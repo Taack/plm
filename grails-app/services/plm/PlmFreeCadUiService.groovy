@@ -153,7 +153,7 @@ class PlmFreeCadUiService implements WebAttributes {
         }
     }
 
-    UiTableSpecifier buildPartTable(PlmFreeCadPart link = null, Collection<PlmFreeCadPart> freeCadParts = null) {
+    UiTableSpecifier buildPartTable(Collection<PlmFreeCadPart> freeCadParts = null) {
         def p = new PlmFreeCadPart(active: true, nextVersion: null)
         def u = new User()
         new UiTableSpecifier().ui PlmFreeCadPart, {
@@ -238,10 +238,18 @@ class PlmFreeCadUiService implements WebAttributes {
                     action "<b>See Part ...</b>", ActionIcon.SHOW, PlmController.&showPart as MethodClosure, part.id
             }
             if (!isMail) {
-                ajaxBlock "showIssueLinks", {
-                    table 'Links', buildLinkTableFromPart(part), BlockSpec.Width.MAX
+                List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
+                if (!parentLinks.empty) {
+                    def containerParts = parentLinks*.parentPart
+                    ajaxBlock "showPartParent", {
+                        table 'Used In', buildPartTable(containerParts), BlockSpec.Width.MAX
+                    }
                 }
-                ajaxBlock "showIssueHistory", {
+                if (!part.linkedParts.empty)
+                    ajaxBlock "showPartLinks", {
+                        table 'Links', buildLinkTableFromPart(part), BlockSpec.Width.MAX
+                    }
+                ajaxBlock "showPartHistory", {
                     table "History", new UiTableSpecifier().ui(PlmFreeCadPart, {
                         def h = part.history
                         PlmFreeCadPart p = null
