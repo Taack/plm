@@ -1,0 +1,49 @@
+buildscript {
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.18'
+    }
+}
+
+plugins {
+    id 'taack-grails-plugin.java-conventions'
+}
+
+apply plugin: 'com.google.protobuf'
+
+dependencies {
+    implementation 'com.google.protobuf:protobuf-java:3.19.4'
+    implementation 'org.codehaus.groovy:groovy-dateutil'
+}
+
+protobuf {
+    generatedFilesBaseDir = "$projectDir/src/"
+
+    if (new File("/usr/local/bin/protoc").exists()) {
+        protoc {
+            path = '/usr/local/bin/protoc'
+        }
+    } else if (new File("/opt/homebrew/bin/protoc").exists()) {
+        protoc {
+            path = '/opt/homebrew/bin/protoc'
+        }
+    } else {
+        protoc {
+            artifact = 'com.google.protobuf:protoc:3.19.4'
+        }
+    }
+
+    generateProtoTasks {
+        ofSourceSet('main').each { task ->
+            task.builtins {
+                java {}
+            }
+        }
+    }
+}
+grails {
+    // should use gradle -Dgrails.run.active=true bootRun
+    exploded = true
+    plugins {
+        implementation project(':crew')
+    }
+}

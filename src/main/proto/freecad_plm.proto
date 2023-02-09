@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package plm.freecad;
+
+
+message PlmFile {
+  string id = 1;
+  string name = 12;
+  string fileName = 2;
+  string label = 3;
+  string lastModifiedBy = 4;
+  string lastModifiedDate = 5;
+  string comment = 6;
+  string company = 7;
+  string createdBy = 8;
+  string createdDate = 9;
+  repeated string externalLink = 10;
+  bytes fileContent = 11;
+}
+
+message PlmLink {
+  enum LinkCopyOnChangeEnum {
+    Disabled = 0;
+    Enabled = 1;
+    Owned = 2;
+  }
+  string linkedObject = 1;
+  bool linkClaimChild = 2;
+  bool linkTransform = 3;
+  LinkCopyOnChangeEnum linkCopyOnChange = 4;
+  double scale = 5;
+  string plmFile = 6;
+}
+
+message Bucket {
+  map<string, PlmFile> plmFiles = 1;
+  map<string, PlmLink> links = 2;
+}
+
+// protoc -I=app/protobuf-source/src/main/protoJava/ --python_out=~/tmp/py app/protobuf-source/src/main/protoJava/freecad_plm.proto
