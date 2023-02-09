@@ -138,7 +138,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     rowColumn {
                         rowField o.linkCopyOnChange?.toString()
                         rowLink 'See Part', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, o.part.id, false
-                        rowField o.part.originalName
+                        rowField o.part.originalName + ' #' + o.linkedObject
                     }
                 }
             }
@@ -217,7 +217,8 @@ class PlmFreeCadUiService implements WebAttributes {
         new UiBlockSpecifier().ui {
             show "Status", new UiShowSpecifier().ui(part, {
                 section "Version", {
-                    field "Version", "#${part.version}"
+                    if (part.active) field "Version", "#${part.version}"
+                    if (!part.active) field "Not ACTIVE", Style.EMPHASIS + Style.RED
                     fieldLabeled part.dateCreated_
                     fieldLabeled part.userUpdated_
                     fieldLabeled part.originalName_
@@ -231,13 +232,14 @@ class PlmFreeCadUiService implements WebAttributes {
             show part.originalName, new UiShowSpecifier().ui(part, {
                 field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?version=${part.version ?: 0}"></div>"""
             }), BlockSpec.Width.QUARTER
-            show 'Last Comment', new UiShowSpecifier().ui(part, {
-                field Markdown.getContentHtml(part.commentVersion), Style.MARKDOWN_BODY
-            }), BlockSpec.Width.HALF, {
-                if (isMail)
-                    action "<b>See Part ...</b>", ActionIcon.SHOW, PlmController.&showPart as MethodClosure, part.id
-            }
-            if (!isMail) {
+            if (part.active)
+                show 'Last Comment', new UiShowSpecifier().ui(part, {
+                    field Markdown.getContentHtml(part.commentVersion), Style.MARKDOWN_BODY
+                }), BlockSpec.Width.HALF, {
+                    if (isMail)
+                        action "<b>See Part ...</b>", ActionIcon.SHOW, PlmController.&showPart as MethodClosure, part.id
+                }
+            if (!isMail && part.active) {
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
                 if (!parentLinks.empty) {
                     def containerParts = parentLinks*.parentPart
@@ -278,9 +280,14 @@ class PlmFreeCadUiService implements WebAttributes {
                                         if (p.originalName != i.originalName) diff << "<li>Original Name became from ${p.originalName} to <b>${i.originalName}</b></li>"
                                         if (p.plmContentType != i.plmContentType) diff << "<li>Content Type became from ${p.plmContentType} to <b>${i.plmContentType}</b></li>"
                                         if (p.comment != i.comment) diff << "<li>Comment became from ${p.comment} to <b>${i.comment}</b></li>"
-                                        if (p.plmLinksOld*.id.sort() != i.plmLinks*.id.sort()) diff << "<li>Links became from [${p.plmLinksOld*.part.originalName.join(', ')}] to ${i.plmLinks*.part.originalName.join(', ')}"
+                                        if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort()) diff << "<li>Links became from [${p.plmLinks*.part.originalName.join(', ')}] to [${i.plmLinks*.part.originalName.join(', ')}]"
                                         diff << "</ul>"
                                         rowField diff.toString()
+                                        if (p.plmContentShaOne != i.plmContentShaOne)
+                                            rowColumn {
+                                                rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, p.id
+                                                rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?version=${p.version ?: 0}"></div>"""
+                                            }
                                     }
                                 }
                                 p = i

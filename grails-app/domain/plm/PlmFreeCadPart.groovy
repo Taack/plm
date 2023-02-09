@@ -55,7 +55,6 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
     String commentVersion
 
     Set<PlmFreeCadLink> plmLinks
-    Set<PlmFreeCadLink> plmLinksOld
 
     Long creationOrder = Long.MAX_VALUE
     Boolean active = true
@@ -118,7 +117,7 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
             oldPart.commentVersion = commentVersion
             oldPart.status = status
             plmLinks.each {
-                oldPart.addToPlmLinksOld(it)
+                oldPart.addToPlmLinks(it)
             }
             return oldPart
         }
