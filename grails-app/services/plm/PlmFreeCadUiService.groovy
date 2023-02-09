@@ -122,7 +122,7 @@ class PlmFreeCadUiService implements WebAttributes {
             def objs = taackSimpleFilterService.list(PlmFreeCadLink, 20, part.plmLinks*.id as Collection)
             for (def o : objs.aValue) {
                 row {
-                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id ?: 0}"></div>"""
+                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id ?: 0}?version=${o.version ?: 0}"></div>"""
                     rowColumn {
                         rowField o.dateCreated
                         rowField o.userCreated.username
@@ -186,7 +186,7 @@ class PlmFreeCadUiService implements WebAttributes {
             paginate(20, params.long("offset"), objs.bValue)
             for (def obj : objs.aValue) {
                 row {
-                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}"></div>"""
+                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?version=${obj.version ?: 0}"></div>"""
                     rowColumn {
                         rowField obj.dateCreated
                         rowField obj.userCreated.username
@@ -229,7 +229,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 action "Download Model Zip File", ActionIcon.DOWNLOAD, PlmController.&downloadPart as MethodClosure, part.id
             }
             show part.originalName, new UiShowSpecifier().ui(part, {
-                field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}"></div>"""
+                field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?version=${part.version ?: 0}"></div>"""
             }), BlockSpec.Width.QUARTER
             show 'Last Comment', new UiShowSpecifier().ui(part, {
                 field Markdown.getContentHtml(part.commentVersion), Style.MARKDOWN_BODY
@@ -403,7 +403,10 @@ class PlmFreeCadUiService implements WebAttributes {
         ret
     }
 
-    File preview(PlmFreeCadPart part) {
+    File preview(PlmFreeCadPart part, Long version = null) {
+        if (version) {
+            part = part.getHistory()[version]
+        }
         String filePath = previewPath + '/' + part.plmContentShaOne + '.webp'
         if (new File(filePath).exists()) return new File(filePath)
         else {
