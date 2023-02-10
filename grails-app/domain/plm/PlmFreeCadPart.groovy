@@ -116,9 +116,9 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
             oldPart.label = label
             oldPart.commentVersion = commentVersion
             oldPart.status = status
-            plmLinks.each {
-                oldPart.addToPlmLinks(it)
-            }
+//            plmLinks.each {
+//                oldPart.addToPlmLinks(it)
+//            }
             return oldPart
         }
         return null

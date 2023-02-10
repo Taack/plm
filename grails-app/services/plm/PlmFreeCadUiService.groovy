@@ -242,7 +242,7 @@ class PlmFreeCadUiService implements WebAttributes {
             if (!isMail && part.active) {
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
                 if (!parentLinks.empty) {
-                    def containerParts = parentLinks*.parentPart
+                    def containerParts = parentLinks*.parentPart.findAll { it.active }
                     ajaxBlock "showPartParent", {
                         table 'Used In', buildPartTable(containerParts), BlockSpec.Width.MAX
                     }
