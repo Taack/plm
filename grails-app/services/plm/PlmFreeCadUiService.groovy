@@ -122,7 +122,7 @@ class PlmFreeCadUiService implements WebAttributes {
             def objs = taackSimpleFilterService.list(PlmFreeCadLink, 20, part.plmLinks*.id as Collection)
             for (def o : objs.aValue) {
                 row {
-                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id ?: 0}?version=${o.version ?: 0}"></div>"""
+                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id ?: 0}?version=${o.part.version ?: 0}"></div>"""
                     rowColumn {
                         rowField o.dateCreated
                         rowField o.userCreated.username
@@ -296,6 +296,9 @@ class PlmFreeCadUiService implements WebAttributes {
                         action "Add", ActionIcon.ADD, PlmController.&editPart as MethodClosure, part.id, true
                     }
                 }
+            } else if (!isMail) {
+                if (!part.linkedParts.empty)
+                    table 'Links', buildLinkTableFromPart(part), BlockSpec.Width.MAX
             }
         }
     }
