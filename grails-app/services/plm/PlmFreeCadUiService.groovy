@@ -432,7 +432,7 @@ class PlmFreeCadUiService implements WebAttributes {
             String conv = """\
             import sys
             import ImportGui
-            from PySide import QtGui
+            from PySide import QtGui, QtCore
                         
             class MyFilter (QtCore.QObject):
               def eventFilter(self, obj, ev):
