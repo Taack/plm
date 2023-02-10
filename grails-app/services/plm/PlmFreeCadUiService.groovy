@@ -286,7 +286,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                         if (p.plmContentShaOne != i.plmContentShaOne)
                                             rowColumn {
                                                 rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, p.id
-                                                rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?version=${p.version ?: 0}"></div>"""
+                                                rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${p.id ?: 0}?version=${p.version ?: 0}"></div>"""
                                             }
                                     }
                                 }
