@@ -129,7 +129,7 @@ class PlmFreeCadUiService implements WebAttributes {
             def objs = taackSimpleFilterService.list(PlmFreeCadLink, 20, part.plmLinks*.id as Collection)
             for (def o : objs.aValue) {
                 row {
-                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id ?: 0}?version=${o.part.version ?: 0}"></div>"""
+                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}"></div>"""
                     rowColumn {
                         rowField o.dateCreated
                         rowField o.userCreated.username
@@ -200,7 +200,7 @@ class PlmFreeCadUiService implements WebAttributes {
             paginate(20, params.long("offset"), objs.bValue)
             for (def obj : objs.aValue) {
                 row {
-                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?version=${obj.version ?: 0}"></div>"""
+                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.version ?: 0}"></div>"""
                     rowColumn {
                         rowField obj.dateCreated
                         rowField obj.userCreated.username
@@ -232,7 +232,11 @@ class PlmFreeCadUiService implements WebAttributes {
         }
     }
 
-    UiBlockSpecifier buildFreeCadPartBlockShow(PlmFreeCadPart part, boolean isMail = false) {
+    UiBlockSpecifier buildFreeCadPartBlockShow(PlmFreeCadPart part, Long partVersion, boolean isMail = false) {
+        if (partVersion != null) {
+            part = part.getHistory()[partVersion]
+        }
+
         new UiBlockSpecifier().ui {
             show "Status", new UiShowSpecifier().ui(part, {
                 section "Version", {
@@ -251,10 +255,10 @@ class PlmFreeCadUiService implements WebAttributes {
                     fieldLabeled part.lockedBy_
                 }
             }), BlockSpec.Width.QUARTER, {
-                action "Download Model Zip File", ActionIcon.DOWNLOAD, PlmController.&downloadPart as MethodClosure, part.id
+                action "Download Model Zip File", ActionIcon.DOWNLOAD, PlmController.&downloadPart as MethodClosure, [id: part.id, partVersion: partVersion]
             }
             show part.originalName, new UiShowSpecifier().ui(part, {
-                field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?version=${part.version ?: 0}"></div>"""
+                field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.version ?: 0}"></div>"""
             }), BlockSpec.Width.QUARTER
             if (part.active)
                 show 'Last Comment', new UiShowSpecifier().ui(part, {
@@ -279,7 +283,8 @@ class PlmFreeCadUiService implements WebAttributes {
                     table "History", new UiTableSpecifier().ui(PlmFreeCadPart, {
                         def h = part.history
                         PlmFreeCadPart p = null
-                        if (h)
+                        if (h) {
+                            long partVersionOcc = 0
                             for (def i : h) {
                                 rowGroupHeader "${i.historyUserCreated} on ${i.historyDateCreated}"
                                 if (i.commentVersion && !p) {
@@ -319,15 +324,16 @@ class PlmFreeCadUiService implements WebAttributes {
                                         if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort()) diff << "<li>Links became from [${p.plmLinks*.part.originalName.join(', ')}] to [${i.plmLinks*.part.originalName.join(', ')}]"
                                         diff << "</ul>"
                                         rowField diff.toString()
-                                        if (p.plmContentShaOne != i.plmContentShaOne)
-                                            rowColumn {
-                                                rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, p.id
-                                                rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${p.id ?: 0}?version=${p.version ?: 0}"></div>"""
-                                            }
+                                        rowColumn {
+                                            rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc]
+                                            rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}"></div>"""
+                                        }
                                     }
+                                    partVersionOcc ++
                                 }
                                 p = i
                             }
+                        }
                     }), BlockSpec.Width.MAX, {
                         action "Add", ActionIcon.ADD, PlmController.&editPart as MethodClosure, part.id, true
                     }
@@ -430,7 +436,10 @@ class PlmFreeCadUiService implements WebAttributes {
         [success: true, message: 'OK'] as JSON
     }
 
-    File zipPart(PlmFreeCadPart part) {
+    File zipPart(PlmFreeCadPart part, Long version = null) {
+        if (version != null) {
+            part = part.getHistory()[version]
+        }
         def ret = new File("${zipPath}/${part.id}.zip")
         FileOutputStream fos = new FileOutputStream(ret)
         ZipOutputStream zipOut = new ZipOutputStream(fos)
@@ -457,7 +466,7 @@ class PlmFreeCadUiService implements WebAttributes {
     }
 
     File preview(PlmFreeCadPart part, Long version = null) {
-        if (version) {
+        if (version != null) {
             part = part.getHistory()[version]
         }
         String filePath = previewPath + '/' + part.plmContentShaOne + '.webp'

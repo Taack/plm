@@ -45,10 +45,10 @@ class PlmController implements WebAttributes {
         render plmFreeCadUiService.processProto(proto.bytes)
     }
 
-    def downloadPart(PlmFreeCadPart part) {
+    def downloadPart(PlmFreeCadPart part, Long partVersion) {
         response.contentType = 'application/zip'
         response.setHeader("Content-disposition", "filename=\"${URLEncoder.encode("${part.originalName}-${new Date().format('yyyyMMdd:hh:mm:ss')}.zip", 'UTF-8')}\"")
-        response.outputStream << plmFreeCadUiService.zipPart(part).bytes
+        response.outputStream << plmFreeCadUiService.zipPart(part, partVersion).bytes
         response.outputStream.close()
     }
 
@@ -66,15 +66,15 @@ class PlmController implements WebAttributes {
         render 'Not done Yet ..'
     }
 
-    def showPart(PlmFreeCadPart part) {
-        taackUiSimpleService.show(plmFreeCadUiService.buildFreeCadPartBlockShow(part), buildMenu())
+    def showPart(PlmFreeCadPart part, Long partVersion) {
+        taackUiSimpleService.show(plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion), buildMenu())
     }
 
-    def previewPart(PlmFreeCadPart part) {
+    def previewPart(PlmFreeCadPart part, Long partVersion) {
         response.setContentType("image/webp")
-        response.setHeader("Content-disposition", "filename=\"${URLEncoder.encode(part?.originalName + '-' + params.long('version') + '.webp', "UTF-8")}\"")
+        response.setHeader("Content-disposition", "filename=\"${URLEncoder.encode(part?.originalName + '-' + partVersion + '.webp', "UTF-8")}\"")
         response.setHeader("Cache-Control", "max-age=604800")
-        response.outputStream << (plmFreeCadUiService.preview(part, params.long('version'))).bytes
+        response.outputStream << (plmFreeCadUiService.preview(part, partVersion)).bytes
         return false
     }
 
