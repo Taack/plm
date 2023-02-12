@@ -29,6 +29,7 @@ import javax.annotation.PostConstruct
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
+import java.text.SimpleDateFormat
 import java.util.zip.ZipEntry
 import java.util.zip.ZipException
 import java.util.zip.ZipOutputStream
@@ -91,6 +92,12 @@ class PlmFreeCadUiService implements WebAttributes {
             }
             section 'Links', {
                 filterField p.plmLinks_, l.part_, p.originalName_
+            }
+            section 'Plm File', {
+                filterField p.plmFileUserCreated_
+                filterField p.plmFileDateCreated_
+                filterField p.plmFileUserUpdated_
+                filterField p.plmFileLastUpdated_
             }
         }
     }
@@ -169,6 +176,14 @@ class PlmFreeCadUiService implements WebAttributes {
                     d = sortableFieldHeader ColumnHeaderFieldSpec.DefaultSortingDirection.DESC, p.lastUpdated_
                 }
                 column {
+                    sortableFieldHeader p.plmFileUserCreated_
+                    sortableFieldHeader p.plmFileDateCreated_
+                }
+                column {
+                    sortableFieldHeader p.plmFileUserUpdated_
+                    sortableFieldHeader p.plmFileLastUpdated_
+                }
+                column {
                     sortableFieldHeader p.lockedBy_, u.username_
                     sortableFieldHeader p.commentVersion_
                 }
@@ -176,7 +191,6 @@ class PlmFreeCadUiService implements WebAttributes {
                     sortableFieldHeader p.originalName_
                     sortableFieldHeader p.status_
                 }
-                fieldHeader 'Comment'
             }
             def f = new UiFilterSpecifier().ui PlmFreeCadPart, {
                 filterFieldExpressionBool(null, new FilterExpression(p.nextVersion_, Operator.EQ, null), true)
@@ -196,6 +210,14 @@ class PlmFreeCadUiService implements WebAttributes {
                         rowField obj.userUpdated?.username
                     }
                     rowColumn {
+                        rowField obj.plmFileUserCreated
+                        rowField obj.plmFileDateCreated.format('yyyy-MM-dd hh:mm:ss')
+                    }
+                    rowColumn {
+                        rowField obj.plmFileUserUpdated
+                        rowField obj.plmFileLastUpdated.format('yyyy-MM-dd hh:mm:ss')
+                    }
+                    rowColumn {
                         rowField obj.lockedBy?.username
                         rowField obj.commentVersion
                     }
@@ -204,9 +226,6 @@ class PlmFreeCadUiService implements WebAttributes {
                         rowLink "Show It", ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, obj.id, false
                         rowField obj.originalName, Style.BLUE
                         rowField obj.status_
-                    }
-                    rowColumn {
-                        rowField obj.comment
                     }
                 }
             }
@@ -222,6 +241,11 @@ class PlmFreeCadUiService implements WebAttributes {
                     fieldLabeled part.dateCreated_
                     fieldLabeled part.userUpdated_
                     fieldLabeled part.originalName_
+                    fieldLabeled part.plmContentType_
+                    fieldLabeled part.plmFileLastUpdated_
+                    fieldLabeled part.plmFileUserUpdated_
+                    fieldLabeled part.plmFileDateCreated_
+                    fieldLabeled part.plmFileUserCreated_
                     fieldLabeled part.plmContentType_
                     field "Status", part.status_, Style.EMPHASIS
                     fieldLabeled part.lockedBy_
@@ -258,9 +282,17 @@ class PlmFreeCadUiService implements WebAttributes {
                         if (h)
                             for (def i : h) {
                                 rowGroupHeader "${i.historyUserCreated} on ${i.historyDateCreated}"
-                                if (i.commentVersion && !p) row {
-                                    rowColumn {
-                                        rowField Markdown.getContentHtml(i.commentVersion), Style.MARKDOWN_BODY
+                                if (i.commentVersion && !p) {
+                                    row {
+                                        rowColumn {
+                                            rowField Markdown.getContentHtml(i.commentVersion), Style.MARKDOWN_BODY
+                                        }
+                                    }
+                                } else if (!p) {
+                                    row {
+                                        rowColumn {
+                                            rowField 'Initial version'
+                                        }
                                     }
                                 }
                                 if (p) {
@@ -279,6 +311,10 @@ class PlmFreeCadUiService implements WebAttributes {
                                         if (p.status != i.status) diff << "<li>Status became from ${p.status} to <b>${i.status}</b></li>"
                                         if (p.originalName != i.originalName) diff << "<li>Original Name became from ${p.originalName} to <b>${i.originalName}</b></li>"
                                         if (p.plmContentType != i.plmContentType) diff << "<li>Content Type became from ${p.plmContentType} to <b>${i.plmContentType}</b></li>"
+                                        if (p.plmFileLastUpdated != i.plmFileLastUpdated) diff << "<li>Declared updated date became from ${p.plmFileLastUpdated} to <b>${i.plmFileLastUpdated}</b></li>"
+                                        if (p.plmFileDateCreated != i.plmFileDateCreated) diff << "<li>Declared creation Date became from ${p.plmFileDateCreated} to <b>${i.plmFileDateCreated}</b></li>"
+                                        if (p.plmFileUserCreated != i.plmFileUserCreated) diff << "<li>Declared user created became from ${p.plmFileUserCreated} to <b>${i.plmFileUserCreated}</b></li>"
+                                        if (p.plmFileUserUpdated != i.plmFileUserUpdated) diff << "<li>Declared user updated became from ${p.plmFileUserUpdated} to <b>${i.plmFileUserUpdated}</b></li>"
                                         if (p.comment != i.comment) diff << "<li>Comment became from ${p.comment} to <b>${i.comment}</b></li>"
                                         if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort()) diff << "<li>Links became from [${p.plmLinks*.part.originalName.join(', ')}] to [${i.plmLinks*.part.originalName.join(', ')}]"
                                         diff << "</ul>"
@@ -311,6 +347,8 @@ class PlmFreeCadUiService implements WebAttributes {
         def r = FreecadPlm.Bucket.newBuilder()
         Map<String, PlmFreeCadPart> loToP = [:]
         Map<String, List<PlmFreeCadPart>> pToLo = [:]
+        def dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
         d.each {
             def f = it.value
             def c = f.fileContent.toByteArray()
@@ -341,6 +379,11 @@ class PlmFreeCadUiService implements WebAttributes {
                     pp.pathOnHost = f.fileName
                     pp.fileId = f.id
                     pp.comment = f.comment
+                    pp.label = f.label
+                    pp.plmFileLastUpdated = dateFormat.parse(f.lastModifiedDate)
+                    pp.plmFileDateCreated = dateFormat.parse(f.createdDate)
+                    pp.plmFileUserCreated = f.createdBy
+                    pp.plmFileUserUpdated = f.lastModifiedBy
                     pp.label = f.label
                     pp.plmContentType = Files.probeContentType(file.toPath())
                     pp.plmContentShaOne = sha1

@@ -43,6 +43,10 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
 
     User lockedBy
 
+    Date plmFileDateCreated
+    Date plmFileLastUpdated
+    String plmFileUserUpdated
+    String plmFileUserCreated
     String plmFilePath
     String plmContentType
     String plmContentShaOne
@@ -66,6 +70,8 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
 
     static constraints = {
         lockedBy nullable: true
+        plmFileLastUpdated nullable: true
+        plmFileUserCreated nullable: true
         comment nullable: true
         commentVersion nullable: true, widget: "markdown"
         nextVersion nullable: true
@@ -106,6 +112,10 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
             oldPart.active = false
             oldPart.nextVersion = this
             oldPart.lockedBy = lockedBy
+            oldPart.plmFileDateCreated = plmFileDateCreated
+            oldPart.plmFileLastUpdated = plmFileLastUpdated
+            oldPart.plmFileUserUpdated = plmFileUserUpdated
+            oldPart.plmFileUserCreated = plmFileUserCreated
             oldPart.plmFilePath = plmFilePath
             oldPart.plmContentType = plmContentType
             oldPart.plmContentShaOne = plmContentShaOne
