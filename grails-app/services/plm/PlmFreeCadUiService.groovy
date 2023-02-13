@@ -70,6 +70,10 @@ class PlmFreeCadUiService implements WebAttributes {
         FileUtils.forceMkdir(new File(glbPath))
         FileUtils.forceMkdir(new File(previewPath))
         FileUtils.forceMkdir(new File(zipPath))
+        if (!new File(plmConfiguration.freecadPath).exists()) {
+            log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
+            throw new RuntimeException('Freecad path not configured ... Stopping')
+        }
     }
 
     UiFilterSpecifier buildPartFilter() {
