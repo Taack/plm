@@ -63,6 +63,8 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
     Long creationOrder = Long.MAX_VALUE
     Boolean active = true
     PlmFreeCadPart nextVersion
+    Long cTimeNs
+    Long mTimeNs
 //    String historyComputed
 //    Long previousVersionComputed
 
@@ -116,6 +118,8 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
             oldPart.plmFileLastUpdated = plmFileLastUpdated
             oldPart.plmFileUserUpdated = plmFileUserUpdated
             oldPart.plmFileUserCreated = plmFileUserCreated
+            oldPart.cTimeNs = cTimeNs
+            oldPart.mTimeNs = mTimeNs
             oldPart.plmFilePath = plmFilePath
             oldPart.plmContentType = plmContentType
             oldPart.plmContentShaOne = plmContentShaOne

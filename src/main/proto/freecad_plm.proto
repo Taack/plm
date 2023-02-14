@@ -16,6 +16,8 @@ message PlmFile {
   string createdDate = 9;
   repeated string externalLink = 10;
   bytes fileContent = 11;
+  int64 cTimeNs = 13;
+  int64 uTimeNs = 14;
 }
 
 message PlmLink {

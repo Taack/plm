@@ -168,6 +168,18 @@ public final class FreecadPlm {
      * @return The fileContent.
      */
     com.google.protobuf.ByteString getFileContent();
+
+    /**
+     * <code>int64 cTimeNs = 13;</code>
+     * @return The cTimeNs.
+     */
+    long getCTimeNs();
+
+    /**
+     * <code>int64 uTimeNs = 14;</code>
+     * @return The uTimeNs.
+     */
+    long getUTimeNs();
   }
   /**
    * Protobuf type {@code plm.freecad.PlmFile}
@@ -299,6 +311,16 @@ public final class FreecadPlm {
               java.lang.String s = input.readStringRequireUtf8();
 
               name_ = s;
+              break;
+            }
+            case 104: {
+
+              cTimeNs_ = input.readInt64();
+              break;
+            }
+            case 112: {
+
+              uTimeNs_ = input.readInt64();
               break;
             }
             default: {
@@ -762,6 +784,28 @@ public final class FreecadPlm {
       return fileContent_;
     }
 
+    public static final int CTIMENS_FIELD_NUMBER = 13;
+    private long cTimeNs_;
+    /**
+     * <code>int64 cTimeNs = 13;</code>
+     * @return The cTimeNs.
+     */
+    @java.lang.Override
+    public long getCTimeNs() {
+      return cTimeNs_;
+    }
+
+    public static final int UTIMENS_FIELD_NUMBER = 14;
+    private long uTimeNs_;
+    /**
+     * <code>int64 uTimeNs = 14;</code>
+     * @return The uTimeNs.
+     */
+    @java.lang.Override
+    public long getUTimeNs() {
+      return uTimeNs_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -811,6 +855,12 @@ public final class FreecadPlm {
       }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(name_)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 12, name_);
+      }
+      if (cTimeNs_ != 0L) {
+        output.writeInt64(13, cTimeNs_);
+      }
+      if (uTimeNs_ != 0L) {
+        output.writeInt64(14, uTimeNs_);
       }
       unknownFields.writeTo(output);
     }
@@ -863,6 +913,14 @@ public final class FreecadPlm {
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(name_)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(12, name_);
       }
+      if (cTimeNs_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(13, cTimeNs_);
+      }
+      if (uTimeNs_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(14, uTimeNs_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -902,6 +960,10 @@ public final class FreecadPlm {
           .equals(other.getExternalLinkList())) return false;
       if (!getFileContent()
           .equals(other.getFileContent())) return false;
+      if (getCTimeNs()
+          != other.getCTimeNs()) return false;
+      if (getUTimeNs()
+          != other.getUTimeNs()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -939,6 +1001,12 @@ public final class FreecadPlm {
       }
       hash = (37 * hash) + FILECONTENT_FIELD_NUMBER;
       hash = (53 * hash) + getFileContent().hashCode();
+      hash = (37 * hash) + CTIMENS_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getCTimeNs());
+      hash = (37 * hash) + UTIMENS_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getUTimeNs());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1096,6 +1164,10 @@ public final class FreecadPlm {
         bitField0_ = (bitField0_ & ~0x00000001);
         fileContent_ = com.google.protobuf.ByteString.EMPTY;
 
+        cTimeNs_ = 0L;
+
+        uTimeNs_ = 0L;
+
         return this;
       }
 
@@ -1139,6 +1211,8 @@ public final class FreecadPlm {
         }
         result.externalLink_ = externalLink_;
         result.fileContent_ = fileContent_;
+        result.cTimeNs_ = cTimeNs_;
+        result.uTimeNs_ = uTimeNs_;
         onBuilt();
         return result;
       }
@@ -1239,6 +1313,12 @@ public final class FreecadPlm {
         }
         if (other.getFileContent() != com.google.protobuf.ByteString.EMPTY) {
           setFileContent(other.getFileContent());
+        }
+        if (other.getCTimeNs() != 0L) {
+          setCTimeNs(other.getCTimeNs());
+        }
+        if (other.getUTimeNs() != 0L) {
+          setUTimeNs(other.getUTimeNs());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2170,6 +2250,68 @@ public final class FreecadPlm {
       public Builder clearFileContent() {
         
         fileContent_ = getDefaultInstance().getFileContent();
+        onChanged();
+        return this;
+      }
+
+      private long cTimeNs_ ;
+      /**
+       * <code>int64 cTimeNs = 13;</code>
+       * @return The cTimeNs.
+       */
+      @java.lang.Override
+      public long getCTimeNs() {
+        return cTimeNs_;
+      }
+      /**
+       * <code>int64 cTimeNs = 13;</code>
+       * @param value The cTimeNs to set.
+       * @return This builder for chaining.
+       */
+      public Builder setCTimeNs(long value) {
+        
+        cTimeNs_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int64 cTimeNs = 13;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearCTimeNs() {
+        
+        cTimeNs_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long uTimeNs_ ;
+      /**
+       * <code>int64 uTimeNs = 14;</code>
+       * @return The uTimeNs.
+       */
+      @java.lang.Override
+      public long getUTimeNs() {
+        return uTimeNs_;
+      }
+      /**
+       * <code>int64 uTimeNs = 14;</code>
+       * @param value The uTimeNs to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUTimeNs(long value) {
+        
+        uTimeNs_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int64 uTimeNs = 14;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearUTimeNs() {
+        
+        uTimeNs_ = 0L;
         onChanged();
         return this;
       }
@@ -4449,26 +4591,27 @@ public final class FreecadPlm {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\021freecad_plm.proto\022\013plm.freecad\"\353\001\n\007Plm" +
+      "\n\021freecad_plm.proto\022\013plm.freecad\"\215\002\n\007Plm" +
       "File\022\n\n\002id\030\001 \001(\t\022\014\n\004name\030\014 \001(\t\022\020\n\010fileNa" +
       "me\030\002 \001(\t\022\r\n\005label\030\003 \001(\t\022\026\n\016lastModifiedB" +
       "y\030\004 \001(\t\022\030\n\020lastModifiedDate\030\005 \001(\t\022\017\n\007com" +
       "ment\030\006 \001(\t\022\017\n\007company\030\007 \001(\t\022\021\n\tcreatedBy" +
       "\030\010 \001(\t\022\023\n\013createdDate\030\t \001(\t\022\024\n\014externalL" +
-      "ink\030\n \003(\t\022\023\n\013fileContent\030\013 \001(\014\"\361\001\n\007PlmLi" +
-      "nk\022\024\n\014linkedObject\030\001 \001(\t\022\026\n\016linkClaimChi" +
-      "ld\030\002 \001(\010\022\025\n\rlinkTransform\030\003 \001(\010\022C\n\020linkC" +
-      "opyOnChange\030\004 \001(\0162).plm.freecad.PlmLink." +
-      "LinkCopyOnChangeEnum\022\r\n\005scale\030\005 \001(\001\022\017\n\007p" +
-      "lmFile\030\006 \001(\t\"<\n\024LinkCopyOnChangeEnum\022\014\n\010" +
-      "Disabled\020\000\022\013\n\007Enabled\020\001\022\t\n\005Owned\020\002\"\367\001\n\006B" +
-      "ucket\0223\n\010plmFiles\030\001 \003(\0132!.plm.freecad.Bu" +
-      "cket.PlmFilesEntry\022-\n\005links\030\002 \003(\0132\036.plm." +
-      "freecad.Bucket.LinksEntry\032E\n\rPlmFilesEnt" +
-      "ry\022\013\n\003key\030\001 \001(\t\022#\n\005value\030\002 \001(\0132\024.plm.fre" +
-      "ecad.PlmFile:\0028\001\032B\n\nLinksEntry\022\013\n\003key\030\001 " +
-      "\001(\t\022#\n\005value\030\002 \001(\0132\024.plm.freecad.PlmLink" +
-      ":\0028\001b\006proto3"
+      "ink\030\n \003(\t\022\023\n\013fileContent\030\013 \001(\014\022\017\n\007cTimeN" +
+      "s\030\r \001(\003\022\017\n\007uTimeNs\030\016 \001(\003\"\361\001\n\007PlmLink\022\024\n\014" +
+      "linkedObject\030\001 \001(\t\022\026\n\016linkClaimChild\030\002 \001" +
+      "(\010\022\025\n\rlinkTransform\030\003 \001(\010\022C\n\020linkCopyOnC" +
+      "hange\030\004 \001(\0162).plm.freecad.PlmLink.LinkCo" +
+      "pyOnChangeEnum\022\r\n\005scale\030\005 \001(\001\022\017\n\007plmFile" +
+      "\030\006 \001(\t\"<\n\024LinkCopyOnChangeEnum\022\014\n\010Disabl" +
+      "ed\020\000\022\013\n\007Enabled\020\001\022\t\n\005Owned\020\002\"\367\001\n\006Bucket\022" +
+      "3\n\010plmFiles\030\001 \003(\0132!.plm.freecad.Bucket.P" +
+      "lmFilesEntry\022-\n\005links\030\002 \003(\0132\036.plm.freeca" +
+      "d.Bucket.LinksEntry\032E\n\rPlmFilesEntry\022\013\n\003" +
+      "key\030\001 \001(\t\022#\n\005value\030\002 \001(\0132\024.plm.freecad.P" +
+      "lmFile:\0028\001\032B\n\nLinksEntry\022\013\n\003key\030\001 \001(\t\022#\n" +
+      "\005value\030\002 \001(\0132\024.plm.freecad.PlmLink:\0028\001b\006" +
+      "proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -4479,7 +4622,7 @@ public final class FreecadPlm {
     internal_static_plm_freecad_PlmFile_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_plm_freecad_PlmFile_descriptor,
-        new java.lang.String[] { "Id", "Name", "FileName", "Label", "LastModifiedBy", "LastModifiedDate", "Comment", "Company", "CreatedBy", "CreatedDate", "ExternalLink", "FileContent", });
+        new java.lang.String[] { "Id", "Name", "FileName", "Label", "LastModifiedBy", "LastModifiedDate", "Comment", "Company", "CreatedBy", "CreatedDate", "ExternalLink", "FileContent", "CTimeNs", "UTimeNs", });
     internal_static_plm_freecad_PlmLink_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_plm_freecad_PlmLink_fieldAccessorTable = new

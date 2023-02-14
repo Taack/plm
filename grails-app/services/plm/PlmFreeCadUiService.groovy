@@ -206,11 +206,11 @@ class PlmFreeCadUiService implements WebAttributes {
                 row {
                     rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.version ?: 0}"></div>"""
                     rowColumn {
-                        rowField obj.dateCreated
+                        rowField obj.dateCreated.format('yyyy-MM-dd hh:mm:ss')
                         rowField obj.userCreated.username
                     }
                     rowColumn {
-                        rowField obj.lastUpdated
+                        rowField obj.lastUpdated.format('yyyy-MM-dd hh:mm:ss')
                         rowField obj.userUpdated?.username
                     }
                     rowColumn {
@@ -302,6 +302,10 @@ class PlmFreeCadUiService implements WebAttributes {
                                         rowColumn {
                                             rowField 'Initial version'
                                         }
+                                        rowColumn {
+                                            rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc]
+                                            rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}"></div>"""
+                                        }
                                     }
                                 }
                                 if (p) {
@@ -329,11 +333,12 @@ class PlmFreeCadUiService implements WebAttributes {
                                         diff << "</ul>"
                                         rowField diff.toString()
                                         rowColumn {
+                                            partVersionOcc ++
+
                                             rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc]
                                             rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}"></div>"""
                                         }
                                     }
-                                    partVersionOcc ++
                                 }
                                 p = i
                             }
@@ -398,6 +403,8 @@ class PlmFreeCadUiService implements WebAttributes {
                     pp.plmContentType = Files.probeContentType(file.toPath())
                     pp.plmContentShaOne = sha1
                     pp.originalName = f.name
+                    pp.cTimeNs = f.getCTimeNs()
+                    pp.mTimeNs = f.getUTimeNs()
                     pp.save(flush: true, failOnError: true)
                     if (pp.hasErrors()) log.error "${pp.errors}"
                 }
@@ -445,11 +452,13 @@ class PlmFreeCadUiService implements WebAttributes {
             part = part.getHistory()[version]
         }
         def ret = new File("${zipPath}/${part.id}.zip")
+        if (ret.exists()) ret.delete()
         FileOutputStream fos = new FileOutputStream(ret)
         ZipOutputStream zipOut = new ZipOutputStream(fos)
         part.allLinkedParts.each {
             FileInputStream fis = new FileInputStream(new File("${storePath}/${it.plmFilePath}"))
             ZipEntry zipEntry = new ZipEntry(it.pathOnHost.substring(it.pathOnHost.lastIndexOf('/') + 1))
+            zipEntry.setTime((long)(part.mTimeNs / 1000000))
             try {
                 zipOut.putNextEntry(zipEntry)
 
