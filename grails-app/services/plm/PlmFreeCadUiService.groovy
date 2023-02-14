@@ -359,7 +359,6 @@ class PlmFreeCadUiService implements WebAttributes {
         def l = bucket.linksMap
         def d = bucket.plmFilesMap
         def u = springSecurityService.currentUser as User
-        def r = FreecadPlm.Bucket.newBuilder()
         Map<String, PlmFreeCadPart> loToP = [:]
         Map<String, List<PlmFreeCadPart>> pToLo = [:]
         def dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -399,7 +398,6 @@ class PlmFreeCadUiService implements WebAttributes {
                     pp.plmFileDateCreated = dateFormat.parse(f.createdDate)
                     pp.plmFileUserCreated = f.createdBy
                     pp.plmFileUserUpdated = f.lastModifiedBy
-                    pp.label = f.label
                     pp.plmContentType = Files.probeContentType(file.toPath())
                     pp.plmContentShaOne = sha1
                     pp.originalName = f.name
