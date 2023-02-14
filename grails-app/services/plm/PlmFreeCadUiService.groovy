@@ -259,7 +259,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     fieldLabeled part.lockedBy_
                 }
             }), BlockSpec.Width.QUARTER, {
-                action "Download Model Zip File", ActionIcon.DOWNLOAD, PlmController.&downloadPart as MethodClosure, [id: part.id, partVersion: partVersion]
+                action "Download Model Zip File", ActionIcon.DOWNLOAD, PlmController.&downloadPart as MethodClosure, [id: part.id, partVersion: part.version ?: 0]
             }
             show part.originalName, new UiShowSpecifier().ui(part, {
                 field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.version ?: 0}"></div>"""
