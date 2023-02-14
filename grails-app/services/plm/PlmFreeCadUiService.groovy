@@ -133,7 +133,7 @@ class PlmFreeCadUiService implements WebAttributes {
             def objs = taackSimpleFilterService.list(PlmFreeCadLink, 20, part.plmLinks*.id as Collection)
             for (def o : objs.aValue) {
                 row {
-                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}"></div>"""
+                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}"></div>"""
                     rowColumn {
                         rowField o.dateCreated
                         rowField o.userCreated.username
@@ -149,7 +149,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     rowColumn {
                         rowField o.linkCopyOnChange?.toString()
                         rowLink 'See Part', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, o.part.id, false
-                        rowField o.part.originalName + ' #' + o.linkedObject
+                        rowField o.part.originalName + '-v' + o.partLinkVersion + ' #' + o.linkedObject
                     }
                 }
             }
@@ -420,7 +420,7 @@ class PlmFreeCadUiService implements WebAttributes {
             pToLo[plpb.key]?.each { parent ->
                 def pl = PlmFreeCadLink.findByPartAndParentPart(part, parent)
                 if (!pl) {
-                    pl = new PlmFreeCadLink(part: part, parentPart: parent, userCreated: u)
+                    pl = new PlmFreeCadLink(part: part, partLinkVersion: part.version, parentPart: parent, userCreated: u)
                 }
                 pl.linkedObject = plpb.value.linkedObject
                 pl.userUpdated = u

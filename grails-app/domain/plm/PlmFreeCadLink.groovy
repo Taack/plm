@@ -24,6 +24,7 @@ class PlmFreeCadLink {
 
     PlmFreeCadPart parentPart
     PlmFreeCadPart part
+    Long partLinkVersion
 
     static constraints = {
     }

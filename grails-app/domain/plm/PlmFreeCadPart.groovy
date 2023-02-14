@@ -183,7 +183,9 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
     }
 
     Collection<PlmFreeCadPart> getLinkedParts() {
-        return this.plmLinks*.part
+        this.plmLinks.collect {
+            it.part.history[it.partLinkVersion]
+        }
     }
 
     Collection<PlmFreeCadPart> getAllLinkedParts() {
