@@ -92,6 +92,7 @@ class PlmFreeCadUiService implements WebAttributes {
             }
             section 'File', {
                 filterField p.originalName_
+                filterField p.label_
                 filterField p.status_
             }
             section 'Links', {
@@ -127,7 +128,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 }
                 column {
                     sortableFieldHeader l.linkCopyOnChange_
-                    sortableFieldHeader l.part_, p.originalName_
+                    sortableFieldHeader l.part_, p.label_
                 }
             }
             def objs = taackSimpleFilterService.list(PlmFreeCadLink, 20, part.plmLinks*.id as Collection)
@@ -149,7 +150,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     rowColumn {
                         rowField o.linkCopyOnChange?.toString()
                         rowLink 'See Part', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, o.part.id, false
-                        rowField o.part.originalName + '-v' + o.partLinkVersion + ' #' + o.linkedObject
+                        rowField o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject
                     }
                 }
             }
@@ -192,7 +193,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     sortableFieldHeader p.commentVersion_
                 }
                 column {
-                    sortableFieldHeader p.originalName_
+                    sortableFieldHeader p.label_
                     sortableFieldHeader p.status_
                 }
             }
@@ -228,7 +229,7 @@ class PlmFreeCadUiService implements WebAttributes {
 
                     rowColumn {
                         rowLink "Show It", ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, obj.id, false
-                        rowField obj.originalName, Style.BLUE
+                        rowField obj.label, Style.BLUE
                         rowField obj.status_
                     }
                 }
@@ -322,6 +323,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                         if (p.plmContentShaOne != i.plmContentShaOne) diff << "<li>Sha1 content became from ${p.plmContentShaOne} to <b>${i.plmContentShaOne}</b></li>"
                                         if (p.lockedBy?.id != i.lockedBy?.id) diff << "<li>Locked by became from ${p.lockedBy} to <b>${i.lockedBy}</b></li>"
                                         if (p.status != i.status) diff << "<li>Status became from ${p.status} to <b>${i.status}</b></li>"
+                                        if (p.label != i.label) diff << "<li>Label became from ${p.label} to <b>${i.label}</b></li>"
                                         if (p.originalName != i.originalName) diff << "<li>Original Name became from ${p.originalName} to <b>${i.originalName}</b></li>"
                                         if (p.plmContentType != i.plmContentType) diff << "<li>Content Type became from ${p.plmContentType} to <b>${i.plmContentType}</b></li>"
                                         if (p.plmFileLastUpdated != i.plmFileLastUpdated) diff << "<li>Declared updated date became from ${p.plmFileLastUpdated} to <b>${i.plmFileLastUpdated}</b></li>"
@@ -329,7 +331,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                         if (p.plmFileUserCreated != i.plmFileUserCreated) diff << "<li>Declared user created became from ${p.plmFileUserCreated} to <b>${i.plmFileUserCreated}</b></li>"
                                         if (p.plmFileUserUpdated != i.plmFileUserUpdated) diff << "<li>Declared user updated became from ${p.plmFileUserUpdated} to <b>${i.plmFileUserUpdated}</b></li>"
                                         if (p.comment != i.comment) diff << "<li>Comment became from ${p.comment} to <b>${i.comment}</b></li>"
-                                        if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort()) diff << "<li>Links became from [${p.plmLinks*.part.originalName.join(', ')}] to [${i.plmLinks*.part.originalName.join(', ')}]"
+                                        if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort() || p.plmLinks*.part.version.sort() != i.plmLinks*.part.version.sort()) diff << "<li>Links became from [${p.plmLinks*.part.collect {it.label + ' v' + it.version}.join(', ')}] to [${i.plmLinks*.part.collect {it.label + ' v' + it.version}.join(', ')}]"
                                         diff << "</ul>"
                                         rowField diff.toString()
                                         rowColumn {
@@ -507,7 +509,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 return False
             
             f = MyFilter()
-            step = '/tmp/model/${part.label}.FCStd'
+            step = '/tmp/model/${part.label.replace("'", "\\'")}.FCStd'
             webp = '${filePath}'
             glb = '${glbPath + '/' + part.plmContentShaOne + ".glb"}'
             
