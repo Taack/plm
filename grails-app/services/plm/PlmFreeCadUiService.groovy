@@ -237,7 +237,7 @@ class PlmFreeCadUiService implements WebAttributes {
         }
     }
 
-    UiBlockSpecifier buildFreeCadPartBlockShow(PlmFreeCadPart part, Long partVersion, boolean isMail = false) {
+    UiBlockSpecifier buildFreeCadPartBlockShow(PlmFreeCadPart part, Long partVersion, boolean isMail = false, boolean isHistory = false) {
         if (partVersion != null) {
             part = part.getHistory()[partVersion]
         }
@@ -272,7 +272,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     if (isMail)
                         action "<b>See Part ...</b>", ActionIcon.SHOW, PlmController.&showPart as MethodClosure, part.id
                 }
-            if (!isMail && part.active) {
+            if (!isMail && !isHistory) {
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
                 if (!parentLinks.empty) {
                     def containerParts = parentLinks*.parentPart.findAll { it.active }
@@ -338,7 +338,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                         rowColumn {
                                             partVersionOcc++
 
-                                            rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc]
+                                            rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc, isHistory: true]
                                             rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}"></div>"""
                                         }
                                     }
