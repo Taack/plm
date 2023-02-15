@@ -305,7 +305,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                             rowField 'Initial version'
                                         }
                                         rowColumn {
-                                            rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc]
+                                            rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc, isHistory: true]
                                             rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}"></div>"""
                                         }
                                     }
