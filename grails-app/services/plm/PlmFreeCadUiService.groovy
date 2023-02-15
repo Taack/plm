@@ -276,9 +276,10 @@ class PlmFreeCadUiService implements WebAttributes {
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
                 if (!parentLinks.empty) {
                     def containerParts = parentLinks*.parentPart.findAll { it.active }
-                    ajaxBlock "showPartParent", {
-                        table 'Used In', buildPartTable(containerParts), BlockSpec.Width.MAX
-                    }
+                    if (containerParts)
+                        ajaxBlock "showPartParent", {
+                            table 'Used In', buildPartTable(containerParts), BlockSpec.Width.MAX
+                        }
                 }
                 if (!part.linkedParts.empty)
                     ajaxBlock "showPartLinks", {
@@ -331,11 +332,11 @@ class PlmFreeCadUiService implements WebAttributes {
                                         if (p.plmFileUserCreated != i.plmFileUserCreated) diff << "<li>Declared user created became from ${p.plmFileUserCreated} to <b>${i.plmFileUserCreated}</b></li>"
                                         if (p.plmFileUserUpdated != i.plmFileUserUpdated) diff << "<li>Declared user updated became from ${p.plmFileUserUpdated} to <b>${i.plmFileUserUpdated}</b></li>"
                                         if (p.comment != i.comment) diff << "<li>Comment became from ${p.comment} to <b>${i.comment}</b></li>"
-                                        if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort() || p.plmLinks*.part.version.sort() != i.plmLinks*.part.version.sort()) diff << "<li>Links became from [${p.plmLinks*.part.collect {it.label + ' v' + it.version}.join(', ')}] to [${i.plmLinks*.part.collect {it.label + ' v' + it.version}.join(', ')}]"
+                                        if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort() || p.plmLinks*.part.version.sort() != i.plmLinks*.part.version.sort()) diff << "<li>Links became from [${p.plmLinks*.part.collect { it.label + ' v' + it.version }.join(', ')}] to [${i.plmLinks*.part.collect { it.label + ' v' + it.version }.join(', ')}]"
                                         diff << "</ul>"
                                         rowField diff.toString()
                                         rowColumn {
-                                            partVersionOcc ++
+                                            partVersionOcc++
 
                                             rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc]
                                             rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}"></div>"""
@@ -465,7 +466,7 @@ class PlmFreeCadUiService implements WebAttributes {
         part.allLinkedParts.each {
             FileInputStream fis = new FileInputStream(new File("${storePath}/${it.plmFilePath}"))
             ZipEntry zipEntry = new ZipEntry(partFileName(it))
-            zipEntry.setTime((long)(part.mTimeNs / 1000000))
+            zipEntry.setTime((long) (part.mTimeNs / 1000000))
             try {
                 zipOut.putNextEntry(zipEntry)
 
