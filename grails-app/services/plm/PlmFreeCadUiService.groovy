@@ -375,6 +375,9 @@ class PlmFreeCadUiService implements WebAttributes {
             if (f.id == null || f.id.isBlank()) {
                 log.error "PlmFile without ID: ${f.name} $exists"
                 return ([success: false, message: "PlmFile without ID: ${f.name} $exists"] as JSON)
+            } else if (f.fileName.contains('"')) {
+                log.error "PlmFile fileName contains double quotes: ${f.fileName} $exists"
+                return ([success: false, message: "PlmFile label contains double quotes: ${f.label} $exists"] as JSON)
             } else {
                 log.info "Upload PlmFile: ${f.name} with id: ${f.id}, exists: ${exists}"
                 PlmFreeCadPart pp = PlmFreeCadPart.findByFileId(f.id)
@@ -447,6 +450,10 @@ class PlmFreeCadUiService implements WebAttributes {
         [success: true, message: 'OK'] as JSON
     }
 
+    private static String partFileName(PlmFreeCadPart part) {
+        "${part.pathOnHost.substring(part.pathOnHost.lastIndexOf('/') + 1)}"
+    }
+
     File zipPart(PlmFreeCadPart part, Long version = null) {
         if (version != null) {
             part = part.getHistory()[version]
@@ -457,7 +464,7 @@ class PlmFreeCadUiService implements WebAttributes {
         ZipOutputStream zipOut = new ZipOutputStream(fos)
         part.allLinkedParts.each {
             FileInputStream fis = new FileInputStream(new File("${storePath}/${it.plmFilePath}"))
-            ZipEntry zipEntry = new ZipEntry(it.pathOnHost.substring(it.pathOnHost.lastIndexOf('/') + 1))
+            ZipEntry zipEntry = new ZipEntry(partFileName(it))
             zipEntry.setTime((long)(part.mTimeNs / 1000000))
             try {
                 zipOut.putNextEntry(zipEntry)
@@ -509,7 +516,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 return False
             
             f = MyFilter()
-            step = '/tmp/model/${part.label.replace("'", "\\'")}.FCStd'
+            step = "/tmp/model/${partFileName(part).replace("\"", "'")}"
             webp = '${filePath}'
             glb = '${glbPath + '/' + part.plmContentShaOne + ".glb"}'
             
