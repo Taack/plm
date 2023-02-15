@@ -69,8 +69,8 @@ class PlmController implements WebAttributes {
         render 'Not done Yet ..'
     }
 
-    def showPart(PlmFreeCadPart part, Long partVersion) {
-        taackUiSimpleService.show(plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, params.boolean('isHistory')), buildMenu())
+    def showPart(PlmFreeCadPart part, Long partVersion, Boolean isHistory) {
+        taackUiSimpleService.show(plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, false, isHistory), isHistory ? null : buildMenu())
     }
 
     def previewPart(PlmFreeCadPart part, Long partVersion) {

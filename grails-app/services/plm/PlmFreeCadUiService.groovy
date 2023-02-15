@@ -245,7 +245,7 @@ class PlmFreeCadUiService implements WebAttributes {
         }
 
         new UiBlockSpecifier().ui {
-            ajaxBlock 'showPartBlock', {
+            ajaxBlock 'showPartPreviewLast', !isHistory, {
                 show "Status", new UiShowSpecifier().ui(part, {
                     section "Version", {
                         if (part.active) field "Version", "#${part.computedVersion}"
@@ -264,25 +264,26 @@ class PlmFreeCadUiService implements WebAttributes {
                     }
                 }), BlockSpec.Width.QUARTER, {
                     action "Download Model Zip File", ActionIcon.DOWNLOAD, PlmController.&downloadPart as MethodClosure, [id: part.id, partVersion: part.computedVersion ?: 0]
-                    action "Add Attachment", ActionIcon.IMPORT, PlmController.&addAttachment as MethodClosure, part.id, true
+                    if (!isHistory) action "Add Attachment", ActionIcon.IMPORT, PlmController.&addAttachment as MethodClosure, part.id, true
                 }
             }
             show part.originalName, new UiShowSpecifier().ui(part, {
                 field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}"></div>"""
             }), BlockSpec.Width.QUARTER
-            if (part.active)
+            if (!isHistory) {
                 show 'Last Comment', new UiShowSpecifier().ui(part, {
                     field Markdown.getContentHtml(part.commentVersion), Style.MARKDOWN_BODY
                 }), BlockSpec.Width.HALF, {
                     if (isMail)
                         action "<b>See Part ...</b>", ActionIcon.SHOW, PlmController.&showPart as MethodClosure, part.id
                 }
+            }
             if (!isMail && !isHistory) {
-
                 if (part.attachments?.size() > 0) {
-                    table "Attachments", attachmentUiService.buildAttachmentsTable(part.attachments)
+                    ajaxBlock "showPartAttachment", {
+                        table "Attachments", attachmentUiService.buildAttachmentsTable(part.attachments)
+                    }
                 }
-
 
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
                 if (!parentLinks.empty) {
@@ -348,8 +349,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                         rowField diff.toString()
                                         rowColumn {
                                             partVersionOcc++
-
-                                            rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc, isHistory: true]
+                                            rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc, isHistory: true], true
                                             rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}"></div>"""
                                         }
                                     }
