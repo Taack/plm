@@ -1,5 +1,6 @@
 package plm
 
+import attachement.AttachmentUiService
 import grails.compiler.GrailsCompileStatic
 import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
@@ -42,6 +43,7 @@ class PlmFreeCadUiService implements WebAttributes {
 
     TaackSimpleFilterService taackSimpleFilterService
     SpringSecurityService springSecurityService
+    AttachmentUiService attachmentUiService
 
     static final singleton = new Object()
 
@@ -205,7 +207,7 @@ class PlmFreeCadUiService implements WebAttributes {
             paginate(20, params.long("offset"), objs.bValue)
             for (def obj : objs.aValue) {
                 row {
-                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.version ?: 0}"></div>"""
+                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}"></div>"""
                     rowColumn {
                         rowField obj.dateCreated.format('yyyy-MM-dd hh:mm:ss')
                         rowField obj.userCreated.username
@@ -243,27 +245,30 @@ class PlmFreeCadUiService implements WebAttributes {
         }
 
         new UiBlockSpecifier().ui {
-            show "Status", new UiShowSpecifier().ui(part, {
-                section "Version", {
-                    if (part.active) field "Version", "#${part.version}"
-                    if (!part.active) field "Not ACTIVE", Style.EMPHASIS + Style.RED
-                    fieldLabeled part.dateCreated_
-                    fieldLabeled part.userUpdated_
-                    fieldLabeled part.originalName_
-                    fieldLabeled part.plmContentType_
-                    fieldLabeled part.plmFileLastUpdated_
-                    fieldLabeled part.plmFileUserUpdated_
-                    fieldLabeled part.plmFileDateCreated_
-                    fieldLabeled part.plmFileUserCreated_
-                    fieldLabeled part.plmContentType_
-                    field "Status", part.status_, Style.EMPHASIS
-                    fieldLabeled part.lockedBy_
+            ajaxBlock 'showPartBlock', {
+                show "Status", new UiShowSpecifier().ui(part, {
+                    section "Version", {
+                        if (part.active) field "Version", "#${part.computedVersion}"
+                        if (!part.active) field "Not ACTIVE", Style.EMPHASIS + Style.RED
+                        fieldLabeled part.dateCreated_
+                        fieldLabeled part.userUpdated_
+                        fieldLabeled part.originalName_
+                        fieldLabeled part.plmContentType_
+                        fieldLabeled part.plmFileLastUpdated_
+                        fieldLabeled part.plmFileUserUpdated_
+                        fieldLabeled part.plmFileDateCreated_
+                        fieldLabeled part.plmFileUserCreated_
+                        fieldLabeled part.plmContentType_
+                        field "Status", part.status_, Style.EMPHASIS
+                        fieldLabeled part.lockedBy_
+                    }
+                }), BlockSpec.Width.QUARTER, {
+                    action "Download Model Zip File", ActionIcon.DOWNLOAD, PlmController.&downloadPart as MethodClosure, [id: part.id, partVersion: part.computedVersion ?: 0]
+                    action "Add Attachment", ActionIcon.IMPORT, PlmController.&addAttachment as MethodClosure, part.id, true
                 }
-            }), BlockSpec.Width.QUARTER, {
-                action "Download Model Zip File", ActionIcon.DOWNLOAD, PlmController.&downloadPart as MethodClosure, [id: part.id, partVersion: part.version ?: 0]
             }
             show part.originalName, new UiShowSpecifier().ui(part, {
-                field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.version ?: 0}"></div>"""
+                field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}"></div>"""
             }), BlockSpec.Width.QUARTER
             if (part.active)
                 show 'Last Comment', new UiShowSpecifier().ui(part, {
@@ -273,6 +278,12 @@ class PlmFreeCadUiService implements WebAttributes {
                         action "<b>See Part ...</b>", ActionIcon.SHOW, PlmController.&showPart as MethodClosure, part.id
                 }
             if (!isMail && !isHistory) {
+
+                if (part.attachments?.size() > 0) {
+                    table "Attachments", attachmentUiService.buildAttachmentsTable(part.attachments)
+                }
+
+
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
                 if (!parentLinks.empty) {
                     def containerParts = parentLinks*.parentPart.findAll { it.active }
@@ -332,7 +343,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                         if (p.plmFileUserCreated != i.plmFileUserCreated) diff << "<li>Declared user created became from ${p.plmFileUserCreated} to <b>${i.plmFileUserCreated}</b></li>"
                                         if (p.plmFileUserUpdated != i.plmFileUserUpdated) diff << "<li>Declared user updated became from ${p.plmFileUserUpdated} to <b>${i.plmFileUserUpdated}</b></li>"
                                         if (p.comment != i.comment) diff << "<li>Comment became from ${p.comment} to <b>${i.comment}</b></li>"
-                                        if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort() || p.plmLinks*.part.version.sort() != i.plmLinks*.part.version.sort()) diff << "<li>Links became from [${p.plmLinks*.part.collect { it.label + ' v' + it.version }.join(', ')}] to [${i.plmLinks*.part.collect { it.label + ' v' + it.version }.join(', ')}]"
+                                        if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort() || p.plmLinks*.part.computedVersion.sort() != i.plmLinks*.part.computedVersion.sort()) diff << "<li>Links became from [${p.plmLinks*.part.collect { it.label + ' v' + it.computedVersion }.join(', ')}] to [${i.plmLinks*.part.collect { it.label + ' v' + it.computedVersion }.join(', ')}]"
                                         diff << "</ul>"
                                         rowField diff.toString()
                                         rowColumn {
@@ -424,7 +435,7 @@ class PlmFreeCadUiService implements WebAttributes {
             pToLo[plpb.key]?.each { parent ->
                 def pl = PlmFreeCadLink.findByPartAndParentPart(part, parent)
                 if (!pl) {
-                    pl = new PlmFreeCadLink(part: part, partLinkVersion: part.version, parentPart: parent, userCreated: u)
+                    pl = new PlmFreeCadLink(part: part, partLinkVersion: part.computedVersion, parentPart: parent, userCreated: u)
                 }
                 pl.linkedObject = plpb.value.linkedObject
                 pl.userUpdated = u

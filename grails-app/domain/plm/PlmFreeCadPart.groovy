@@ -3,6 +3,7 @@ package plm
 
 import grails.compiler.GrailsCompileStatic
 import groovy.transform.CompileStatic
+import org.taack.Attachment
 import org.taack.User
 import taack.ast.annotation.TaackFieldEnum
 import taack.domain.IDomainHistory
@@ -38,6 +39,8 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
     Date dateCreated
     Date lastUpdated
 
+    Long computedVersion = 0
+
     User userCreated
     User userUpdated
 
@@ -65,8 +68,6 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
     PlmFreeCadPart nextVersion
     Long cTimeNs
     Long mTimeNs
-//    String historyComputed
-//    Long previousVersionComputed
 
     PlmFreeCadPartStatus status = PlmFreeCadPartStatus.CREATED
 
@@ -85,21 +86,15 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
 
     static hasMany = [
             plmLinks: PlmFreeCadLink,
-            plmLinksOld: PlmFreeCadLink
+            plmLinksOld: PlmFreeCadLink,
+            attachments  : Attachment,
     ]
 
     static mapping = {
+        version false
         comment type: 'text'
         commentVersion type: 'text'
-//        WORKS ONLY WITH POSTGRESQL !!!
-//        historyComputed formula: '(SELECT array(SELECT t.id FROM plm_free_cad_part t WHERE t.next_version_id = id or t.id = id order by t.creation_order))'
-//        previousVersionComputed formula: '(' +
-//                'select ' +
-//                '   case\n' +
-//                '      when creation_order = 1 then next_version_id\n' +
-//                '      when (select ti2.id from plm_free_cad_part ti2 where ti2.creation_order < creation_order and ti2.next_version_id = next_version_id order by ti2.creation_order desc limit 1) is not null then (select ti2.id from plm_free_cad_part ti2 where ti2.creation_order < creation_order and ti2.next_version_id = next_version_id order by ti2.creation_order desc limit 1)\n' +
-//                '      else next_version_id' +
-//                '   end)\n'
+        computedVersion column: '`version`'
     }
 
     static mappedBy = [plmLinks: "parentPart", plmLinksOld: "none"]
@@ -109,8 +104,8 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
         if (this.id) {
             PlmFreeCadPart oldPart = new PlmFreeCadPart()
             oldPart.userCreated = userUpdated
-            log.info "PlmFreeCadPart::cloneDirectObjectData ${version} ${userCreated}: ${dateCreated}, ${userUpdated}: ${lastUpdated}"
-            oldPart.creationOrder = version + 1
+            log.info "PlmFreeCadPart::cloneDirectObjectData ${computedVersion} ${userCreated}: ${dateCreated}, ${userUpdated}: ${lastUpdated}"
+            oldPart.creationOrder = computedVersion++
             oldPart.active = false
             oldPart.nextVersion = this
             oldPart.lockedBy = lockedBy
@@ -140,7 +135,6 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
 
     @Override
     List<PlmFreeCadPart> getHistory() {
-//        return historyComputed?.replaceAll("[{}\"]", "")?.split(',')?.collect { read(it) }
         try {
             return (PlmFreeCadPart.findAllByNextVersion(this) + this).sort {
                 (it as PlmFreeCadPart).creationOrder
@@ -152,7 +146,6 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
     }
 
     PlmFreeCadPart getPreviousVersion() {
-        //read(previousVersionComputed)
         if (creationOrder == 1) return nextVersion
         else {
             def t = PlmFreeCadPart.find("from PlmFreeCadPart t where creationOrder < :thisCreationOrder and nextVersion.id = :thisNextVersionId order by creationOrder desc", [thisCreationOrder: creationOrder, thisNextVersionId: nextVersion?.id ?: id])

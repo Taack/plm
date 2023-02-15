@@ -1,11 +1,13 @@
 package plm
 
+import attachement.AttachmentUiService
 import grails.compiler.GrailsCompileStatic
 import grails.gorm.transactions.Transactional
 import grails.plugin.springsecurity.annotation.Secured
 import grails.web.api.WebAttributes
 import org.codehaus.groovy.runtime.MethodClosure
 import org.springframework.web.multipart.MultipartRequest
+import org.taack.Attachment
 import taack.ast.type.FieldInfo
 import taack.base.TaackMetaModelService
 import taack.base.TaackSimpleSaveService
@@ -23,6 +25,7 @@ class PlmController implements WebAttributes {
     PlmFreeCadUiService plmFreeCadUiService
     TaackMetaModelService taackMetaModelService
     TaackSimpleSaveService taackSimpleSaveService
+    AttachmentUiService attachmentUiService
 
     protected final String tr(final String code, final Locale locale = null) {
         plmUiService.tr(code, locale)
@@ -103,6 +106,30 @@ class PlmController implements WebAttributes {
                 }
             }
         })
+    }
+
+    def addAttachment(PlmFreeCadPart part) {
+        taackUiSimpleService.show(new UiBlockSpecifier().ui {
+            modal {
+                ajaxBlock "addAttachment", {
+                    form "Upload a File",
+                            AttachmentUiService.buildAttachmentForm(
+                                    new Attachment(fileOrigin: controllerName),
+                                    this.&saveAttachment as MethodClosure,
+                                    part.id
+                            ),
+                            BlockSpec.Width.MAX
+                }
+            }
+        })
+    }
+
+    @Transactional
+    def saveAttachment() {
+        def p = PlmFreeCadPart.get(params.long('objectId'))
+        def att = attachmentUiService.saveAttachment()
+        p.addToAttachments(att)
+        taackUiSimpleService.ajaxReload()
     }
 
 }
