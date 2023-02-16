@@ -1,6 +1,7 @@
 package plm
 
 import attachement.AttachmentUiService
+import crew.AttachmentController
 import grails.compiler.GrailsCompileStatic
 import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
@@ -9,6 +10,7 @@ import org.apache.commons.io.FileUtils
 import org.codehaus.groovy.runtime.MethodClosure
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.taack.Term
 import org.taack.User
 import plm.freecad.FreecadPlm
 import taack.base.TaackSimpleFilterService
@@ -82,6 +84,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def p = new PlmFreeCadPart(active: true, nextVersion: null, status: null)
         def l = new PlmFreeCadLink()
         def u = new User()
+        def t = new Term()
         new UiFilterSpecifier().ui PlmFreeCadPart, {
             section 'User', {
                 filterField p.lockedBy_, u.username_
@@ -97,7 +100,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 filterField p.label_
                 filterField p.status_
             }
-            section 'Links', {
+            section 'Used In', {
                 filterField p.plmLinks_, l.part_, p.originalName_
             }
             section 'Plm File', {
@@ -105,6 +108,9 @@ class PlmFreeCadUiService implements WebAttributes {
                 filterField p.plmFileDateCreated_
                 filterField p.plmFileUserUpdated_
                 filterField p.plmFileLastUpdated_
+            }
+            section 'Tags', {
+                filterField p.tags_, t.name_
             }
         }
     }
@@ -132,6 +138,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     sortableFieldHeader l.linkCopyOnChange_
                     sortableFieldHeader l.part_, p.label_
                 }
+                fieldHeader 'Tags'
             }
             def objs = taackSimpleFilterService.list(PlmFreeCadLink, 20, part.plmLinks*.id as Collection)
             for (def o : objs.aValue) {
@@ -154,6 +161,7 @@ class PlmFreeCadUiService implements WebAttributes {
                         rowLink 'See Part', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, o.part.id, false
                         rowField o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject
                     }
+                    rowField o.part.tags*.name?.join(', ')
                 }
             }
         }
@@ -163,6 +171,7 @@ class PlmFreeCadUiService implements WebAttributes {
         new UiFormSpecifier().ui part, {
             field part.commentVersion_
             field part.status_
+            ajaxField part.tags_, AttachmentController.&selectTagsM2M as MethodClosure
             formAction 'Update', PlmController.&savePart as MethodClosure, true
         }
     }
@@ -192,12 +201,13 @@ class PlmFreeCadUiService implements WebAttributes {
                 }
                 column {
                     sortableFieldHeader p.lockedBy_, u.username_
-                    sortableFieldHeader p.commentVersion_
+                    sortableFieldHeader p.computedVersion_
                 }
                 column {
                     sortableFieldHeader p.label_
                     sortableFieldHeader p.status_
                 }
+                fieldHeader 'Tags'
             }
             def f = new UiFilterSpecifier().ui PlmFreeCadPart, {
                 filterFieldExpressionBool(null, new FilterExpression(p.nextVersion_, Operator.EQ, null), true)
@@ -226,7 +236,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     }
                     rowColumn {
                         rowField obj.lockedBy?.username
-                        rowField obj.commentVersion
+                        rowField obj.computedVersion
                     }
 
                     rowColumn {
@@ -234,6 +244,7 @@ class PlmFreeCadUiService implements WebAttributes {
                         rowField obj.label, Style.BLUE
                         rowField obj.status_
                     }
+                    rowField obj.tags*.name?.join(', ')
                 }
             }
         }
@@ -261,6 +272,7 @@ class PlmFreeCadUiService implements WebAttributes {
                         fieldLabeled part.plmContentType_
                         field "Status", part.status_, Style.EMPHASIS
                         fieldLabeled part.lockedBy_
+                        fieldLabeled part.tags_
                     }
                 }), BlockSpec.Width.QUARTER, {
                     action "Download Model Zip File", ActionIcon.DOWNLOAD, PlmController.&downloadPart as MethodClosure, [id: part.id, partVersion: part.computedVersion ?: 0]
@@ -345,6 +357,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                         if (p.plmFileUserUpdated != i.plmFileUserUpdated) diff << "<li>Declared user updated became from ${p.plmFileUserUpdated} to <b>${i.plmFileUserUpdated}</b></li>"
                                         if (p.comment != i.comment) diff << "<li>Comment became from ${p.comment} to <b>${i.comment}</b></li>"
                                         if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort() || p.plmLinks*.part.computedVersion.sort() != i.plmLinks*.part.computedVersion.sort()) diff << "<li>Links became from [${p.plmLinks*.part.collect { it.label + ' v' + it.computedVersion }.join(', ')}] to [${i.plmLinks*.part.collect { it.label + ' v' + it.computedVersion }.join(', ')}]"
+                                        if (p.tags*.id.sort() != i.tags*.id.sort()) diff << "<li>Tags became from [${p.tags*.name.join(', ')}] to [${i.tags*.name.join(', ')}]"
                                         diff << "</ul>"
                                         rowField diff.toString()
                                         rowColumn {

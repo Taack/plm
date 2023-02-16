@@ -4,6 +4,7 @@ package plm
 import grails.compiler.GrailsCompileStatic
 import groovy.transform.CompileStatic
 import org.taack.Attachment
+import org.taack.Term
 import org.taack.User
 import taack.ast.annotation.TaackFieldEnum
 import taack.domain.IDomainHistory
@@ -62,6 +63,7 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
     String commentVersion
 
     Set<PlmFreeCadLink> plmLinks
+    Set<Term> tags
 
     Long creationOrder = Long.MAX_VALUE
     Boolean active = true
@@ -88,6 +90,7 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
             plmLinks: PlmFreeCadLink,
             plmLinksOld: PlmFreeCadLink,
             attachments  : Attachment,
+            tags  : Term,
     ]
 
     static mapping = {
@@ -127,6 +130,9 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
             oldPart.status = status
             plmLinks.each {
                 oldPart.addToPlmLinks(it)
+            }
+            tags.each {
+                oldPart.addToTags(it)
             }
             return oldPart
         }

@@ -94,7 +94,7 @@ class PlmController implements WebAttributes {
     @Transactional
     def savePart() {
         def p = new PlmFreeCadPart()
-        taackSimpleSaveService.saveThenReloadOrRenderErrors(PlmFreeCadPart, [null, p.commentVersion_, p.status_] as FieldInfo[])
+        taackSimpleSaveService.saveThenReloadOrRenderErrors(PlmFreeCadPart, [null, p.commentVersion_, p.status_, p.tags_] as FieldInfo[])
     }
 
     def model() {
