@@ -479,6 +479,10 @@ class PlmFreeCadUiService implements WebAttributes {
         "${part.pathOnHost.substring(part.pathOnHost.lastIndexOf('/') + 1)}"
     }
 
+    private static String partFilePath(PlmFreeCadPart part, PlmFreeCadPart linkPart) {
+        "${linkPart.pathOnHost - part.pathOnHost.substring(0, part.pathOnHost.lastIndexOf('/'))}"
+    }
+
     File zipPart(PlmFreeCadPart part, Long version = null) {
         if (version != null) {
             part = part.getHistory()[version]
@@ -489,7 +493,7 @@ class PlmFreeCadUiService implements WebAttributes {
         ZipOutputStream zipOut = new ZipOutputStream(fos)
         part.allLinkedParts.each {
             FileInputStream fis = new FileInputStream(new File("${storePath}/${it.plmFilePath}"))
-            ZipEntry zipEntry = new ZipEntry(partFileName(it))
+            ZipEntry zipEntry = new ZipEntry(partFilePath(part, it))
             zipEntry.setTime((long) (part.mTimeNs / 1000000))
             try {
                 zipOut.putNextEntry(zipEntry)
@@ -598,7 +602,7 @@ class PlmFreeCadUiService implements WebAttributes {
             Process p = cmd.execute()
             int occ = 0
             println "COUCOUCOU $conv"
-            while (!new File(filePath).exists() && occ++ < 40) {
+            while (!new File(filePath).exists() && occ++ < 60) {
                 sleep(1000)
                 println "Wait $occ ${new File(filePath).exists()} ${filePath}"
             }
