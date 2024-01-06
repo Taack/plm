@@ -5,13 +5,13 @@ buildscript {
 }
 
 plugins {
-    id 'taack-grails-plugin.java-conventions'
+    id 'taack-grails-plugin'
 }
 
 apply plugin: 'com.google.protobuf'
 
 dependencies {
-    implementation 'com.google.protobuf:protobuf-java:3.19.4'
+    implementation 'com.google.protobuf:protobuf-java:3.25.1'
     implementation 'org.codehaus.groovy:groovy-dateutil'
 }
 
@@ -28,7 +28,7 @@ protobuf {
         }
     } else {
         protoc {
-            artifact = 'com.google.protobuf:protoc:3.19.4'
+            artifact = 'com.google.protobuf:protoc:3.25.1'
         }
     }
 

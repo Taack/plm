@@ -8,7 +8,6 @@ import grails.plugin.springsecurity.SpringSecurityService
 import grails.web.api.WebAttributes
 import org.apache.commons.io.FileUtils
 import org.codehaus.groovy.runtime.MethodClosure
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.taack.Term
 import org.taack.User
@@ -40,8 +39,8 @@ import java.util.zip.ZipOutputStream
 @GrailsCompileStatic
 class PlmFreeCadUiService implements WebAttributes {
 
-    @Autowired
-    PlmConfiguration plmConfiguration
+    @Value('${plm.freecadPath}')
+    String freecadPath
 
     TaackSimpleFilterService taackSimpleFilterService
     SpringSecurityService springSecurityService
@@ -74,10 +73,11 @@ class PlmFreeCadUiService implements WebAttributes {
         FileUtils.forceMkdir(new File(glbPath))
         FileUtils.forceMkdir(new File(previewPath))
         FileUtils.forceMkdir(new File(zipPath))
-        if (!new File(plmConfiguration.freecadPath).exists()) {
+        if (!new File(freecadPath).exists()) {
             log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
             throw new RuntimeException('Freecad path not configured ... Stopping')
         }
+
     }
 
     UiFilterSpecifier buildPartFilter() {
@@ -598,7 +598,7 @@ class PlmFreeCadUiService implements WebAttributes {
             Path convPath = Files.createTempFile("FreeCAD-Script", ".py")
             File convFile = convPath.toFile()
             convFile.append(conv)
-            String cmd = "/usr/bin/xvfb-run ${plmConfiguration.freecadPath} --single-instance ${convFile.path}"
+            String cmd = "/usr/bin/xvfb-run ${freecadPath} --single-instance ${convFile.path}"
             Process p = cmd.execute()
             int occ = 0
             println "COUCOUCOU $conv"
