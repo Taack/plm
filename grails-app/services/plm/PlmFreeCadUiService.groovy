@@ -42,6 +42,21 @@ class PlmFreeCadUiService implements WebAttributes {
     @Value('${plm.freecadPath}')
     String freecadPath
 
+    @Value('${exe.unzipPath}')
+    String unzipPath
+
+    @Value('${exe.convertPath}')
+    String convertPath
+
+    @Value('${plm.singleInstance}')
+    Boolean singleInstance
+
+    @Value('${plm.xvfbRun}')
+    Boolean xvfbRun
+
+    @Value('${plm.useWeston}')
+    Boolean useWeston
+
     TaackSimpleFilterService taackSimpleFilterService
     SpringSecurityService springSecurityService
     AttachmentUiService attachmentUiService
@@ -73,9 +88,25 @@ class PlmFreeCadUiService implements WebAttributes {
         FileUtils.forceMkdir(new File(glbPath))
         FileUtils.forceMkdir(new File(previewPath))
         FileUtils.forceMkdir(new File(zipPath))
+        log.info "singleInstance = $singleInstance, xvfbRun = $xvfbRun, useWeston = $useWeston"
         if (!new File(freecadPath).exists()) {
             log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
             throw new RuntimeException('Freecad path not configured ... Stopping')
+        }
+
+        if (!new File(unzipPath).exists()) {
+            log.error "configure plm.unzipPath in server/grails-app/conf/Application.yml"
+            throw new RuntimeException('unzip path not configured ... Stopping')
+        }
+
+        if (useWeston && !new File("/usr/bin/weston").exists()) {
+            log.error "useWeston is true in server/grails-app/conf/Application.yml but no weston"
+            throw new RuntimeException('weston not found ... Stopping')
+        }
+
+        if (!new File(convertPath).exists()) {
+            log.error "no convert in $convertPath. please, install ImageMagick"
+            throw new RuntimeException('convert not found ... Stopping')
         }
 
     }
@@ -519,16 +550,22 @@ class PlmFreeCadUiService implements WebAttributes {
             part = part.getHistory()[version]
         }
         String filePath = previewPath + '/' + part.plmContentShaOne + '.webp'
-        if (new File(filePath).exists()) return new File(filePath)
+        if (new File(filePath).exists())
+            return new File(filePath)
         else {
-            createPreview(part)
+            try {
+                createPreview(part)
+            } catch (Throwable t) {
+                log.error(t.message)
+                t.printStackTrace()
+            }
         }
         return new File(filePath)
     }
 
     private void createPreview(PlmFreeCadPart part) {
         def zipFile = zipPart(part)
-        String filePath = previewPath + '/' + part.plmContentShaOne + '.webp'
+        String filePath = previewPath + '/' + part.plmContentShaOne + '.bmp'
         if (new File(filePath).exists()) return
         synchronized (singleton) {
             if (new File('/tmp/model').exists()) FileUtils.forceDelete(new File('/tmp/model'))
@@ -558,33 +595,23 @@ class PlmFreeCadUiService implements WebAttributes {
             #    imdi.installEventFilter(f)
 
             ImportGui.export(FreeCAD.ActiveDocument.RootObjects, glb)
-            
-            #if (Gui.ActiveDocument.ActiveView != 'View3DInventor'):
-            #    Gui.getMainWindow().centralWidget().activeSubWindow().installEventFilter(f)
-            #    Gui.getMainWindow().centralWidget().activeSubWindow().close()
-            #    Gui.getMainWindow().centralWidget().activeSubWindow().installEventFilter(f)
-            #else:
-            #    Gui.getMainWindow().centralWidget().activeSubWindow().installEventFilter(f)
-            
+                        
             sw = Gui.getMainWindow().centralWidget().activeSubWindow()
-            #sw.installEventFilter(f)
             
             count = 5
             
-            while count > 0 and None != sw and None != Gui.ActiveDocument and str(Gui.ActiveDocument.ActiveView) != 'View3DInventor':
-                print('AUO33 ' + str(sw) + ' ' + str(Gui.ActiveDocument.ActiveView))
+            while count > 0 and None != sw and None != Gui.ActiveDocument and str(FreeCADGui.ActiveDocument.ActiveView) != 'View3DInventor':
+                print('AUO33 ' + str(sw) + ' ' + str(FreeCADGui.ActiveDocument.ActiveView))
                 sw.close()
                 sw = Gui.getMainWindow().centralWidget().activeSubWindow()
                 sw.installEventFilter(f)
                 count -= 1
             
-            print('AUO' + str(Gui.ActiveDocument.ActiveView))
-            Gui.activeDocument().activeView().viewIsometric()
+            print('AUO' + str(FreeCADGui.ActiveDocument.ActiveView))
+            FreeCADGui.ActiveDocument.ActiveView.viewIsometric()
             Gui.SendMsgToActiveView("ViewFit")
-            Gui.ActiveDocument.ActiveView.saveImage(webp, 480, 300, 'Current')
-            #QtCore.QCoreApplication.quit()
-            #Gui.SendMsgToActiveView("Save")
-            #d.save()
+            FreeCADGui.ActiveDocument.ActiveView.saveImage(webp, 480, 300, 'Current')
+
             mw=FreeCADGui.getMainWindow()
             mdi=mw.findChildren(QtGui.QMdiSubWindow)
             for imdi in iter(mdi):
@@ -594,20 +621,42 @@ class PlmFreeCadUiService implements WebAttributes {
             App.closeDocument(d.Name)
 
             Gui.runCommand('Std_CloseAllWindows',0)
+            Gui.runCommand('Std_Quit',0)
             """.stripIndent()
             Path convPath = Files.createTempFile("FreeCAD-Script", ".py")
             File convFile = convPath.toFile()
             convFile.append(conv)
-            String cmd = "/usr/bin/xvfb-run ${freecadPath} --single-instance ${convFile.path}"
-            Process p = cmd.execute()
-            int occ = 0
-            println "COUCOUCOU $conv"
-            while (!new File(filePath).exists() && occ++ < 60) {
-                sleep(1000)
-                println "Wait $occ ${new File(filePath).exists()} ${filePath}"
+            String cmd
+            Process pWeston
+            if (useWeston) {
+                String pWestonCmd = "/usr/bin/weston --no-config --socket=wl-freecad --backend=headless"
+                log.info "$pWestonCmd"
+                pWeston = pWestonCmd.execute()
+                cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance?'--single-instance':''} ${convFile.path}"
+            } else {
+                cmd = "${xvfbRun ? "/usr/bin/xvfb-run ":""}${freecadPath} ${singleInstance?'--single-instance':''} ${convFile.path}"
             }
-            println "Deleting ${convPath.toString()}"
-            Files.deleteIfExists(convPath)
+            if (cmd) {
+                log.info "$cmd"
+                Process pFreecad = cmd.execute()
+                int occ = 0
+                println "Script:\n$conv"
+                while (!new File(filePath).exists() && occ++ < 60) {
+                    sleep(1000)
+                    println "Wait $occ ${new File(filePath).exists()} ${filePath}"
+                }
+                println "Deleting ${convPath.toString()}"
+                Files.deleteIfExists(convPath)
+            }
+            if (useWeston && pWeston) {
+                println "Deleting ${convPath.toString()} & killing weston"
+                pWeston.waitForOrKill(1000)
+            }
+            if (new File(filePath).exists()) {
+                "/usr/bin/convert ${filePath} ${previewPath + '/' + part.plmContentShaOne + '.webp'}".execute()
+            } else {
+                log.error "No BMP file preview ..."
+            }
         }
     }
 }
