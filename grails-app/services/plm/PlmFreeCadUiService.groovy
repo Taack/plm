@@ -554,7 +554,7 @@ class PlmFreeCadUiService implements WebAttributes {
             return new File(filePath)
         else {
             try {
-                createPreview(part)
+                createPreview(part, filePath)
             } catch (Throwable t) {
                 log.error(t.message)
                 t.printStackTrace()
@@ -563,63 +563,34 @@ class PlmFreeCadUiService implements WebAttributes {
         return new File(filePath)
     }
 
-    private void createPreview(PlmFreeCadPart part) {
+    private void createPreview(PlmFreeCadPart part, String filePath) {
         def zipFile = zipPart(part)
-        String filePath = previewPath + '/' + part.plmContentShaOne + '.bmp'
         if (new File(filePath).exists()) return
         synchronized (singleton) {
             if (new File('/tmp/model').exists()) FileUtils.forceDelete(new File('/tmp/model'))
             "unzip ${zipFile.path} -d /tmp/model".execute()
             String conv = """\
-            import sys
-            import ImportGui
-            from PySide import QtGui, QtCore
+            import sys, os
                         
-            class MyFilter (QtCore.QObject):
-              def eventFilter(self, obj, ev):
-                if issubclass(type(ev), QtGui.QCloseEvent):
-                  return True
-                return False
-            
-            f = MyFilter()
             step = "/tmp/model/${partFileName(part).replace("\"", "'")}"
             webp = '${filePath}'
-            glb = '${glbPath + '/' + part.plmContentShaOne + ".glb"}'
             
-            d = App.openDocument(step)
-            mw=FreeCADGui.getMainWindow()
-            mdi=mw.findChildren(QtGui.QMdiSubWindow)
-
-            #f=MyFilter()
-            #for imdi in iter(mdi):
-            #    imdi.installEventFilter(f)
-
-            ImportGui.export(FreeCAD.ActiveDocument.RootObjects, glb)
-                        
-            sw = Gui.getMainWindow().centralWidget().activeSubWindow()
-            
-            count = 5
-            
-            while count > 0 and None != sw and None != Gui.ActiveDocument and str(FreeCADGui.ActiveDocument.ActiveView) != 'View3DInventor':
-                print('AUO33 ' + str(sw) + ' ' + str(FreeCADGui.ActiveDocument.ActiveView))
-                sw.close()
-                sw = Gui.getMainWindow().centralWidget().activeSubWindow()
-                sw.installEventFilter(f)
-                count -= 1
-            
-            print('AUO' + str(FreeCADGui.ActiveDocument.ActiveView))
-            FreeCADGui.ActiveDocument.ActiveView.viewIsometric()
-            Gui.SendMsgToActiveView("ViewFit")
-            FreeCADGui.ActiveDocument.ActiveView.saveImage(webp, 480, 300, 'Current')
-
-            mw=FreeCADGui.getMainWindow()
-            mdi=mw.findChildren(QtGui.QMdiSubWindow)
-            for imdi in iter(mdi):
-                imdi.installEventFilter(f)
-            #    imdi.deleteLater()
-
-            App.closeDocument(d.Name)
-
+            if (os.path.isfile(webp)):
+              print("File exists, exiting ...")
+            else:
+              d = App.openDocument(step)
+              FreeCADGui.ActiveDocument.ActiveView.setAnimationEnabled(False)
+              print("Document Opened...")
+              print("FreeCADGui.ActiveDocument.ActiveView " + str(FreeCADGui.ActiveDocument.ActiveView))            
+              FreeCADGui.ActiveDocument.ActiveView.viewIsometric()
+              Gui.SendMsgToActiveView("OrthographicCamera")
+              Gui.SendMsgToActiveView("ViewAxo")
+              Gui.SendMsgToActiveView("ViewFit")
+              print("Next Save Image ...")
+              App.ParamGet("User parameter:BaseApp/Preferences/View").SetString("SavePicture", "FramebufferObject")
+              FreeCADGui.ActiveDocument.ActiveView.saveImage(webp, 1448, 1760, 'Transparent')
+              print("Saved, exiting...")
+          
             Gui.runCommand('Std_CloseAllWindows',0)
             Gui.runCommand('Std_Quit',0)
             """.stripIndent()
@@ -649,14 +620,65 @@ class PlmFreeCadUiService implements WebAttributes {
                 Files.deleteIfExists(convPath)
             }
             if (useWeston && pWeston) {
-                println "Deleting ${convPath.toString()} & killing weston"
+                println "killing weston"
                 pWeston.waitForOrKill(1000)
             }
-            if (new File(filePath).exists()) {
-                "/usr/bin/convert ${filePath} ${previewPath + '/' + part.plmContentShaOne + '.webp'}".execute()
-            } else {
-                log.error "No BMP file preview ..."
-            }
         }
+    }
+
+    private void create3dPreview(PlmFreeCadPart part) {
+        def zipFile = zipPart(part)
+        if (new File("${glbPath + '/' + part.plmContentShaOne + '.glb'}").exists()) return
+        synchronized (singleton) {
+            if (new File('/tmp/model').exists()) FileUtils.forceDelete(new File('/tmp/model'))
+            "unzip ${zipFile.path} -d /tmp/model".execute()
+            String conv = """\
+            import sys
+            import ImportGui
+            from PySide import QtGui, QtCore
+                        
+            step = "/tmp/model/${partFileName(part).replace("\"", "'")}"
+            glb = '${glbPath + '/' + part.plmContentShaOne + ".glb"}'
+            
+            d = App.openDocument(step)
+            mw=FreeCADGui.getMainWindow()
+            mdi=mw.findChildren(QtGui.QMdiSubWindow)
+            
+            ImportGui.export(FreeCAD.ActiveDocument.RootObjects, glb)
+                        
+            App.closeDocument(d.Name)
+
+            Gui.runCommand('Std_CloseAllWindows',0)
+            Gui.runCommand('Std_Quit',0)
+            """.stripIndent()
+            Path convPath = Files.createTempFile("FreeCAD-Script", ".py")
+            File convFile = convPath.toFile()
+            convFile.append(conv)
+            String cmd
+            Process pWeston
+            if (useWeston) {
+                String pWestonCmd = "/usr/bin/weston --no-config --socket=wl-freecad --backend=headless"
+                log.info "$pWestonCmd"
+                pWeston = pWestonCmd.execute()
+                cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance?'--single-instance':''} ${convFile.path}"
+            } else {
+                cmd = "${xvfbRun ? "/usr/bin/xvfb-run ":""}${freecadPath} ${singleInstance?'--single-instance':''} ${convFile.path}"
+            }
+            if (cmd) {
+                log.info "$cmd"
+                Process pFreecad = cmd.execute()
+                println "Script:\n$conv"
+                println "Deleting ${convPath.toString()}"
+                Files.deleteIfExists(convPath)
+            }
+            if (useWeston && pWeston) {
+                println "killing weston"
+                pWeston.waitForOrKill(1000)
+            }
+
+        }
+
+
+
     }
 }
