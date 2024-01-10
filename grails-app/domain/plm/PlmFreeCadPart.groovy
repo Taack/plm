@@ -12,19 +12,19 @@ import taack.domain.IEnumTransition2
 
 @CompileStatic
 enum PlmFreeCadPartStatus implements IEnumTransition2<User>  {
-    CREATED, FREE, LOCKED, FREEZE, OBSOLETE
+    CREATED, FREE, LOCKED, OBSOLETE
 
     @Override
     IEnumTransition2[] transitionsTo(User user) {
         switch (this) {
             case CREATED:
-                return [FREE, LOCKED, FREEZE, OBSOLETE] as IEnumTransition2[]
-            case LOCKED:
-                return [FREE, FREEZE] as IEnumTransition2[]
-            case FREEZE:
                 return [FREE, LOCKED] as IEnumTransition2[]
+            case LOCKED:
+                return [FREE] as IEnumTransition2[]
             case OBSOLETE:
-                return [FREE, FREEZE, LOCKED] as IEnumTransition2[]
+                return [FREE] as IEnumTransition2[]
+            case FREE:
+                return [LOCKED, OBSOLETE] as IEnumTransition2[]
         }
     }
 

@@ -58,7 +58,7 @@ class PlmFreeCadUiService implements WebAttributes {
     Boolean useWeston
 
     @Value('${exe.dot.path}')
-    Boolean dotPath
+    String dotPath
 
     TaackSimpleFilterService taackSimpleFilterService
     SpringSecurityService springSecurityService
