@@ -57,6 +57,9 @@ class PlmFreeCadUiService implements WebAttributes {
     @Value('${plm.useWeston}')
     Boolean useWeston
 
+    @Value('${exe.dot.path}')
+    Boolean dotPath
+
     TaackSimpleFilterService taackSimpleFilterService
     SpringSecurityService springSecurityService
     AttachmentUiService attachmentUiService
@@ -107,6 +110,11 @@ class PlmFreeCadUiService implements WebAttributes {
         if (!new File(convertPath).exists()) {
             log.error "no convert in $convertPath. please, install ImageMagick"
             throw new RuntimeException('convert not found ... Stopping')
+        }
+
+        if (!new File(dotPath).exists()) {
+            log.error "no dot executable in $dotPath. please, install graphviz"
+            throw new RuntimeException('"dot" executable not found ... Stopping')
         }
 
     }
