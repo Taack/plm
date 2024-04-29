@@ -7,24 +7,20 @@ import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.web.api.WebAttributes
 import org.apache.commons.io.FileUtils
-import org.codehaus.groovy.runtime.MethodClosure
+import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.beans.factory.annotation.Value
 import org.taack.Term
 import org.taack.User
 import plm.freecad.FreecadPlm
-import taack.base.TaackSimpleFilterService
-import taack.ui.base.UiBlockSpecifier
-import taack.ui.base.UiFilterSpecifier
-import taack.ui.base.UiFormSpecifier
-import taack.ui.base.UiShowSpecifier
-import taack.ui.base.UiTableSpecifier
+import taack.domain.TaackFilter
+import taack.domain.TaackFilterService
+import taack.ui.base.*
 import taack.ui.base.block.BlockSpec
 import taack.ui.base.common.ActionIcon
-import taack.ui.base.common.ActionIconStyleModifier
+import taack.ui.base.common.IconStyle
 import taack.ui.base.common.Style
 import taack.ui.base.filter.expression.FilterExpression
 import taack.ui.base.filter.expression.Operator
-import taack.ui.base.table.ColumnHeaderFieldSpec
 import taack.ui.utils.Markdown
 
 import javax.annotation.PostConstruct
@@ -60,7 +56,7 @@ class PlmFreeCadUiService implements WebAttributes {
     @Value('${exe.dot.path}')
     String dotPath
 
-    TaackSimpleFilterService taackSimpleFilterService
+    TaackFilterService taackFilterService
     SpringSecurityService springSecurityService
     AttachmentUiService attachmentUiService
 
@@ -158,7 +154,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def l = new PlmFreeCadLink()
         def p = new PlmFreeCadPart()
         def u = new User()
-        new UiTableSpecifier().ui PlmFreeCadLink, {
+        new UiTableSpecifier().ui {
             header {
                 fieldHeader 'Preview'
                 column {
@@ -179,16 +175,20 @@ class PlmFreeCadUiService implements WebAttributes {
                 }
                 fieldHeader 'Tags'
             }
-            def objs = taackSimpleFilterService.list(PlmFreeCadLink, 20, part.plmLinks*.id as Collection)
-            for (def o : objs.aValue) {
+
+            iterate(taackFilterService.getBuilder(PlmFreeCadLink)
+                    .setMaxNumberOfLine(20)
+                    .setSortOrder(TaackFilter.Order.DESC, p.dateCreated_)
+                    .addRestrictedIds(part.plmLinks*.id as Long[])
+                    .build()) { PlmFreeCadLink o ->
                 row {
                     rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}&timestamp=${o.part.mTimeNs}"></div>"""
                     rowColumn {
-                        rowField o.dateCreated
+                        rowField o.dateCreated_
                         rowField o.userCreated.username
                     }
                     rowColumn {
-                        rowField o.lastUpdated
+                        rowField o.lastUpdated_
                         rowField o.userUpdated.username
                     }
                     rowColumn {
@@ -197,7 +197,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     }
                     rowColumn {
                         rowField o.linkCopyOnChange?.toString()
-                        rowLink 'See Part', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, o.part.id, false
+                        rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, o.part.id
                         rowField o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject
                     }
                     rowField o.part.tags*.name?.join(', ')
@@ -210,16 +210,15 @@ class PlmFreeCadUiService implements WebAttributes {
         new UiFormSpecifier().ui part, {
             field part.commentVersion_
             field part.status_
-            ajaxField part.tags_, AttachmentController.&selectTagsM2M as MethodClosure
-            formAction 'Update', PlmController.&savePart as MethodClosure, true
+            ajaxField part.tags_, AttachmentController.&selectTagsM2M as MC
+            formAction PlmController.&savePart as MC
         }
     }
 
     UiTableSpecifier buildPartTable(Collection<PlmFreeCadPart> freeCadParts = null) {
         def p = new PlmFreeCadPart(active: true, nextVersion: null)
         def u = new User()
-        new UiTableSpecifier().ui PlmFreeCadPart, {
-            ColumnHeaderFieldSpec.SortableDirection d = null
+        new UiTableSpecifier().ui {
             header {
                 fieldHeader 'Preview'
                 column {
@@ -228,7 +227,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 }
                 column {
                     sortableFieldHeader p.userUpdated_, u.username_
-                    d = sortableFieldHeader ColumnHeaderFieldSpec.DefaultSortingDirection.DESC, p.lastUpdated_
+                    sortableFieldHeader p.lastUpdated_
                 }
                 column {
                     sortableFieldHeader p.plmFileUserCreated_
@@ -249,12 +248,15 @@ class PlmFreeCadUiService implements WebAttributes {
                 fieldHeader 'Tags'
             }
             def f = new UiFilterSpecifier().ui PlmFreeCadPart, {
-                filterFieldExpressionBool(null, new FilterExpression(p.nextVersion_, Operator.EQ, null), true)
+                filterFieldExpressionBool(null, new FilterExpression(p.nextVersion_, Operator.EQ, null))
             }
-            def objs = freeCadParts ?
-                    taackSimpleFilterService.list(PlmFreeCadPart, 20, d, freeCadParts*.id as Collection<Long>) : taackSimpleFilterService.list(PlmFreeCadPart, 20, f, null, d)
-            paginate(20, params.long("offset"), objs.bValue)
-            for (def obj : objs.aValue) {
+
+            iterate(taackFilterService.getBuilder(PlmFreeCadPart)
+                    .setSortOrder(TaackFilter.Order.DESC, p.dateCreated_)
+                    .setMaxNumberOfLine(20)
+                    .addFilter(f)
+                    .addRestrictedIds((freeCadParts ? freeCadParts*.id : []) as Long[])
+                    .build()) { PlmFreeCadPart obj ->
                 row {
                     rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
                     rowColumn {
@@ -275,11 +277,11 @@ class PlmFreeCadUiService implements WebAttributes {
                     }
                     rowColumn {
                         rowField obj.lockedBy?.username
-                        rowField obj.computedVersion
+                        rowField obj.computedVersion_
                     }
 
                     rowColumn {
-                        rowLink "Show It", ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, obj.id, false
+                        rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, obj.id
                         rowField obj.label, Style.BLUE
                         rowField obj.status_
                     }
@@ -294,129 +296,132 @@ class PlmFreeCadUiService implements WebAttributes {
             part = part.getHistory()[partVersion]
         }
 
-        new UiBlockSpecifier().ui {
-            ajaxBlock 'showPartPreviewLast', !isHistory, {
-                show "Status", new UiShowSpecifier().ui(part, {
-                    section "Version", {
-                        if (part.active) field "Version", "#${part.computedVersion}"
-                        if (!part.active) field "Not ACTIVE", Style.EMPHASIS + Style.RED
-                        fieldLabeled part.dateCreated_
-                        fieldLabeled part.userUpdated_
-                        fieldLabeled part.originalName_
-                        fieldLabeled part.plmContentType_
-                        fieldLabeled part.plmFileLastUpdated_
-                        fieldLabeled part.plmFileUserUpdated_
-                        fieldLabeled part.plmFileDateCreated_
-                        fieldLabeled part.plmFileUserCreated_
-                        fieldLabeled part.plmContentType_
-                        field "Status", part.status_, Style.EMPHASIS
-                        fieldLabeled part.lockedBy_
-                        fieldLabeled part.tags_
-                    }
-                }), BlockSpec.Width.QUARTER, {
-                    action "Download Model Zip File", ActionIcon.DOWNLOAD, PlmController.&downloadPart as MethodClosure, [id: part.id, partVersion: part.computedVersion ?: 0]
-                    if (!isHistory) action "Add Attachment", ActionIcon.IMPORT, PlmController.&addAttachment as MethodClosure, part.id, true
-                }
+        def showFields = new UiShowSpecifier().ui(part, {
+            section "Version", {
+                if (part.active) field "Version", "#${part.computedVersion}"
+                if (!part.active) field "Not ACTIVE", Style.EMPHASIS + Style.RED
+                fieldLabeled part.dateCreated_
+                fieldLabeled part.userUpdated_
+                fieldLabeled part.originalName_
+                fieldLabeled part.plmContentType_
+                fieldLabeled part.plmFileLastUpdated_
+                fieldLabeled part.plmFileUserUpdated_
+                fieldLabeled part.plmFileDateCreated_
+                fieldLabeled part.plmFileUserCreated_
+                fieldLabeled part.plmContentType_
+                field "Status", part.status_, Style.EMPHASIS
+                fieldLabeled part.lockedBy_
+                fieldLabeled part.tags_
             }
-            show part.originalName, new UiShowSpecifier().ui(part, {
-                field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}&timestamp=${part.mTimeNs}"></div>"""
-            }), BlockSpec.Width.QUARTER
+        })
+
+        def showPreview = new UiShowSpecifier().ui(part, {
+            field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}&timestamp=${part.mTimeNs}"></div>"""
+        })
+
+        UiBlockSpecifier b = new UiBlockSpecifier().ui {
+            show "Status", showFields, BlockSpec.Width.QUARTER, {
+                action ActionIcon.DOWNLOAD, PlmController.&downloadPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
+                if (!isHistory)
+                    action ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
+            }
+            show part.originalName, showPreview, BlockSpec.Width.QUARTER
             if (!isHistory) {
                 show 'Last Comment', new UiShowSpecifier().ui(part, {
                     field Markdown.getContentHtml(part.commentVersion), Style.MARKDOWN_BODY
                 }), BlockSpec.Width.HALF, {
                     if (isMail)
-                        action "<b>See Part ...</b>", ActionIcon.SHOW, PlmController.&showPart as MethodClosure, part.id
+                        action ActionIcon.SHOW, PlmController.&showPart as MC, part.id
                 }
             }
             if (!isMail && !isHistory) {
                 if (part.attachments?.size() > 0) {
-                    ajaxBlock "showPartAttachment", {
-                        table "Attachments", attachmentUiService.buildAttachmentsTable(part.attachments)
-                    }
+                    table "Attachments", attachmentUiService.buildAttachmentsTable(part.attachments)
                 }
 
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
                 if (!parentLinks.empty) {
                     def containerParts = parentLinks*.parentPart.findAll { it.active }
                     if (containerParts)
-                        ajaxBlock "showPartParent", {
-                            table 'Used In', buildPartTable(containerParts), BlockSpec.Width.MAX
-                        }
+                        table 'Used In', buildPartTable(containerParts), BlockSpec.Width.MAX
                 }
                 if (!part.linkedParts.empty)
-                    ajaxBlock "showPartLinks", {
-                        table 'Links', buildLinkTableFromPart(part), BlockSpec.Width.MAX
-                    }
-                ajaxBlock "showPartHistory", {
-                    table "History", new UiTableSpecifier().ui(PlmFreeCadPart, {
-                        def h = part.history
-                        PlmFreeCadPart p = null
-                        if (h) {
-                            long partVersionOcc = 0
-                            for (def i : h) {
-                                rowGroupHeader "${i.historyUserCreated} on ${i.historyDateCreated}"
-                                if (i.commentVersion && !p) {
+                    table 'Links', buildLinkTableFromPart(part), BlockSpec.Width.MAX
+                table "History", new UiTableSpecifier().ui({
+                    def h = part.history
+                    PlmFreeCadPart p = null
+                    if (h) {
+                        long partVersionOcc = 0
+                        for (def i : h) {
+                            rowGroupHeader "${i.historyUserCreated} on ${i.historyDateCreated}"
+                            if (i.commentVersion && !p) {
+                                row {
+                                    rowColumn {
+                                        rowField Markdown.getContentHtml(i.commentVersion), Style.MARKDOWN_BODY
+                                    }
+                                }
+                            } else if (!p) {
+                                row {
+                                    rowColumn {
+                                        rowField 'Initial version'
+                                    }
+                                    rowColumn {
+                                        rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
+                                        rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
+                                    }
+                                }
+                            }
+                            if (p) {
+                                if (i.commentVersion && p.commentVersion != i.commentVersion) {
                                     row {
                                         rowColumn {
                                             rowField Markdown.getContentHtml(i.commentVersion), Style.MARKDOWN_BODY
                                         }
                                     }
-                                } else if (!p) {
-                                    row {
-                                        rowColumn {
-                                            rowField 'Initial version'
-                                        }
-                                        rowColumn {
-                                            rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc, isHistory: true]
-                                            rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
-                                        }
+                                }
+                                row {
+                                    StringBuffer diff = new StringBuffer()
+                                    diff << "<ul>"
+                                    if (p.plmContentShaOne != i.plmContentShaOne) diff << "<li>Sha1 content became from ${p.plmContentShaOne} to <b>${i.plmContentShaOne}</b></li>"
+                                    if (p.lockedBy?.id != i.lockedBy?.id) diff << "<li>Locked by became from ${p.lockedBy} to <b>${i.lockedBy}</b></li>"
+                                    if (p.status != i.status) diff << "<li>Status became from ${p.status} to <b>${i.status}</b></li>"
+                                    if (p.label != i.label) diff << "<li>Label became from ${p.label} to <b>${i.label}</b></li>"
+                                    if (p.originalName != i.originalName) diff << "<li>Original Name became from ${p.originalName} to <b>${i.originalName}</b></li>"
+                                    if (p.plmContentType != i.plmContentType) diff << "<li>Content Type became from ${p.plmContentType} to <b>${i.plmContentType}</b></li>"
+                                    if (p.plmFileLastUpdated != i.plmFileLastUpdated) diff << "<li>Declared updated date became from ${p.plmFileLastUpdated} to <b>${i.plmFileLastUpdated}</b></li>"
+                                    if (p.plmFileDateCreated != i.plmFileDateCreated) diff << "<li>Declared creation Date became from ${p.plmFileDateCreated} to <b>${i.plmFileDateCreated}</b></li>"
+                                    if (p.plmFileUserCreated != i.plmFileUserCreated) diff << "<li>Declared user created became from ${p.plmFileUserCreated} to <b>${i.plmFileUserCreated}</b></li>"
+                                    if (p.plmFileUserUpdated != i.plmFileUserUpdated) diff << "<li>Declared user updated became from ${p.plmFileUserUpdated} to <b>${i.plmFileUserUpdated}</b></li>"
+                                    if (p.comment != i.comment) diff << "<li>Comment became from ${p.comment} to <b>${i.comment}</b></li>"
+                                    if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort() || p.plmLinks*.part.computedVersion.sort() != i.plmLinks*.part.computedVersion.sort()) diff << "<li>Links became from [${p.plmLinks*.part.collect { it.label + ' v' + it.computedVersion }.join(', ')}] to [${i.plmLinks*.part.collect { it.label + ' v' + it.computedVersion }.join(', ')}]"
+                                    if (p.tags*.id.sort() != i.tags*.id.sort()) diff << "<li>Tags became from [${p.tags*.name.join(', ')}] to [${i.tags*.name.join(', ')}]"
+                                    diff << "</ul>"
+                                    rowField diff.toString()
+                                    rowColumn {
+                                        partVersionOcc++
+                                        rowAction 'Access Version', ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
+                                        rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
                                     }
                                 }
-                                if (p) {
-                                    if (i.commentVersion && p.commentVersion != i.commentVersion) {
-                                        row {
-                                            rowColumn {
-                                                rowField Markdown.getContentHtml(i.commentVersion), Style.MARKDOWN_BODY
-                                            }
-                                        }
-                                    }
-                                    row {
-                                        StringBuffer diff = new StringBuffer()
-                                        diff << "<ul>"
-                                        if (p.plmContentShaOne != i.plmContentShaOne) diff << "<li>Sha1 content became from ${p.plmContentShaOne} to <b>${i.plmContentShaOne}</b></li>"
-                                        if (p.lockedBy?.id != i.lockedBy?.id) diff << "<li>Locked by became from ${p.lockedBy} to <b>${i.lockedBy}</b></li>"
-                                        if (p.status != i.status) diff << "<li>Status became from ${p.status} to <b>${i.status}</b></li>"
-                                        if (p.label != i.label) diff << "<li>Label became from ${p.label} to <b>${i.label}</b></li>"
-                                        if (p.originalName != i.originalName) diff << "<li>Original Name became from ${p.originalName} to <b>${i.originalName}</b></li>"
-                                        if (p.plmContentType != i.plmContentType) diff << "<li>Content Type became from ${p.plmContentType} to <b>${i.plmContentType}</b></li>"
-                                        if (p.plmFileLastUpdated != i.plmFileLastUpdated) diff << "<li>Declared updated date became from ${p.plmFileLastUpdated} to <b>${i.plmFileLastUpdated}</b></li>"
-                                        if (p.plmFileDateCreated != i.plmFileDateCreated) diff << "<li>Declared creation Date became from ${p.plmFileDateCreated} to <b>${i.plmFileDateCreated}</b></li>"
-                                        if (p.plmFileUserCreated != i.plmFileUserCreated) diff << "<li>Declared user created became from ${p.plmFileUserCreated} to <b>${i.plmFileUserCreated}</b></li>"
-                                        if (p.plmFileUserUpdated != i.plmFileUserUpdated) diff << "<li>Declared user updated became from ${p.plmFileUserUpdated} to <b>${i.plmFileUserUpdated}</b></li>"
-                                        if (p.comment != i.comment) diff << "<li>Comment became from ${p.comment} to <b>${i.comment}</b></li>"
-                                        if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort() || p.plmLinks*.part.computedVersion.sort() != i.plmLinks*.part.computedVersion.sort()) diff << "<li>Links became from [${p.plmLinks*.part.collect { it.label + ' v' + it.computedVersion }.join(', ')}] to [${i.plmLinks*.part.collect { it.label + ' v' + it.computedVersion }.join(', ')}]"
-                                        if (p.tags*.id.sort() != i.tags*.id.sort()) diff << "<li>Tags became from [${p.tags*.name.join(', ')}] to [${i.tags*.name.join(', ')}]"
-                                        diff << "</ul>"
-                                        rowField diff.toString()
-                                        rowColumn {
-                                            partVersionOcc++
-                                            rowLink 'Access Version', ActionIcon.SHOW * ActionIconStyleModifier.SCALE_DOWN, PlmController.&showPart as MethodClosure, part.id, [partVersion: partVersionOcc, isHistory: true], true
-                                            rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
-                                        }
-                                    }
-                                }
-                                p = i
                             }
+                            p = i
                         }
-                    }), BlockSpec.Width.MAX, {
-                        action "Add", ActionIcon.ADD, PlmController.&editPart as MethodClosure, part.id, true
                     }
+                }), BlockSpec.Width.MAX, {
+                    action ActionIcon.ADD, PlmController.&editPart as MC, part.id
                 }
             } else if (!isMail) {
                 if (!part.linkedParts.empty)
                     table 'Links', buildLinkTableFromPart(part), BlockSpec.Width.MAX
             }
+        }
+
+        if (isHistory) {
+            new UiBlockSpecifier().ui {
+                modal(b.closure)
+            }
+        } else {
+            b
         }
     }
 
@@ -611,9 +616,9 @@ class PlmFreeCadUiService implements WebAttributes {
                 String pWestonCmd = "/usr/bin/weston --no-config --socket=wl-freecad --backend=headless"
                 log.info "$pWestonCmd"
                 pWeston = pWestonCmd.execute()
-                cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance?'--single-instance':''} ${convFile.path}"
+                cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
             } else {
-                cmd = "${xvfbRun ? "/usr/bin/xvfb-run ":""}${freecadPath} ${singleInstance?'--single-instance':''} ${convFile.path}"
+                cmd = "${xvfbRun ? "/usr/bin/xvfb-run " : ""}${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
             }
             if (cmd) {
                 log.info "$cmd"
@@ -668,9 +673,9 @@ class PlmFreeCadUiService implements WebAttributes {
                 String pWestonCmd = "/usr/bin/weston --no-config --socket=wl-freecad --backend=headless"
                 log.info "$pWestonCmd"
                 pWeston = pWestonCmd.execute()
-                cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance?'--single-instance':''} ${convFile.path}"
+                cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
             } else {
-                cmd = "${xvfbRun ? "/usr/bin/xvfb-run ":""}${freecadPath} ${singleInstance?'--single-instance':''} ${convFile.path}"
+                cmd = "${xvfbRun ? "/usr/bin/xvfb-run " : ""}${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
             }
             if (cmd) {
                 log.info "$cmd"
@@ -685,8 +690,5 @@ class PlmFreeCadUiService implements WebAttributes {
             }
 
         }
-
-
-
     }
 }

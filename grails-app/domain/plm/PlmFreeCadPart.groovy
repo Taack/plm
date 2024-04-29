@@ -173,7 +173,7 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
     }
 
     private Collection<PlmFreeCadPart> linkedPartsFromParts(Collection<PlmFreeCadPart> parts) {
-        Set ret = []
+        Set<PlmFreeCadPart> ret = []
         ret.addAll(parts)
         parts.each {
            ret.addAll(linkedPartsFromParts(it.linkedParts))
