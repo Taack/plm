@@ -260,20 +260,20 @@ class PlmFreeCadUiService implements WebAttributes {
                 row {
                     rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
                     rowColumn {
-                        rowField obj.dateCreated.format('yyyy-MM-dd hh:mm:ss')
+                        rowField obj.dateCreated_
                         rowField obj.userCreated.username
                     }
                     rowColumn {
-                        rowField obj.lastUpdated.format('yyyy-MM-dd hh:mm:ss')
+                        rowField obj.lastUpdated_
                         rowField obj.userUpdated?.username
                     }
                     rowColumn {
                         rowField obj.plmFileUserCreated
-                        rowField obj.plmFileDateCreated.format('yyyy-MM-dd hh:mm:ss')
+                        rowField obj.plmFileDateCreated_
                     }
                     rowColumn {
                         rowField obj.plmFileUserUpdated
-                        rowField obj.plmFileLastUpdated.format('yyyy-MM-dd hh:mm:ss')
+                        rowField obj.plmFileLastUpdated_
                     }
                     rowColumn {
                         rowField obj.lockedBy?.username
