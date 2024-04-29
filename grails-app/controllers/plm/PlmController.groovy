@@ -17,8 +17,6 @@ import taack.ui.base.UiMenuSpecifier
 import taack.ui.base.block.BlockSpec
 import taack.ui.base.common.ActionIcon
 
-import java.time.Year
-
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
 class PlmController implements WebAttributes {
@@ -26,7 +24,6 @@ class PlmController implements WebAttributes {
     PlmFreeCadUiService plmFreeCadUiService
     TaackMetaModelService taackMetaModelService
     TaackSaveService taackSaveService
-    AttachmentUiService attachmentUiService
 
     private UiMenuSpecifier buildMenu() {
         new UiMenuSpecifier().ui {
