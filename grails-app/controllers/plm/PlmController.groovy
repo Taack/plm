@@ -113,7 +113,7 @@ class PlmController implements WebAttributes {
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
                 form AttachmentUiService.buildAttachmentForm(
-                        new Attachment(fileOrigin: controllerName),
+                        new Attachment(),
                         this.&saveAttachment as MC,
                         [id: part.id]),
                         BlockSpec.Width.MAX
