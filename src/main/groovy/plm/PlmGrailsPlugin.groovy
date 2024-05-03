@@ -4,7 +4,6 @@ import grails.compiler.GrailsCompileStatic
 import grails.plugins.Plugin
 import taack.ui.TaackPlugin
 import taack.ui.TaackPluginConfiguration
-import taack.ui.config.Language
 
 /*
 TODO: put user extra configuration accessible to server to centralize configuration
@@ -59,7 +58,7 @@ class PlmGrailsPlugin extends Plugin implements TaackPlugin {
     ]
 
     static final TaackPluginConfiguration pluginConfiguration = new TaackPluginConfiguration("Plm",
-            "/plm/plm.svg", "plm", [Language.EN, Language.FR, Language.CN],
+            "/plm/plm.svg", "plm",
             new TaackPluginConfiguration.IPluginRole() {
                 @Override
                 List<TaackPluginConfiguration.PluginRole> getPluginRoles() {
