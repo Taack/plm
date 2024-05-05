@@ -96,7 +96,7 @@ class PlmController implements WebAttributes {
         String graph = taackMetaModelService.buildEnumTransitionGraph(PlmFreeCadPartStatus.CREATED)
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
-                custom "Graph", taackMetaModelService.svg(graph)
+                custom 'Graph', taackMetaModelService.svg(graph)
             }
         })
     }
