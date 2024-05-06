@@ -17,6 +17,8 @@ import taack.ui.base.UiMenuSpecifier
 import taack.ui.base.block.BlockSpec
 import taack.ui.base.common.ActionIcon
 
+import static taack.render.TaackUiService.tr
+
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
 class PlmController implements WebAttributes {
@@ -51,7 +53,7 @@ class PlmController implements WebAttributes {
 
     def parts() {
         taackUiService.show(new UiBlockSpecifier().ui {
-            tableFilter("Filter", plmFreeCadUiService.buildPartFilter(), "Results", plmFreeCadUiService.buildPartTable(), BlockSpec.Width.MAX, {
+            tableFilter(tr('default.filter.label'), plmFreeCadUiService.buildPartFilter(), tr('default.plmFreeCadPart.label'), plmFreeCadUiService.buildPartTable(), BlockSpec.Width.MAX, {
                 action ActionIcon.GRAPH, this.&model as MC
             })
         }, buildMenu())
