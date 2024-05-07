@@ -17,6 +17,8 @@ import taack.ui.base.UiMenuSpecifier
 import taack.ui.base.block.BlockSpec
 import taack.ui.base.common.ActionIcon
 
+import static taack.render.TaackUiService.tr
+
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
 class PlmController implements WebAttributes {
@@ -43,23 +45,15 @@ class PlmController implements WebAttributes {
     }
 
     def downloadPart(PlmFreeCadPart part, Long partVersion) {
-        Calendar cal = Calendar.getInstance()
-        int y = cal.get(Calendar.YEAR)
-        int m = cal.get(Calendar.MONTH)
-        int dm = cal.get(Calendar.DAY_OF_MONTH)
-        int hd = cal.get(Calendar.HOUR_OF_DAY)
-        int mn = cal.get(Calendar.MINUTE)
-        int sec = cal.get(Calendar.SECOND)
-        String date = "$y$m$dm$hd$mn$sec"
         response.contentType = 'application/zip'
-        response.setHeader("Content-disposition", "filename=\"${URLEncoder.encode("${part.originalName}${partVersion ? "-v${partVersion}" : ''}-${date}.zip", 'UTF-8')}\"")
+        response.setHeader("Content-disposition", "filename=\"${URLEncoder.encode("${part.originalName}${partVersion ? "-v${partVersion}" : ''}-${TaackUiService.dateFileName}.zip", 'UTF-8')}\"")
         response.outputStream << plmFreeCadUiService.zipPart(part, partVersion).bytes
         response.outputStream.close()
     }
 
     def parts() {
         taackUiService.show(new UiBlockSpecifier().ui {
-            tableFilter("Filter", plmFreeCadUiService.buildPartFilter(), "Results", plmFreeCadUiService.buildPartTable(), BlockSpec.Width.MAX, {
+            tableFilter(tr('default.filter.label'), plmFreeCadUiService.buildPartFilter(), tr('default.plmFreeCadPart.label'), plmFreeCadUiService.buildPartTable(), BlockSpec.Width.MAX, {
                 action ActionIcon.GRAPH, this.&model as MC
             })
         }, buildMenu())
@@ -104,7 +98,7 @@ class PlmController implements WebAttributes {
         String graph = taackMetaModelService.buildEnumTransitionGraph(PlmFreeCadPartStatus.CREATED)
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
-                custom "Graph", taackMetaModelService.svg(graph)
+                custom 'Graph', taackMetaModelService.svg(graph)
             }
         })
     }
@@ -113,7 +107,7 @@ class PlmController implements WebAttributes {
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
                 form AttachmentUiService.buildAttachmentForm(
-                        new Attachment(fileOrigin: controllerName),
+                        new Attachment(),
                         this.&saveAttachment as MC,
                         [id: part.id]),
                         BlockSpec.Width.MAX
