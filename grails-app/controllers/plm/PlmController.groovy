@@ -35,7 +35,10 @@ class PlmController implements WebAttributes {
     }
 
     def index() {
-        redirect action: 'parts'
+        if (PlmFreeCadUiService.errorsInit.size() > 0)
+            render('Following errors occurs when checking binaries:<br>' + PlmFreeCadUiService.errorsInit.join('<br>'))
+        else
+            redirect action: 'parts'
     }
 
     @Transactional

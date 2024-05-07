@@ -35,6 +35,8 @@ import java.util.zip.ZipOutputStream
 @GrailsCompileStatic
 class PlmFreeCadUiService implements WebAttributes {
 
+    static final List<String> errorsInit = []
+
     @Value('${plm.freecadPath}')
     String freecadPath
 
@@ -90,27 +92,27 @@ class PlmFreeCadUiService implements WebAttributes {
         log.info "singleInstance = $singleInstance, xvfbRun = $xvfbRun, useWeston = $useWeston"
         if (!new File(freecadPath).exists()) {
             log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
-            throw new RuntimeException('Freecad path not configured ... Stopping')
+            errorsInit.add 'Freecad path not configured ... Stopping'
         }
 
         if (!new File(unzipPath).exists()) {
             log.error "configure plm.unzipPath in server/grails-app/conf/Application.yml"
-            throw new RuntimeException('unzip path not configured ... Stopping')
+            errorsInit.add 'unzip path not configured ... Stopping'
         }
 
         if (useWeston && !new File("/usr/bin/weston").exists()) {
             log.error "useWeston is true in server/grails-app/conf/Application.yml but no weston"
-            throw new RuntimeException('weston not found ... Stopping')
+            errorsInit.add 'weston not found ... Stopping'
         }
 
         if (!new File(convertPath).exists()) {
             log.error "no convert in $convertPath. please, install ImageMagick"
-            throw new RuntimeException('convert not found ... Stopping')
+            errorsInit.add 'convert not found ... Stopping'
         }
 
         if (!new File(dotPath).exists()) {
             log.error "no dot executable in $dotPath. please, install graphviz"
-            throw new RuntimeException('"dot" executable not found ... Stopping')
+            errorsInit.add '"dot" executable not found ... Stopping'
         }
 
     }
