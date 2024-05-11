@@ -183,27 +183,25 @@ class PlmFreeCadUiService implements WebAttributes {
                     .setSortOrder(TaackFilter.Order.DESC, p.dateCreated_)
                     .addRestrictedIds(part.plmLinks*.id as Long[])
                     .build()) { PlmFreeCadLink o ->
-                row {
-                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}&timestamp=${o.part.mTimeNs}"></div>"""
-                    rowColumn {
-                        rowField o.dateCreated_
-                        rowField o.userCreated.username
-                    }
-                    rowColumn {
-                        rowField o.lastUpdated_
-                        rowField o.userUpdated.username
-                    }
-                    rowColumn {
-                        rowField o.linkClaimChild?.toString()
-                        rowField o.linkTransform?.toString()
-                    }
-                    rowColumn {
-                        rowField o.linkCopyOnChange?.toString()
-                        rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, o.part.id
-                        rowField o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject
-                    }
-                    rowField o.part.tags*.name?.join(', ')
+                rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}&timestamp=${o.part.mTimeNs}"></div>"""
+                rowColumn {
+                    rowField o.dateCreated_
+                    rowField o.userCreated.username
                 }
+                rowColumn {
+                    rowField o.lastUpdated_
+                    rowField o.userUpdated.username
+                }
+                rowColumn {
+                    rowField o.linkClaimChild?.toString()
+                    rowField o.linkTransform?.toString()
+                }
+                rowColumn {
+                    rowField o.linkCopyOnChange?.toString()
+                    rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, o.part.id
+                    rowField o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject
+                }
+                rowField o.part.tags*.name?.join(', ')
             }
         }
     }
@@ -249,7 +247,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 }
                 fieldHeader 'Tags'
             }
-            def f = new UiFilterSpecifier().ui PlmFreeCadPart, {
+            def f = new UiFilterSpecifier().sec PlmFreeCadPart, {
                 filterFieldExpressionBool(null, new FilterExpression(p.nextVersion_, Operator.EQ, null))
             }
 
@@ -259,36 +257,34 @@ class PlmFreeCadUiService implements WebAttributes {
                     .addFilter(f)
                     .addRestrictedIds((freeCadParts ? freeCadParts*.id : []) as Long[])
                     .build()) { PlmFreeCadPart obj ->
-                row {
-                    rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
-                    rowColumn {
-                        rowField obj.dateCreated_
-                        rowField obj.userCreated.username
-                    }
-                    rowColumn {
-                        rowField obj.lastUpdated_
-                        rowField obj.userUpdated?.username
-                    }
-                    rowColumn {
-                        rowField obj.plmFileUserCreated
-                        rowField obj.plmFileDateCreated_
-                    }
-                    rowColumn {
-                        rowField obj.plmFileUserUpdated
-                        rowField obj.plmFileLastUpdated_
-                    }
-                    rowColumn {
-                        rowField obj.lockedBy?.username
-                        rowField obj.computedVersion_
-                    }
-
-                    rowColumn {
-                        rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, obj.id
-                        rowField obj.label, Style.BLUE
-                        rowField obj.status_
-                    }
-                    rowField obj.tags*.name?.join(', ')
+                rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
+                rowColumn {
+                    rowField obj.dateCreated_
+                    rowField obj.userCreated.username
                 }
+                rowColumn {
+                    rowField obj.lastUpdated_
+                    rowField obj.userUpdated?.username
+                }
+                rowColumn {
+                    rowField obj.plmFileUserCreated
+                    rowField obj.plmFileDateCreated_
+                }
+                rowColumn {
+                    rowField obj.plmFileUserUpdated
+                    rowField obj.plmFileLastUpdated_
+                }
+                rowColumn {
+                    rowField obj.lockedBy?.username
+                    rowField obj.computedVersion_
+                }
+
+                rowColumn {
+                    rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, obj.id
+                    rowField obj.label, Style.BLUE
+                    rowField obj.status_
+                }
+                rowField obj.tags*.name?.join(', ')
             }
         }
     }
