@@ -298,13 +298,14 @@ class PlmFreeCadUiService implements WebAttributes {
         String to = tr('none.label')
         if (fieldInfoTo && fieldInfoTo.value) to = fieldInfoTo.toString()
 
-        if (from != to)  {
+        if (from != to) {
             String i18n = tr('content.became.from.to.label', tr(fieldInfoFrom), from, to)
             "<li>$i18n</li>"
         } else ''
     }
 
     UiBlockSpecifier buildFreeCadPartBlockShow(PlmFreeCadPart part, Long partVersion, boolean isMail = false, boolean isHistory = false) {
+        MC diffTr = PlmFreeCadUiService.&diffTr as MC
         if (partVersion != null) {
             part = part.getHistory()[partVersion]
         }
