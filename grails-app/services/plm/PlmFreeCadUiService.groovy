@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.taack.Term
 import org.taack.User
 import plm.freecad.FreecadPlm
+import taack.ast.type.FieldInfo
 import taack.domain.TaackFilter
 import taack.domain.TaackFilterService
 import taack.ui.base.*
@@ -31,6 +32,8 @@ import java.text.SimpleDateFormat
 import java.util.zip.ZipEntry
 import java.util.zip.ZipException
 import java.util.zip.ZipOutputStream
+
+import static taack.render.TaackUiService.tr
 
 @GrailsCompileStatic
 class PlmFreeCadUiService implements WebAttributes {
@@ -123,30 +126,30 @@ class PlmFreeCadUiService implements WebAttributes {
         def u = new User()
         def t = new Term()
         new UiFilterSpecifier().ui PlmFreeCadPart, {
-            section 'User', {
+            section tr('default.user.label'), {
                 filterField p.lockedBy_, u.username_
                 filterField p.userCreated_, u.username_
                 filterField p.userUpdated_, u.username_
             }
-            section 'Dates', {
+            section tr('dates.label'), {
                 filterField p.dateCreated_
                 filterField p.lastUpdated_
             }
-            section 'File', {
+            section tr('files.label'), {
                 filterField p.originalName_
                 filterField p.label_
                 filterField p.status_
             }
-            section 'Used In', {
+            section tr('usedIn.label'), {
                 filterField p.plmLinks_, l.part_, p.originalName_
             }
-            section 'Plm File', {
+            section tr('plmFile.label'), {
                 filterField p.plmFileUserCreated_
                 filterField p.plmFileDateCreated_
                 filterField p.plmFileUserUpdated_
                 filterField p.plmFileLastUpdated_
             }
-            section 'Tags', {
+            section tr('tags.label'), {
                 filterField p.tags_, t.name_
             }
         }
@@ -158,7 +161,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def u = new User()
         new UiTableSpecifier().ui {
             header {
-                fieldHeader 'Preview'
+                fieldHeader tr('preview.label')
                 column {
                     sortableFieldHeader l.dateCreated_
                     sortableFieldHeader l.userCreated_, u.username_
@@ -175,7 +178,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     sortableFieldHeader l.linkCopyOnChange_
                     sortableFieldHeader l.part_, p.label_
                 }
-                fieldHeader 'Tags'
+                fieldHeader l.part_, p.tags_
             }
 
             iterate(taackFilterService.getBuilder(PlmFreeCadLink)
@@ -220,7 +223,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def u = new User()
         new UiTableSpecifier().ui {
             header {
-                fieldHeader 'Preview'
+                fieldHeader tr('preview.label')
                 column {
                     sortableFieldHeader p.userCreated_, u.username_
                     sortableFieldHeader p.dateCreated_
@@ -245,7 +248,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     sortableFieldHeader p.label_
                     sortableFieldHeader p.status_
                 }
-                fieldHeader 'Tags'
+                fieldHeader tr('tags.label')
             }
             def f = new UiFilterSpecifier().sec PlmFreeCadPart, {
                 filterFieldExpressionBool(null, new FilterExpression(p.nextVersion_, Operator.EQ, null))
@@ -289,15 +292,27 @@ class PlmFreeCadUiService implements WebAttributes {
         }
     }
 
+    private static String diffTr(FieldInfo fieldInfoFrom, FieldInfo fieldInfoTo) {
+        String from = tr('none.label')
+        if (fieldInfoFrom && fieldInfoFrom.value) from = fieldInfoFrom.value.toString()
+        String to = tr('none.label')
+        if (fieldInfoTo && fieldInfoTo.value) to = fieldInfoTo.toString()
+
+        if (from != to)  {
+            String i18n = tr('content.became.from.to.label', tr(fieldInfoFrom), from, to)
+            "<li>$i18n</li>"
+        } else ''
+    }
+
     UiBlockSpecifier buildFreeCadPartBlockShow(PlmFreeCadPart part, Long partVersion, boolean isMail = false, boolean isHistory = false) {
         if (partVersion != null) {
             part = part.getHistory()[partVersion]
         }
 
         def showFields = new UiShowSpecifier().ui(part, {
-            section "Version", {
-                if (part.active) field "Version", "#${part.computedVersion}"
-                if (!part.active) field "Not ACTIVE", Style.EMPHASIS + Style.RED
+            section tr('version.label'), {
+                if (part.active) field tr('version.label'), "#${part.computedVersion}"
+                if (!part.active) field tr('not.active.label'), Style.EMPHASIS + Style.RED
                 fieldLabeled part.dateCreated_
                 fieldLabeled part.userUpdated_
                 fieldLabeled part.originalName_
@@ -307,7 +322,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 fieldLabeled part.plmFileDateCreated_
                 fieldLabeled part.plmFileUserCreated_
                 fieldLabeled part.plmContentType_
-                field "Status", part.status_, Style.EMPHASIS
+                fieldLabeled Style.EMPHASIS, part.status_
                 fieldLabeled part.lockedBy_
                 fieldLabeled part.tags_
             }
@@ -318,14 +333,14 @@ class PlmFreeCadUiService implements WebAttributes {
         })
 
         UiBlockSpecifier b = new UiBlockSpecifier().ui {
-            show "Status", showFields, BlockSpec.Width.QUARTER, {
+            show tr('status.label'), showFields, BlockSpec.Width.QUARTER, {
                 action ActionIcon.DOWNLOAD, PlmController.&downloadPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                 if (!isHistory)
                     action ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
             }
             show part.originalName, showPreview, BlockSpec.Width.QUARTER
             if (!isHistory) {
-                show 'Last Comment', new UiShowSpecifier().ui(part, {
+                show tr('last.comment.label'), new UiShowSpecifier().ui(part, {
                     field Markdown.getContentHtml(part.commentVersion), Style.MARKDOWN_BODY
                 }), BlockSpec.Width.HALF, {
                     if (isMail)
@@ -334,18 +349,18 @@ class PlmFreeCadUiService implements WebAttributes {
             }
             if (!isMail && !isHistory) {
                 if (part.attachments?.size() > 0) {
-                    table "Attachments", attachmentUiService.buildAttachmentsTable(part.attachments)
+                    table tr('attachments.label'), attachmentUiService.buildAttachmentsTable(part.attachments)
                 }
 
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
                 if (!parentLinks.empty) {
                     def containerParts = parentLinks*.parentPart.findAll { it.active }
                     if (containerParts)
-                        table 'Used In', buildPartTable(containerParts), BlockSpec.Width.MAX
+                        table tr('usedIn.label'), buildPartTable(containerParts), BlockSpec.Width.MAX
                 }
                 if (!part.linkedParts.empty)
-                    table 'Links', buildLinkTableFromPart(part), BlockSpec.Width.MAX
-                table "History", new UiTableSpecifier().ui({
+                    table tr('links.label'), buildLinkTableFromPart(part), BlockSpec.Width.MAX
+                table tr('history.label'), new UiTableSpecifier().ui({
                     def h = part.history
                     PlmFreeCadPart p = null
                     if (h) {
@@ -361,7 +376,7 @@ class PlmFreeCadUiService implements WebAttributes {
                             } else if (!p) {
                                 row {
                                     rowColumn {
-                                        rowField 'Initial version'
+                                        rowField tr('initial.version.label')
                                     }
                                     rowColumn {
                                         rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
@@ -380,19 +395,18 @@ class PlmFreeCadUiService implements WebAttributes {
                                 row {
                                     StringBuffer diff = new StringBuffer()
                                     diff << "<ul>"
-                                    if (p.plmContentShaOne != i.plmContentShaOne) diff << "<li>Sha1 content became from ${p.plmContentShaOne} to <b>${i.plmContentShaOne}</b></li>"
-                                    if (p.lockedBy?.id != i.lockedBy?.id) diff << "<li>Locked by became from ${p.lockedBy} to <b>${i.lockedBy}</b></li>"
-                                    if (p.status != i.status) diff << "<li>Status became from ${p.status} to <b>${i.status}</b></li>"
-                                    if (p.label != i.label) diff << "<li>Label became from ${p.label} to <b>${i.label}</b></li>"
-                                    if (p.originalName != i.originalName) diff << "<li>Original Name became from ${p.originalName} to <b>${i.originalName}</b></li>"
-                                    if (p.plmContentType != i.plmContentType) diff << "<li>Content Type became from ${p.plmContentType} to <b>${i.plmContentType}</b></li>"
-                                    if (p.plmFileLastUpdated != i.plmFileLastUpdated) diff << "<li>Declared updated date became from ${p.plmFileLastUpdated} to <b>${i.plmFileLastUpdated}</b></li>"
-                                    if (p.plmFileDateCreated != i.plmFileDateCreated) diff << "<li>Declared creation Date became from ${p.plmFileDateCreated} to <b>${i.plmFileDateCreated}</b></li>"
-                                    if (p.plmFileUserCreated != i.plmFileUserCreated) diff << "<li>Declared user created became from ${p.plmFileUserCreated} to <b>${i.plmFileUserCreated}</b></li>"
-                                    if (p.plmFileUserUpdated != i.plmFileUserUpdated) diff << "<li>Declared user updated became from ${p.plmFileUserUpdated} to <b>${i.plmFileUserUpdated}</b></li>"
-                                    if (p.comment != i.comment) diff << "<li>Comment became from ${p.comment} to <b>${i.comment}</b></li>"
-                                    if (p.plmLinks*.part.id.sort() != i.plmLinks*.part.id.sort() || p.plmLinks*.part.computedVersion.sort() != i.plmLinks*.part.computedVersion.sort()) diff << "<li>Links became from [${p.plmLinks*.part.collect { it.label + ' v' + it.computedVersion }.join(', ')}] to [${i.plmLinks*.part.collect { it.label + ' v' + it.computedVersion }.join(', ')}]"
-                                    if (p.tags*.id.sort() != i.tags*.id.sort()) diff << "<li>Tags became from [${p.tags*.name.join(', ')}] to [${i.tags*.name.join(', ')}]"
+                                    diff << diffTr(p.plmContentShaOne_, i.plmContentShaOne_)
+                                    diff << diffTr(p.lockedBy_, i.lockedBy_)
+                                    diff << diffTr(p.status_, i.status_)
+                                    diff << diffTr(p.label_, i.label_)
+                                    diff << diffTr(p.originalName_, i.originalName_)
+                                    diff << diffTr(p.plmContentType_, i.plmContentType_)
+                                    diff << diffTr(p.plmFileLastUpdated_, i.plmFileLastUpdated_)
+                                    diff << diffTr(p.plmFileDateCreated_, i.plmFileDateCreated_)
+                                    diff << diffTr(p.plmFileUserCreated_, i.plmFileUserCreated_)
+                                    diff << diffTr(p.plmFileUserUpdated_, i.plmFileLastUpdated_)
+                                    diff << diffTr(p.comment_, i.comment_)
+                                    diff << diffTr(p.tags_, i.tags_)
                                     diff << "</ul>"
                                     rowField diff.toString()
                                     rowColumn {
@@ -410,7 +424,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 }
             } else if (!isMail) {
                 if (!part.linkedParts.empty)
-                    table 'Links', buildLinkTableFromPart(part), BlockSpec.Width.MAX
+                    table tr('links.label'), buildLinkTableFromPart(part), BlockSpec.Width.MAX
             }
         }
 
@@ -435,7 +449,7 @@ class PlmFreeCadUiService implements WebAttributes {
         d.each {
             def f = it.value
             def c = f.fileContent.toByteArray()
-            def sha1 = MessageDigest.getInstance("SHA1").digest(c).encodeHex().toString()
+            def sha1 = MessageDigest.getInstance('SHA1').digest(c).encodeHex().toString()
             def exists = PlmFreeCadPart.findByPlmContentShaOne(sha1)
             def ext = f.fileName.substring(f.fileName.lastIndexOf('.') + 1)
 
@@ -507,7 +521,7 @@ class PlmFreeCadUiService implements WebAttributes {
                         pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.OWNED
                         break
                     case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED:
-                        log.error "FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED"
+                        log.error 'FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED'
                         break
                 }
                 pl.save(flush: true, failOnError: true)
