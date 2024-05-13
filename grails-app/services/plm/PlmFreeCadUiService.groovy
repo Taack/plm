@@ -251,7 +251,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 fieldHeader tr('tags.label')
             }
             def f = new UiFilterSpecifier().sec PlmFreeCadPart, {
-                filterFieldExpressionBool(null, new FilterExpression(p.nextVersion_, Operator.EQ, null))
+                filterFieldExpressionBool(new FilterExpression(null as Object, Operator.EQ, p.nextVersion_))
             }
 
             iterate(taackFilterService.getBuilder(PlmFreeCadPart)
