@@ -9,8 +9,8 @@ import grails.web.api.WebAttributes
 import org.apache.commons.io.FileUtils
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.beans.factory.annotation.Value
-import org.taack.Term
-import org.taack.User
+import attachment.Term
+import crew.User
 import plm.freecad.FreecadPlm
 import taack.ast.type.FieldInfo
 import taack.domain.TaackFilter

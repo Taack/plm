@@ -3,9 +3,9 @@ package plm
 
 import grails.compiler.GrailsCompileStatic
 import groovy.transform.CompileStatic
-import org.taack.Attachment
-import org.taack.Term
-import org.taack.User
+import attachment.Attachment
+import attachment.Term
+import crew.User
 import taack.ast.annotation.TaackFieldEnum
 import taack.domain.IDomainHistory
 import taack.domain.IEnumTransition2

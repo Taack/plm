@@ -7,7 +7,7 @@ import grails.plugin.springsecurity.annotation.Secured
 import grails.web.api.WebAttributes
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.web.multipart.MultipartRequest
-import org.taack.Attachment
+import attachment.Attachment
 import taack.ast.type.FieldInfo
 import taack.domain.TaackMetaModelService
 import taack.domain.TaackSaveService
