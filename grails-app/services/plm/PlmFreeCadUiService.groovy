@@ -22,7 +22,7 @@ import taack.ui.base.common.IconStyle
 import taack.ui.base.common.Style
 import taack.ui.base.filter.expression.FilterExpression
 import taack.ui.base.filter.expression.Operator
-import taack.ui.utils.Markdown
+import taack.ui.dump.markdown.Markdown
 
 import javax.annotation.PostConstruct
 import java.nio.file.Files
