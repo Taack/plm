@@ -334,34 +334,34 @@ class PlmFreeCadUiService implements WebAttributes {
         })
 
         UiBlockSpecifier b = new UiBlockSpecifier().ui {
-            show tr('status.label'), showFields, BlockSpec.Width.QUARTER, {
-                action ActionIcon.DOWNLOAD, PlmController.&downloadPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
+            show showFields, BlockSpec.Width.QUARTER, {
+                menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                 if (!isHistory)
-                    action ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
+                    menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
             }
-            show part.originalName, showPreview, BlockSpec.Width.QUARTER
+            show showPreview, BlockSpec.Width.QUARTER
             if (!isHistory) {
-                show tr('last.comment.label'), new UiShowSpecifier().ui(part, {
+                show new UiShowSpecifier().ui(part, {
                     field Markdown.getContentHtml(part.commentVersion), Style.MARKDOWN_BODY
                 }), BlockSpec.Width.HALF, {
                     if (isMail)
-                        action ActionIcon.SHOW, PlmController.&showPart as MC, part.id
+                        menuIcon ActionIcon.SHOW, PlmController.&showPart as MC, part.id
                 }
             }
             if (!isMail && !isHistory) {
                 if (part.attachments?.size() > 0) {
-                    table tr('attachments.label'), attachmentUiService.buildAttachmentsTable(part.attachments)
+                    table attachmentUiService.buildAttachmentsTable(part.attachments)
                 }
 
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
                 if (!parentLinks.empty) {
                     def containerParts = parentLinks*.parentPart.findAll { it.active }
                     if (containerParts)
-                        table tr('usedIn.label'), buildPartTable(containerParts), BlockSpec.Width.MAX
+                        table buildPartTable(containerParts), BlockSpec.Width.MAX
                 }
                 if (!part.linkedParts.empty)
-                    table tr('links.label'), buildLinkTableFromPart(part), BlockSpec.Width.MAX
-                table tr('history.label'), new UiTableSpecifier().ui({
+                    table buildLinkTableFromPart(part), BlockSpec.Width.MAX
+                table new UiTableSpecifier().ui({
                     def h = part.history
                     PlmFreeCadPart p = null
                     if (h) {
@@ -421,11 +421,11 @@ class PlmFreeCadUiService implements WebAttributes {
                         }
                     }
                 }), BlockSpec.Width.MAX, {
-                    action ActionIcon.ADD, PlmController.&editPart as MC, part.id
+//                    menuIcon ActionIcon.ADD, PlmController.&editPart as MC, part.id
                 }
             } else if (!isMail) {
                 if (!part.linkedParts.empty)
-                    table tr('links.label'), buildLinkTableFromPart(part), BlockSpec.Width.MAX
+                    table buildLinkTableFromPart(part), BlockSpec.Width.MAX
             }
         }
 

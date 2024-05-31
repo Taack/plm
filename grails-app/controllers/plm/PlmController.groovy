@@ -56,8 +56,8 @@ class PlmController implements WebAttributes {
 
     def parts() {
         taackUiService.show(new UiBlockSpecifier().ui {
-            tableFilter(tr('default.filter.label'), plmFreeCadUiService.buildPartFilter(), tr('default.plmFreeCadPart.label'), plmFreeCadUiService.buildPartTable(), BlockSpec.Width.MAX, {
-                action ActionIcon.GRAPH, this.&model as MC
+            tableFilter(plmFreeCadUiService.buildPartFilter(), plmFreeCadUiService.buildPartTable(), BlockSpec.Width.MAX, {
+                menuIcon ActionIcon.GRAPH, this.&model as MC
             })
         }, buildMenu())
     }
@@ -101,7 +101,7 @@ class PlmController implements WebAttributes {
         String graph = taackMetaModelService.buildEnumTransitionGraph(PlmFreeCadPartStatus.CREATED)
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
-                custom 'Graph', taackMetaModelService.svg(graph)
+                custom taackMetaModelService.svg(graph)
             }
         })
     }
