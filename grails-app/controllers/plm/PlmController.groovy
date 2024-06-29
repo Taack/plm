@@ -12,10 +12,9 @@ import taack.ast.type.FieldInfo
 import taack.domain.TaackMetaModelService
 import taack.domain.TaackSaveService
 import taack.render.TaackUiService
-import taack.ui.base.UiBlockSpecifier
-import taack.ui.base.UiMenuSpecifier
-import taack.ui.base.block.BlockSpec
-import taack.ui.base.common.ActionIcon
+import taack.ui.dsl.UiBlockSpecifier
+import taack.ui.dsl.UiMenuSpecifier
+import taack.ui.dsl.common.ActionIcon
 
 import static taack.render.TaackUiService.tr
 
@@ -56,7 +55,7 @@ class PlmController implements WebAttributes {
 
     def parts() {
         taackUiService.show(new UiBlockSpecifier().ui {
-            tableFilter(plmFreeCadUiService.buildPartFilter(), plmFreeCadUiService.buildPartTable(), BlockSpec.Width.MAX, {
+            tableFilter(plmFreeCadUiService.buildPartFilter(), plmFreeCadUiService.buildPartTable(), {
                 menuIcon ActionIcon.GRAPH, this.&model as MC
             })
         }, buildMenu())
@@ -112,8 +111,7 @@ class PlmController implements WebAttributes {
                 form AttachmentUiService.buildAttachmentForm(
                         new Attachment(),
                         this.&saveAttachment as MC,
-                        [id: part.id]),
-                        BlockSpec.Width.MAX
+                        [id: part.id])
             }
         })
     }

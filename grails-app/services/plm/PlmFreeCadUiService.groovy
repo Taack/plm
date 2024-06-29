@@ -15,13 +15,17 @@ import plm.freecad.FreecadPlm
 import taack.ast.type.FieldInfo
 import taack.domain.TaackFilter
 import taack.domain.TaackFilterService
-import taack.ui.base.*
-import taack.ui.base.block.BlockSpec
-import taack.ui.base.common.ActionIcon
-import taack.ui.base.common.IconStyle
-import taack.ui.base.common.Style
-import taack.ui.base.filter.expression.FilterExpression
-import taack.ui.base.filter.expression.Operator
+import taack.ui.dsl.UiBlockSpecifier
+import taack.ui.dsl.UiFilterSpecifier
+import taack.ui.dsl.UiFormSpecifier
+import taack.ui.dsl.UiShowSpecifier
+import taack.ui.dsl.UiTableSpecifier
+import taack.ui.dsl.block.BlockSpec
+import taack.ui.dsl.common.ActionIcon
+import taack.ui.dsl.common.IconStyle
+import taack.ui.dsl.common.Style
+import taack.ui.dsl.filter.expression.FilterExpression
+import taack.ui.dsl.filter.expression.Operator
 import taack.ui.dump.markdown.Markdown
 
 import javax.annotation.PostConstruct
@@ -161,7 +165,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def u = new User()
         new UiTableSpecifier().ui {
             header {
-                fieldHeader tr('preview.label')
+                label tr('preview.label')
                 column {
                     sortableFieldHeader l.dateCreated_
                     sortableFieldHeader l.userCreated_, u.username_
@@ -178,7 +182,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     sortableFieldHeader l.linkCopyOnChange_
                     sortableFieldHeader l.part_, p.label_
                 }
-                fieldHeader l.part_, p.tags_
+                label l.part_, p.tags_
             }
 
             iterate(taackFilterService.getBuilder(PlmFreeCadLink)
@@ -223,7 +227,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def u = new User()
         new UiTableSpecifier().ui {
             header {
-                fieldHeader tr('preview.label')
+                label tr('preview.label')
                 column {
                     sortableFieldHeader p.userCreated_, u.username_
                     sortableFieldHeader p.dateCreated_
@@ -248,7 +252,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     sortableFieldHeader p.label_
                     sortableFieldHeader p.status_
                 }
-                fieldHeader tr('tags.label')
+                label tr('tags.label')
             }
             def f = new UiFilterSpecifier().sec PlmFreeCadPart, {
                 filterFieldExpressionBool(new FilterExpression(null as Object, Operator.EQ, p.nextVersion_))
@@ -334,16 +338,16 @@ class PlmFreeCadUiService implements WebAttributes {
         })
 
         UiBlockSpecifier b = new UiBlockSpecifier().ui {
-            show showFields, BlockSpec.Width.QUARTER, {
+            show showFields, {
                 menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                 if (!isHistory)
                     menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
             }
-            show showPreview, BlockSpec.Width.QUARTER
+            show showPreview
             if (!isHistory) {
                 show new UiShowSpecifier().ui(part, {
                     field Markdown.getContentHtml(part.commentVersion), Style.MARKDOWN_BODY
-                }), BlockSpec.Width.HALF, {
+                }), {
                     if (isMail)
                         menuIcon ActionIcon.SHOW, PlmController.&showPart as MC, part.id
                 }
@@ -357,17 +361,21 @@ class PlmFreeCadUiService implements WebAttributes {
                 if (!parentLinks.empty) {
                     def containerParts = parentLinks*.parentPart.findAll { it.active }
                     if (containerParts)
-                        table buildPartTable(containerParts), BlockSpec.Width.MAX
+                        table buildPartTable(containerParts)
                 }
                 if (!part.linkedParts.empty)
-                    table buildLinkTableFromPart(part), BlockSpec.Width.MAX
+                    table buildLinkTableFromPart(part)
                 table new UiTableSpecifier().ui({
                     def h = part.history
                     PlmFreeCadPart p = null
                     if (h) {
                         long partVersionOcc = 0
                         for (def i : h) {
-                            rowGroupHeader "${i.historyUserCreated} on ${i.historyDateCreated}"
+                            row {
+                                rowColumn 2, {
+                                    rowField "${i.historyUserCreated} on ${i.historyDateCreated}"
+                                }
+                            }
                             if (i.commentVersion && !p) {
                                 row {
                                     rowColumn {
@@ -420,12 +428,12 @@ class PlmFreeCadUiService implements WebAttributes {
                             p = i
                         }
                     }
-                }), BlockSpec.Width.MAX, {
+                }), {
 //                    menuIcon ActionIcon.ADD, PlmController.&editPart as MC, part.id
                 }
             } else if (!isMail) {
                 if (!part.linkedParts.empty)
-                    table buildLinkTableFromPart(part), BlockSpec.Width.MAX
+                    table buildLinkTableFromPart(part)
             }
         }
 
