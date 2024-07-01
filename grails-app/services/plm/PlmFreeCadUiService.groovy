@@ -1,7 +1,9 @@
 package plm
 
 import attachement.AttachmentUiService
+import attachment.Term
 import crew.AttachmentController
+import crew.User
 import grails.compiler.GrailsCompileStatic
 import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
@@ -9,18 +11,11 @@ import grails.web.api.WebAttributes
 import org.apache.commons.io.FileUtils
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.beans.factory.annotation.Value
-import attachment.Term
-import crew.User
 import plm.freecad.FreecadPlm
 import taack.ast.type.FieldInfo
 import taack.domain.TaackFilter
 import taack.domain.TaackFilterService
-import taack.ui.dsl.UiBlockSpecifier
-import taack.ui.dsl.UiFilterSpecifier
-import taack.ui.dsl.UiFormSpecifier
-import taack.ui.dsl.UiShowSpecifier
-import taack.ui.dsl.UiTableSpecifier
-import taack.ui.dsl.block.BlockSpec
+import taack.ui.dsl.*
 import taack.ui.dsl.common.ActionIcon
 import taack.ui.dsl.common.IconStyle
 import taack.ui.dsl.common.Style
@@ -237,14 +232,6 @@ class PlmFreeCadUiService implements WebAttributes {
                     sortableFieldHeader p.lastUpdated_
                 }
                 column {
-                    sortableFieldHeader p.plmFileUserCreated_
-                    sortableFieldHeader p.plmFileDateCreated_
-                }
-                column {
-                    sortableFieldHeader p.plmFileUserUpdated_
-                    sortableFieldHeader p.plmFileLastUpdated_
-                }
-                column {
                     sortableFieldHeader p.lockedBy_, u.username_
                     sortableFieldHeader p.computedVersion_
                 }
@@ -274,18 +261,9 @@ class PlmFreeCadUiService implements WebAttributes {
                     rowField obj.userUpdated?.username
                 }
                 rowColumn {
-                    rowField obj.plmFileUserCreated
-                    rowField obj.plmFileDateCreated_
-                }
-                rowColumn {
-                    rowField obj.plmFileUserUpdated
-                    rowField obj.plmFileLastUpdated_
-                }
-                rowColumn {
                     rowField obj.lockedBy?.username
                     rowField obj.computedVersion_
                 }
-
                 rowColumn {
                     rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, obj.id
                     rowField obj.label, Style.BLUE
@@ -300,7 +278,7 @@ class PlmFreeCadUiService implements WebAttributes {
         String from = tr('none.label')
         if (fieldInfoFrom && fieldInfoFrom.value) from = fieldInfoFrom.value.toString()
         String to = tr('none.label')
-        if (fieldInfoTo && fieldInfoTo.value) to = fieldInfoTo.toString()
+        if (fieldInfoTo && fieldInfoTo.value) to = fieldInfoTo.value.toString()
 
         if (from != to) {
             String i18n = tr('content.became.from.to.label', tr(fieldInfoFrom), from, to)
@@ -338,12 +316,18 @@ class PlmFreeCadUiService implements WebAttributes {
         })
 
         UiBlockSpecifier b = new UiBlockSpecifier().ui {
-            show showFields, {
-                menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
-                if (!isHistory)
-                    menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
+            row {
+                col {
+                    show showFields
+                }
+                col {
+                    show showPreview, {
+                        menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
+                        if (!isHistory)
+                            menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
+                    }
+                }
             }
-            show showPreview
             if (!isHistory) {
                 show new UiShowSpecifier().ui(part, {
                     field Markdown.getContentHtml(part.commentVersion), Style.MARKDOWN_BODY
@@ -373,7 +357,7 @@ class PlmFreeCadUiService implements WebAttributes {
                         for (def i : h) {
                             row {
                                 rowColumn 2, {
-                                    rowField "${i.historyUserCreated} on ${i.historyDateCreated}"
+                                    rowField "<b>${i.historyUserCreated.username}</b> on ${i.historyDateCreated}"
                                 }
                             }
                             if (i.commentVersion && !p) {
@@ -413,7 +397,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                     diff << diffTr(p.plmFileLastUpdated_, i.plmFileLastUpdated_)
                                     diff << diffTr(p.plmFileDateCreated_, i.plmFileDateCreated_)
                                     diff << diffTr(p.plmFileUserCreated_, i.plmFileUserCreated_)
-                                    diff << diffTr(p.plmFileUserUpdated_, i.plmFileLastUpdated_)
+                                    diff << diffTr(p.plmFileUserUpdated_, i.plmFileUserUpdated_)
                                     diff << diffTr(p.comment_, i.comment_)
                                     diff << diffTr(p.tags_, i.tags_)
                                     diff << "</ul>"
