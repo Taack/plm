@@ -1,10 +1,12 @@
 package plm
 
 import attachement.AttachmentUiService
+import crew.config.SupportedLanguage
 import grails.compiler.GrailsCompileStatic
 import grails.gorm.transactions.Transactional
 import grails.plugin.springsecurity.annotation.Secured
 import grails.web.api.WebAttributes
+import org.codehaus.groovy.runtime.MethodClosure
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.web.multipart.MultipartRequest
 import attachment.Attachment
@@ -16,8 +18,6 @@ import taack.ui.dsl.UiBlockSpecifier
 import taack.ui.dsl.UiMenuSpecifier
 import taack.ui.dsl.common.ActionIcon
 
-import static taack.render.TaackUiService.tr
-
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
 class PlmController implements WebAttributes {
@@ -25,11 +25,15 @@ class PlmController implements WebAttributes {
     PlmFreeCadUiService plmFreeCadUiService
     TaackMetaModelService taackMetaModelService
     TaackSaveService taackSaveService
+    PlmSearchService plmSearchService
 
-    private UiMenuSpecifier buildMenu() {
+    private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
             menu this.&parts as MC
             menu this.&lockedParts as MC
+            menuSearch this.&search as MethodClosure, q
+            menuOptions(SupportedLanguage.fromContext())
+
         }
     }
 
@@ -122,6 +126,10 @@ class PlmController implements WebAttributes {
         def att = taackSaveService.save(Attachment)
         p.addToAttachments(att)
         taackUiService.ajaxReload()
+    }
+
+    def search(String q) {
+        taackUiService.show(plmSearchService.buildSearchBlock(q), buildMenu(q))
     }
 
 }
