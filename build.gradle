@@ -20,13 +20,27 @@ protobuf {
         artifact = 'com.google.protobuf:protoc:3.25.3'
     }
     generateProtoTasks {
-        ofSourceSet('main').each { task ->
+        all().configureEach { task ->
             task.builtins {
                 java {}
             }
         }
     }
 }
+
+sourceSets {
+    main {
+        proto {
+            // In addition to the default 'src/main/proto'
+            srcDir 'src/main/proto'
+        }
+        java {
+            // In addition to the default 'src/main/proto'
+            srcDir 'src/main/java'
+        }
+    }
+}
+
 grails {
     // should use gradle -Dgrails.run.active=true bootRun
     exploded = true

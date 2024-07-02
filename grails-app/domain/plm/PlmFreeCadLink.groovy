@@ -1,7 +1,7 @@
 package plm
 
 import grails.compiler.GrailsCompileStatic
-import org.taack.User
+import crew.User
 import taack.ast.annotation.TaackFieldEnum
 
 enum PlmFreeCadLinkCopyOnChange {

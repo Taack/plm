@@ -1,23 +1,22 @@
 package plm
 
 import attachement.AttachmentUiService
+import crew.config.SupportedLanguage
 import grails.compiler.GrailsCompileStatic
 import grails.gorm.transactions.Transactional
 import grails.plugin.springsecurity.annotation.Secured
 import grails.web.api.WebAttributes
+import org.codehaus.groovy.runtime.MethodClosure
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.web.multipart.MultipartRequest
-import org.taack.Attachment
+import attachment.Attachment
 import taack.ast.type.FieldInfo
 import taack.domain.TaackMetaModelService
 import taack.domain.TaackSaveService
 import taack.render.TaackUiService
-import taack.ui.base.UiBlockSpecifier
-import taack.ui.base.UiMenuSpecifier
-import taack.ui.base.block.BlockSpec
-import taack.ui.base.common.ActionIcon
-
-import static taack.render.TaackUiService.tr
+import taack.ui.dsl.UiBlockSpecifier
+import taack.ui.dsl.UiMenuSpecifier
+import taack.ui.dsl.common.ActionIcon
 
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
@@ -26,11 +25,15 @@ class PlmController implements WebAttributes {
     PlmFreeCadUiService plmFreeCadUiService
     TaackMetaModelService taackMetaModelService
     TaackSaveService taackSaveService
+    PlmSearchService plmSearchService
 
-    private UiMenuSpecifier buildMenu() {
+    private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
             menu this.&parts as MC
             menu this.&lockedParts as MC
+            menuSearch this.&search as MethodClosure, q
+            menuOptions(SupportedLanguage.fromContext())
+
         }
     }
 
@@ -56,8 +59,8 @@ class PlmController implements WebAttributes {
 
     def parts() {
         taackUiService.show(new UiBlockSpecifier().ui {
-            tableFilter(tr('default.filter.label'), plmFreeCadUiService.buildPartFilter(), tr('default.plmFreeCadPart.label'), plmFreeCadUiService.buildPartTable(), BlockSpec.Width.MAX, {
-                action ActionIcon.GRAPH, this.&model as MC
+            tableFilter(plmFreeCadUiService.buildPartFilter(), plmFreeCadUiService.buildPartTable(), {
+                menuIcon ActionIcon.GRAPH, this.&model as MC
             })
         }, buildMenu())
     }
@@ -101,7 +104,7 @@ class PlmController implements WebAttributes {
         String graph = taackMetaModelService.buildEnumTransitionGraph(PlmFreeCadPartStatus.CREATED)
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
-                custom 'Graph', taackMetaModelService.svg(graph)
+                custom taackMetaModelService.svg(graph)
             }
         })
     }
@@ -112,8 +115,7 @@ class PlmController implements WebAttributes {
                 form AttachmentUiService.buildAttachmentForm(
                         new Attachment(),
                         this.&saveAttachment as MC,
-                        [id: part.id]),
-                        BlockSpec.Width.MAX
+                        [id: part.id])
             }
         })
     }
@@ -124,6 +126,10 @@ class PlmController implements WebAttributes {
         def att = taackSaveService.save(Attachment)
         p.addToAttachments(att)
         taackUiService.ajaxReload()
+    }
+
+    def search(String q) {
+        taackUiService.show(plmSearchService.buildSearchBlock(q), buildMenu(q))
     }
 
 }
