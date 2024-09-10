@@ -182,7 +182,7 @@ class PlmFreeCadUiService implements WebAttributes {
 
             iterate(taackFilterService.getBuilder(PlmFreeCadLink)
                     .setMaxNumberOfLine(20)
-                    .setSortOrder(TaackFilter.Order.DESC, p.dateCreated_)
+                    .setSortOrder(TaackFilter.Order.DESC, l.dateCreated_)
                     .addRestrictedIds(part.plmLinks*.id as Long[])
                     .build()) { PlmFreeCadLink o ->
                 rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}&timestamp=${o.part.mTimeNs}"></div>"""
@@ -250,7 +250,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     .setMaxNumberOfLine(20)
                     .addFilter(f)
 
-            if(freeCadParts) {
+            if (freeCadParts) {
                 tfb.addRestrictedIds(freeCadParts*.id as Long[])
             }
 
@@ -351,8 +351,10 @@ class PlmFreeCadUiService implements WebAttributes {
                     if (containerParts)
                         table buildPartTable(containerParts)
                 }
-                if (!part.linkedParts.empty)
+                if (!part.linkedParts.empty) {
                     table buildLinkTableFromPart(part)
+                }
+
                 table new UiTableSpecifier().ui({
                     def h = part.history
                     PlmFreeCadPart p = null

@@ -71,10 +71,13 @@ class PlmController implements WebAttributes {
 
     def showPart(PlmFreeCadPart part, Long partVersion, Boolean isHistory) {
         if (!isHistory) {
-            params.remove('isAjax') // TODO: Avoid that ...
-            taackUiService.show(plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, false, isHistory), buildMenu())
+            taackUiService.show(plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, false, false), buildMenu())
         } else {
-            taackUiService.show(plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, false, isHistory))
+            taackUiService.show(
+                    plmFreeCadUiService.buildFreeCadPartBlockShow(
+                            part, partVersion, false, true
+                    ), "isHistory"
+            )
         }
     }
 
