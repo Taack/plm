@@ -245,12 +245,16 @@ class PlmFreeCadUiService implements WebAttributes {
                 filterFieldExpressionBool(new FilterExpression(null as Object, Operator.EQ, p.nextVersion_))
             }
 
-            iterate(taackFilterService.getBuilder(PlmFreeCadPart)
+            TaackFilter.FilterBuilder tfb = taackFilterService.getBuilder(PlmFreeCadPart)
                     .setSortOrder(TaackFilter.Order.DESC, p.dateCreated_)
                     .setMaxNumberOfLine(20)
                     .addFilter(f)
-                    .addRestrictedIds((freeCadParts ? freeCadParts*.id : []) as Long[])
-                    .build()) { PlmFreeCadPart obj ->
+
+            if(freeCadParts) {
+                tfb.addRestrictedIds(freeCadParts*.id as Long[])
+            }
+
+            iterate(tfb.build()) { PlmFreeCadPart obj ->
                 rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
                 rowColumn {
                     rowField obj.dateCreated_
