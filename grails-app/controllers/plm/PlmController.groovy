@@ -50,9 +50,9 @@ class PlmController implements WebAttributes {
         render plmFreeCadUiService.processProto(proto.bytes)
     }
 
-    def downloadPart(PlmFreeCadPart part, Long partVersion) {
+    def downloadBinPart(PlmFreeCadPart part, Long partVersion) {
         response.contentType = 'application/zip'
-        response.setHeader("Content-disposition", "filename=\"${URLEncoder.encode("${part.originalName}${partVersion ? "-v${partVersion}" : ''}-${TaackUiService.dateFileName}.zip", 'UTF-8')}\"")
+        response.setHeader("Content-disposition", "filename=${URLEncoder.encode("${part.originalName}${partVersion ? "-v${partVersion}" : ''}-${TaackUiService.dateFileName}.zip", 'UTF-8')}")
         response.outputStream << plmFreeCadUiService.zipPart(part, partVersion).bytes
         response.outputStream.close()
     }

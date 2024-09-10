@@ -326,7 +326,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 }
                 col {
                     show showPreview, {
-                        menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
+                        menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadBinPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                         if (!isHistory)
                             menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
                     }
