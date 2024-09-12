@@ -181,7 +181,6 @@ class PlmFreeCadUiService implements WebAttributes {
             }
 
             iterate(taackFilterService.getBuilder(PlmFreeCadLink)
-                    .setMaxNumberOfLine(20)
                     .setSortOrder(TaackFilter.Order.DESC, l.dateCreated_)
                     .addRestrictedIds(part.plmLinks*.id as Long[])
                     .build()) { PlmFreeCadLink o ->
@@ -247,7 +246,6 @@ class PlmFreeCadUiService implements WebAttributes {
 
             TaackFilter.FilterBuilder tfb = taackFilterService.getBuilder(PlmFreeCadPart)
                     .setSortOrder(TaackFilter.Order.DESC, p.dateCreated_)
-                    .setMaxNumberOfLine(20)
                     .addFilter(f)
 
             if (freeCadParts) {

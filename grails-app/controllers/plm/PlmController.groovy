@@ -70,15 +70,11 @@ class PlmController implements WebAttributes {
     }
 
     def showPart(PlmFreeCadPart part, Long partVersion, Boolean isHistory) {
-        if (!isHistory) {
-            taackUiService.show(plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, false, false), buildMenu())
-        } else {
-            taackUiService.show(
-                    plmFreeCadUiService.buildFreeCadPartBlockShow(
-                            part, partVersion, false, true
-                    ), "isHistory"
-            )
-        }
+        taackUiService.show(
+                plmFreeCadUiService.buildFreeCadPartBlockShow(
+                        part, partVersion, false, isHistory),
+                buildMenu(),
+                "isHistory")
     }
 
     def previewPart(PlmFreeCadPart part, Long partVersion, String timestamp) {
