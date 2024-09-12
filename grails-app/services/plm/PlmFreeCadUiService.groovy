@@ -181,8 +181,7 @@ class PlmFreeCadUiService implements WebAttributes {
             }
 
             iterate(taackFilterService.getBuilder(PlmFreeCadLink)
-                    .setMaxNumberOfLine(20)
-                    .setSortOrder(TaackFilter.Order.DESC, p.dateCreated_)
+                    .setSortOrder(TaackFilter.Order.DESC, l.dateCreated_)
                     .addRestrictedIds(part.plmLinks*.id as Long[])
                     .build()) { PlmFreeCadLink o ->
                 rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}&timestamp=${o.part.mTimeNs}"></div>"""
@@ -245,12 +244,15 @@ class PlmFreeCadUiService implements WebAttributes {
                 filterFieldExpressionBool(new FilterExpression(null as Object, Operator.EQ, p.nextVersion_))
             }
 
-            iterate(taackFilterService.getBuilder(PlmFreeCadPart)
+            TaackFilter.FilterBuilder tfb = taackFilterService.getBuilder(PlmFreeCadPart)
                     .setSortOrder(TaackFilter.Order.DESC, p.dateCreated_)
-                    .setMaxNumberOfLine(20)
                     .addFilter(f)
-                    .addRestrictedIds((freeCadParts ? freeCadParts*.id : []) as Long[])
-                    .build()) { PlmFreeCadPart obj ->
+
+            if (freeCadParts) {
+                tfb.addRestrictedIds(freeCadParts*.id as Long[])
+            }
+
+            iterate(tfb.build()) { PlmFreeCadPart obj ->
                 rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
                 rowColumn {
                     rowField obj.dateCreated_
@@ -322,7 +324,7 @@ class PlmFreeCadUiService implements WebAttributes {
                 }
                 col {
                     show showPreview, {
-                        menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
+                        menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadBinPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                         if (!isHistory)
                             menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
                     }
@@ -347,8 +349,10 @@ class PlmFreeCadUiService implements WebAttributes {
                     if (containerParts)
                         table buildPartTable(containerParts)
                 }
-                if (!part.linkedParts.empty)
+                if (!part.linkedParts.empty) {
                     table buildLinkTableFromPart(part)
+                }
+
                 table new UiTableSpecifier().ui({
                     def h = part.history
                     PlmFreeCadPart p = null

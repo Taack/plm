@@ -50,9 +50,9 @@ class PlmController implements WebAttributes {
         render plmFreeCadUiService.processProto(proto.bytes)
     }
 
-    def downloadPart(PlmFreeCadPart part, Long partVersion) {
+    def downloadBinPart(PlmFreeCadPart part, Long partVersion) {
         response.contentType = 'application/zip'
-        response.setHeader("Content-disposition", "filename=\"${URLEncoder.encode("${part.originalName}${partVersion ? "-v${partVersion}" : ''}-${TaackUiService.dateFileName}.zip", 'UTF-8')}\"")
+        response.setHeader("Content-disposition", "filename=${URLEncoder.encode("${part.originalName}${partVersion ? "-v${partVersion}" : ''}-${TaackUiService.dateFileName}.zip", 'UTF-8')}")
         response.outputStream << plmFreeCadUiService.zipPart(part, partVersion).bytes
         response.outputStream.close()
     }
@@ -70,12 +70,11 @@ class PlmController implements WebAttributes {
     }
 
     def showPart(PlmFreeCadPart part, Long partVersion, Boolean isHistory) {
-        if (!isHistory) {
-            params.remove('isAjax') // TODO: Avoid that ...
-            taackUiService.show(plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, false, isHistory), buildMenu())
-        } else {
-            taackUiService.show(plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, false, isHistory))
-        }
+        taackUiService.show(
+                plmFreeCadUiService.buildFreeCadPartBlockShow(
+                        part, partVersion, false, isHistory),
+                buildMenu(),
+                "isHistory")
     }
 
     def previewPart(PlmFreeCadPart part, Long partVersion, String timestamp) {

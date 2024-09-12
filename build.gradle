@@ -9,15 +9,15 @@ plugins {
 }
 
 apply plugin: 'com.google.protobuf'
-
-dependencies {
-    implementation 'com.google.protobuf:protobuf-java:3.25.3'
-}
+//
+//dependencies {
+//    implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
+//}
 
 protobuf {
 //    generatedFilesBaseDir = "$projectDir/src/"
     protoc {
-        artifact = 'com.google.protobuf:protoc:3.25.3'
+        artifact = "com.google.protobuf:protoc:${protobufVersion}"
     }
     generateProtoTasks {
         all().configureEach { task ->
