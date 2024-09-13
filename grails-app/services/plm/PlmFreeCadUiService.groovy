@@ -51,6 +51,9 @@ class PlmFreeCadUiService implements WebAttributes {
     @Value('${plm.singleInstance}')
     Boolean singleInstance
 
+    @Value('${plm.offscreen}')
+    Boolean offscreen
+
     @Value('${plm.xvfbRun}')
     Boolean xvfbRun
 
@@ -91,7 +94,7 @@ class PlmFreeCadUiService implements WebAttributes {
         FileUtils.forceMkdir(new File(glbPath))
         FileUtils.forceMkdir(new File(previewPath))
         FileUtils.forceMkdir(new File(zipPath))
-        log.info "singleInstance = $singleInstance, xvfbRun = $xvfbRun, useWeston = $useWeston"
+        log.info "singleInstance = $singleInstance, xvfbRun = $xvfbRun, useWeston = $useWeston, offscreen = $offscreen"
         if (!new File(freecadPath).exists()) {
             log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
             errorsInit.add 'Freecad path not configured ... Stopping'
@@ -626,8 +629,10 @@ class PlmFreeCadUiService implements WebAttributes {
                 log.info "$pWestonCmd"
                 pWeston = pWestonCmd.execute()
                 cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
-            } else {
+            } else if (xvfbRun) {
                 cmd = "${xvfbRun ? "/usr/bin/xvfb-run " : ""}${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
+            } else if (offscreen) {
+                cmd = "env QT_QPA_PLATFORM=offscreen ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
             }
             if (cmd) {
                 log.info "$cmd"
