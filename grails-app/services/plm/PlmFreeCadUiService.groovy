@@ -300,7 +300,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def showFields = new UiShowSpecifier().ui(part, {
             section tr('version.label'), {
                 if (part.active) field tr('version.label'), "#${part.computedVersion}"
-                if (!part.active) field tr('not.active.label'), Style.EMPHASIS + Style.RED
+                if (!part.active) field Style.EMPHASIS + Style.RED, tr('not.active.label')
                 fieldLabeled part.dateCreated_
                 fieldLabeled part.userUpdated_
                 fieldLabeled part.originalName_
@@ -335,7 +335,7 @@ class PlmFreeCadUiService implements WebAttributes {
             }
             if (!isHistory) {
                 show new UiShowSpecifier().ui(part, {
-                    field Markdown.getContentHtml(part.commentVersion), Style.MARKDOWN_BODY
+                    field Style.MARKDOWN_BODY, Markdown.getContentHtml(part.commentVersion)
                 }), {
                     if (isMail)
                         menuIcon ActionIcon.SHOW, PlmController.&showPart as MC, part.id
