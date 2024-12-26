@@ -78,7 +78,7 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
         plmFileLastUpdated nullable: true
         plmFileUserCreated nullable: true
         comment nullable: true
-        commentVersion nullable: true, widget: "markdown"
+        commentVersion nullable: true, widget: 'asciidoc'
         nextVersion nullable: true
         plmContentType nullable: true
         plmContentShaOne nullable: true

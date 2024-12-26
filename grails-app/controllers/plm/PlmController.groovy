@@ -15,6 +15,7 @@ import taack.domain.TaackMetaModelService
 import taack.domain.TaackSaveService
 import taack.render.TaackUiService
 import taack.ui.dsl.UiBlockSpecifier
+import taack.ui.dsl.UiFormSpecifier
 import taack.ui.dsl.UiMenuSpecifier
 import taack.ui.dsl.common.ActionIcon
 
@@ -67,6 +68,26 @@ class PlmController implements WebAttributes {
 
     def lockedParts() {
         render 'Not done Yet ..'
+    }
+
+    @Transactional
+    def saveComment() {
+        taackSaveService.saveThenReloadOrRenderErrors(PlmFreeCadPart)
+    }
+
+    def addComment(PlmFreeCadPart part) {
+        taackUiService.show(new UiBlockSpecifier().ui {
+            modal {
+                form(new UiFormSpecifier().ui(part) {
+                    section {
+                        field part.commentVersion_
+                    }
+                    formAction this.&saveComment as MC
+                }) {
+                    label('coucou')
+                }
+            }
+        })
     }
 
     def showPart(PlmFreeCadPart part, Long partVersion, Boolean isHistory) {

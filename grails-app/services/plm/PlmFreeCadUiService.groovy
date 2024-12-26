@@ -16,12 +16,13 @@ import taack.ast.type.FieldInfo
 import taack.domain.TaackFilter
 import taack.domain.TaackFilterService
 import taack.ui.dsl.*
+import taack.ui.dsl.block.BlockSpec
 import taack.ui.dsl.common.ActionIcon
 import taack.ui.dsl.common.IconStyle
 import taack.ui.dsl.common.Style
 import taack.ui.dsl.filter.expression.FilterExpression
 import taack.ui.dsl.filter.expression.Operator
-import taack.ui.dump.markdown.Markdown
+import taack.wysiwyg.Markdown
 
 import javax.annotation.PostConstruct
 import java.nio.file.Files
@@ -187,7 +188,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     .setSortOrder(TaackFilter.Order.DESC, l.dateCreated_)
                     .addRestrictedIds(part.plmLinks*.id as Long[])
                     .build()) { PlmFreeCadLink o ->
-                rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}&timestamp=${o.part.mTimeNs}"></div>"""
+                rowFieldRaw """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}&timestamp=${o.part.mTimeNs}"></div>"""
                 rowColumn {
                     rowField o.dateCreated_
                     rowField o.userCreated.username
@@ -256,7 +257,7 @@ class PlmFreeCadUiService implements WebAttributes {
             }
 
             iterate(tfb.build()) { PlmFreeCadPart obj ->
-                rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
+                rowFieldRaw """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
                 rowColumn {
                     rowField obj.dateCreated_
                     rowField obj.userCreated.username
@@ -297,7 +298,7 @@ class PlmFreeCadUiService implements WebAttributes {
             part = part.getHistory()[partVersion]
         }
 
-        def showFields = new UiShowSpecifier().ui(part, {
+        def showFields = new UiShowSpecifier().ui {
             section tr('version.label'), {
                 if (part.active) field tr('version.label'), "#${part.computedVersion}"
                 if (!part.active) field Style.EMPHASIS + Style.RED, tr('not.active.label')
@@ -314,29 +315,31 @@ class PlmFreeCadUiService implements WebAttributes {
                 fieldLabeled part.lockedBy_
                 fieldLabeled part.tags_
             }
-        })
+        }
 
-        def showPreview = new UiShowSpecifier().ui(part, {
+        def showPreview = new UiShowSpecifier().ui {
             field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}&timestamp=${part.mTimeNs}"></div>"""
-        })
+        }
 
         UiBlockSpecifier b = new UiBlockSpecifier().ui {
             row {
-                col {
+                col BlockSpec.Width.QUARTER, {
                     show showFields
                 }
-                col {
+                col BlockSpec.Width.THREE_QUARTER, {
                     show showPreview, {
                         menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadBinPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
-                        if (!isHistory)
+                        if (!isHistory) {
                             menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
+                            menuIcon ActionIcon.ADD, PlmController.&addComment as MC, part.id
+                        }
                     }
                 }
             }
             if (!isHistory) {
-                show new UiShowSpecifier().ui(part, {
+                show new UiShowSpecifier().ui {
                     field Style.MARKDOWN_BODY, Markdown.getContentHtml(part.commentVersion)
-                }), {
+                }, {
                     if (isMail)
                         menuIcon ActionIcon.SHOW, PlmController.&showPart as MC, part.id
                 }
@@ -380,7 +383,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                     }
                                     rowColumn {
                                         rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
-                                        rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
+                                        rowFieldRaw """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
                                     }
                                 }
                             }
@@ -412,7 +415,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                     rowColumn {
                                         partVersionOcc++
                                         rowAction 'Access Version', ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
-                                        rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
+                                        rowFieldRaw """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
                                     }
                                 }
                             }
