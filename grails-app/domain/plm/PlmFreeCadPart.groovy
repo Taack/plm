@@ -11,7 +11,7 @@ import taack.domain.IDomainHistory
 import taack.domain.IEnumTransition2
 
 @CompileStatic
-enum PlmFreeCadPartStatus implements IEnumTransition2<User>  {
+enum PlmFreeCadPartStatus implements IEnumTransition2<User> {
     CREATED, FREE, LOCKED, OBSOLETE
 
     @Override
@@ -73,6 +73,8 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
 
     PlmFreeCadPartStatus status = PlmFreeCadPartStatus.CREATED
 
+    Set<Attachment> commentVersionAttachmentList
+
     static constraints = {
         lockedBy nullable: true
         plmFileLastUpdated nullable: true
@@ -87,10 +89,10 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
     }
 
     static hasMany = [
-            plmLinks: PlmFreeCadLink,
-            plmLinksOld: PlmFreeCadLink,
-            attachments  : Attachment,
-            tags  : Term,
+            plmLinks                    : PlmFreeCadLink,
+            plmLinksOld                 : PlmFreeCadLink,
+            commentVersionAttachmentList: Attachment,
+            tags                        : Term,
     ]
 
     static mapping = {
@@ -145,7 +147,7 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
             return (PlmFreeCadPart.findAllByNextVersion(this) + this).sort {
                 (it as PlmFreeCadPart).creationOrder
             }
-        } catch(e) {
+        } catch (e) {
             println "PlmFreeCadPart ${e}"
             return null
         }
@@ -176,7 +178,7 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
         Set<PlmFreeCadPart> ret = []
         ret.addAll(parts)
         parts.each {
-           ret.addAll(linkedPartsFromParts(it.linkedParts))
+            ret.addAll(linkedPartsFromParts(it.linkedParts))
         }
         ret
     }

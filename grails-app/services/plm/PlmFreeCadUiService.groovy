@@ -345,8 +345,8 @@ class PlmFreeCadUiService implements WebAttributes {
                 }
             }
             if (!isMail && !isHistory) {
-                if (part.attachments?.size() > 0) {
-                    table attachmentUiService.buildAttachmentsTable(part.attachments)
+                if (part.commentVersionAttachmentList?.size() > 0) {
+                    table attachmentUiService.buildAttachmentsTable(part.commentVersionAttachmentList)
                 }
 
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)

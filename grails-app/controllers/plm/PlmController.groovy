@@ -144,7 +144,7 @@ class PlmController implements WebAttributes {
     def saveAttachment() {
         def p = PlmFreeCadPart.get(params.long('objectId'))
         def att = taackSaveService.save(Attachment)
-        p.addToAttachments(att)
+        p.addToCommentVersionAttachmentList(att)
         taackUiService.ajaxReload()
     }
 
