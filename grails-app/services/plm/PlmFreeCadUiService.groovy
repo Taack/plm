@@ -22,6 +22,8 @@ import taack.ui.dsl.common.IconStyle
 import taack.ui.dsl.common.Style
 import taack.ui.dsl.filter.expression.FilterExpression
 import taack.ui.dsl.filter.expression.Operator
+import taack.ui.dump.Parameter
+import taack.wysiwyg.Asciidoc
 import taack.wysiwyg.Markdown
 
 import javax.annotation.PostConstruct
@@ -370,14 +372,13 @@ class PlmFreeCadUiService implements WebAttributes {
                                     rowField "<b>${i.historyUserCreated.username}</b> on ${i.historyDateCreated}"
                                 }
                             }
-                            if (i.commentVersion && !p) {
-                                row {
+                            row {
+                                if (i.commentVersion && !p) {
                                     rowColumn {
-                                        rowField Markdown.getContentHtml(i.commentVersion), Style.MARKDOWN_BODY
+                                        String urlFileRoot = Parameter.urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: i.id])
+                                        rowFieldRaw Asciidoc.getContentHtml(i.commentVersion, urlFileRoot), Style.MARKDOWN_BODY
                                     }
-                                }
-                            } else if (!p) {
-                                row {
+                                } else if (!p) {
                                     rowColumn {
                                         rowField tr('initial.version.label')
                                     }
@@ -391,7 +392,8 @@ class PlmFreeCadUiService implements WebAttributes {
                                 if (i.commentVersion && p.commentVersion != i.commentVersion) {
                                     row {
                                         rowColumn {
-                                            rowField Markdown.getContentHtml(i.commentVersion), Style.MARKDOWN_BODY
+                                            String urlFileRoot = Parameter.urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: i.id])
+                                            rowFieldRaw Asciidoc.getContentHtml(i.commentVersion, urlFileRoot), Style.MARKDOWN_BODY
                                         }
                                     }
                                 }

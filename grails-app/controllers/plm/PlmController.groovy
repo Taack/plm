@@ -11,6 +11,7 @@ import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.web.multipart.MultipartRequest
 import attachment.Attachment
 import taack.ast.type.FieldInfo
+import taack.domain.TaackAttachmentService
 import taack.domain.TaackMetaModelService
 import taack.domain.TaackSaveService
 import taack.render.TaackUiService
@@ -27,6 +28,7 @@ class PlmController implements WebAttributes {
     TaackMetaModelService taackMetaModelService
     TaackSaveService taackSaveService
     PlmSearchService plmSearchService
+    TaackAttachmentService taackAttachmentService
 
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
@@ -152,4 +154,16 @@ class PlmController implements WebAttributes {
         taackUiService.show(plmSearchService.buildSearchBlock(q), buildMenu(q))
     }
 
+    def downloadBinCommentVersionFiles(PlmFreeCadPart part, String path) {
+        part = part.nextVersion ?: part
+        Attachment a = part.commentVersionAttachmentList.find {
+            it.originalName == path.substring(1)
+        }
+println part
+println part.commentVersionAttachmentList
+        if (a) {
+            taackAttachmentService.downloadAttachment(a)
+        }
+        return false
+    }
 }
