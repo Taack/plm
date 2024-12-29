@@ -157,12 +157,12 @@ class PlmController implements WebAttributes {
     def downloadBinCommentVersionFiles(PlmFreeCadPart part, String path) {
         part = part.nextVersion ?: part
         Attachment a = part.commentVersionAttachmentList.find {
-            it.originalName == path.substring(1)
+            it.originalName == path.replace('/', '')
         }
-println part
-println part.commentVersionAttachmentList
         if (a) {
-            taackAttachmentService.downloadAttachment(a)
+            if (a.contentType.startsWith("image")) {
+                taackAttachmentService.downloadAttachment(a, TaackAttachmentService.PreviewFormat.PREVIEW_MEDIUM)
+            } else taackAttachmentService.downloadAttachment(a)
         }
         return false
     }
