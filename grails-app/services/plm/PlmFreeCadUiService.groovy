@@ -21,7 +21,7 @@ import taack.ui.dsl.common.IconStyle
 import taack.ui.dsl.common.Style
 import taack.ui.dsl.filter.expression.FilterExpression
 import taack.ui.dsl.filter.expression.Operator
-import taack.ui.dump.markdown.Markdown
+import taack.wysiwyg.Markdown
 
 import javax.annotation.PostConstruct
 import java.nio.file.Files
@@ -214,7 +214,6 @@ class PlmFreeCadUiService implements WebAttributes {
         new UiFormSpecifier().ui part, {
             field part.commentVersion_
             field part.status_
-            ajaxField part.tags_, AttachmentController.&selectTagsM2M as MC
             formAction PlmController.&savePart as MC
         }
     }
@@ -343,7 +342,7 @@ class PlmFreeCadUiService implements WebAttributes {
             }
             if (!isMail && !isHistory) {
                 if (part.attachments?.size() > 0) {
-                    table attachmentUiService.buildAttachmentsTable(part.attachments)
+                    table this.attachmentUiService.buildObjectAttachmentsTable(part, part.attachments)
                 }
 
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)

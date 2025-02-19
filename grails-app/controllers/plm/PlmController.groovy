@@ -26,6 +26,7 @@ class PlmController implements WebAttributes {
     TaackMetaModelService taackMetaModelService
     TaackSaveService taackSaveService
     PlmSearchService plmSearchService
+    AttachmentUiService attachmentUiService
 
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
@@ -111,10 +112,7 @@ class PlmController implements WebAttributes {
     def addAttachment(PlmFreeCadPart part) {
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
-                form AttachmentUiService.buildAttachmentForm(
-                        new Attachment(),
-                        this.&saveAttachment as MC,
-                        [id: part.id])
+                inline(attachmentUiService.buildAttachmentsBlock(this.&saveAttachment as MethodClosure, params.long("objectId") ?: part.id))
             }
         })
     }

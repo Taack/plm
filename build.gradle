@@ -1,45 +1,11 @@
-buildscript {
-    dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.9.4'
-    }
-}
-
 plugins {
     id 'taack-grails-plugin'
 }
 
-apply plugin: 'com.google.protobuf'
-//
-//dependencies {
-//    implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
-//}
-
-protobuf {
-//    generatedFilesBaseDir = "$projectDir/src/"
-    protoc {
-        artifact = "com.google.protobuf:protoc:${protobufVersion}"
-    }
-    generateProtoTasks {
-        all().configureEach { task ->
-            task.builtins {
-                java {}
-            }
-        }
-    }
+dependencies {
+    implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
 }
 
-sourceSets {
-    main {
-        proto {
-            // In addition to the default 'src/main/proto'
-            srcDir 'src/main/proto'
-        }
-        java {
-            // In addition to the default 'src/main/proto'
-            srcDir 'src/main/java'
-        }
-    }
-}
 
 grails {
     // should use gradle -Dgrails.run.active=true bootRun
