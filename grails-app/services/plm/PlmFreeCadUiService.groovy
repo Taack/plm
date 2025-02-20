@@ -2,7 +2,6 @@ package plm
 
 import attachement.AttachmentUiService
 import attachment.Term
-import crew.AttachmentController
 import crew.User
 import grails.compiler.GrailsCompileStatic
 import grails.converters.JSON
@@ -187,7 +186,7 @@ class PlmFreeCadUiService implements WebAttributes {
                     .setSortOrder(TaackFilter.Order.DESC, l.dateCreated_)
                     .addRestrictedIds(part.plmLinks*.id as Long[])
                     .build()) { PlmFreeCadLink o ->
-                rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}&timestamp=${o.part.mTimeNs}"></div>"""
+                rowFieldRaw """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}&timestamp=${o.part.mTimeNs}"></div>"""
                 rowColumn {
                     rowField o.dateCreated_
                     rowField o.userCreated.username
@@ -255,7 +254,7 @@ class PlmFreeCadUiService implements WebAttributes {
             }
 
             iterate(tfb.build()) { PlmFreeCadPart obj ->
-                rowField """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
+                rowFieldRaw """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
                 rowColumn {
                     rowField obj.dateCreated_
                     rowField obj.userCreated.username
@@ -315,9 +314,9 @@ class PlmFreeCadUiService implements WebAttributes {
             }
         })
 
-        def showPreview = new UiShowSpecifier().ui(part, {
+        def showPreview = new UiShowSpecifier().ui {
             field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}&timestamp=${part.mTimeNs}"></div>"""
-        })
+        }
 
         UiBlockSpecifier b = new UiBlockSpecifier().ui {
             row {
@@ -379,7 +378,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                     }
                                     rowColumn {
                                         rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
-                                        rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
+                                        rowFieldRaw """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
                                     }
                                 }
                             }
@@ -411,7 +410,7 @@ class PlmFreeCadUiService implements WebAttributes {
                                     rowColumn {
                                         partVersionOcc++
                                         rowAction 'Access Version', ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
-                                        rowField """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
+                                        rowFieldRaw """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
                                     }
                                 }
                             }

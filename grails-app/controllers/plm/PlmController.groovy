@@ -74,7 +74,7 @@ class PlmController implements WebAttributes {
         taackUiService.show(
                 plmFreeCadUiService.buildFreeCadPartBlockShow(
                         part, partVersion, false, isHistory),
-                buildMenu(),
+                isHistory ? null : buildMenu(),
                 "isHistory")
     }
 
@@ -120,7 +120,7 @@ class PlmController implements WebAttributes {
     @Transactional
     def saveAttachment() {
         def p = PlmFreeCadPart.get(params.long('objectId'))
-        def att = taackSaveService.save(Attachment)
+        def att = params.id ? Attachment.get(params.long('id')) : taackSaveService.save(Attachment)
         p.addToAttachments(att)
         taackUiService.ajaxReload()
     }
