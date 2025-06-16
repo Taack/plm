@@ -8,7 +8,8 @@ import grails.compiler.GrailsCompileStatic
 import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.web.api.WebAttributes
-import org.apache.commons.io.FileUtils
+import jakarta.annotation.PostConstruct
+import org.apache.tomcat.util.http.fileupload.FileUtils
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.beans.factory.annotation.Value
 import plm.freecad.FreecadPlm
@@ -24,9 +25,7 @@ import taack.ui.dsl.filter.expression.FilterExpression
 import taack.ui.dsl.filter.expression.Operator
 import taack.ui.dump.Parameter
 import taack.wysiwyg.Asciidoc
-import taack.wysiwyg.Markdown
 
-import javax.annotation.PostConstruct
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
@@ -217,7 +216,7 @@ class PlmFreeCadUiService implements WebAttributes {
         new UiFormSpecifier().ui part, {
             field part.commentVersion_
             field part.status_
-            ajaxField part.tags_, AttachmentController.&selectTagsM2M as MC
+            ajaxField part.tags_, AttachmentController.&selectTermM2O as MC
             formAction PlmController.&savePart as MC
         }
     }
@@ -322,7 +321,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def showPreview = new UiShowSpecifier().ui {
             field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}&timestamp=${part.mTimeNs}"></div>"""
         }
-        String urlFileRoot = Parameter.urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: part.id])
+        String urlFileRoot = new Parameter().urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: part.id])
 
         UiBlockSpecifier b = new UiBlockSpecifier().ui {
             row {
@@ -350,7 +349,7 @@ class PlmFreeCadUiService implements WebAttributes {
             }
             if (!isMail && !isHistory) {
                 if (part.commentVersionAttachmentList?.size() > 0) {
-                    table attachmentUiService.buildAttachmentsTable(part.commentVersionAttachmentList)
+                    table attachmentUiService.buildAttachmentsTable(null, null, null, part.commentVersionAttachmentList*.id?.toArray() as Long[])
                 }
 
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)

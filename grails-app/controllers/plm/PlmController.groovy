@@ -13,7 +13,7 @@ import attachment.Attachment
 import taack.ast.type.FieldInfo
 import taack.domain.TaackAttachmentService
 import taack.domain.TaackMetaModelService
-import taack.domain.TaackSaveService
+import taack.render.TaackSaveService
 import taack.render.TaackUiService
 import taack.ui.dsl.UiBlockSpecifier
 import taack.ui.dsl.UiFormSpecifier
@@ -29,6 +29,7 @@ class PlmController implements WebAttributes {
     TaackSaveService taackSaveService
     PlmSearchService plmSearchService
     TaackAttachmentService taackAttachmentService
+    AttachmentUiService attachmentUiService
 
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
@@ -134,10 +135,7 @@ class PlmController implements WebAttributes {
     def addAttachment(PlmFreeCadPart part) {
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
-                form AttachmentUiService.buildAttachmentForm(
-                        new Attachment(),
-                        this.&saveAttachment as MC,
-                        [id: part.id])
+                form(this.attachmentUiService.buildAttachmentForm(new Attachment()))
             }
         })
     }
@@ -161,7 +159,7 @@ class PlmController implements WebAttributes {
         }
         if (a) {
             if (a.contentType.startsWith("image")) {
-                taackAttachmentService.downloadAttachment(a, TaackAttachmentService.PreviewFormat.PREVIEW_MEDIUM)
+                taackAttachmentService.downloadAttachment(a, true)
             } else taackAttachmentService.downloadAttachment(a)
         }
         return false

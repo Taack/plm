@@ -1,11 +1,9 @@
 package plm
 
-
+import jakarta.annotation.PostConstruct
 import org.codehaus.groovy.runtime.MethodClosure
 import taack.app.TaackApp
 import taack.app.TaackAppRegisterService
-
-import javax.annotation.PostConstruct
 
 class PlmFreeCadSecurityService {
     static lazyInit = false
