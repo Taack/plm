@@ -9,7 +9,6 @@ import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.web.api.WebAttributes
 import jakarta.annotation.PostConstruct
-import org.apache.tomcat.util.http.fileupload.FileUtils
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.beans.factory.annotation.Value
 import plm.freecad.FreecadPlm
@@ -92,10 +91,10 @@ class PlmFreeCadUiService implements WebAttributes {
 
     @PostConstruct
     void init() {
-        FileUtils.forceMkdir(new File(storePath))
-        FileUtils.forceMkdir(new File(glbPath))
-        FileUtils.forceMkdir(new File(previewPath))
-        FileUtils.forceMkdir(new File(zipPath))
+        new File(storePath).mkdirs()
+        new File(glbPath).mkdirs()
+        new File(previewPath).mkdirs()
+        new File(zipPath).mkdirs()
         log.info "singleInstance = $singleInstance, xvfbRun = $xvfbRun, useWeston = $useWeston, offscreen = $offscreen"
         if (!new File(freecadPath).exists()) {
             log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
@@ -340,7 +339,7 @@ class PlmFreeCadUiService implements WebAttributes {
             }
             if (!isHistory) {
                 show new UiShowSpecifier().ui {
-                    String asciidoc = Asciidoc.getContentHtml(part.commentVersion, urlFileRoot)
+                    String asciidoc = Asciidoc.getContentHtml(part.commentVersion, urlFileRoot, false)
                     inlineHtml(asciidoc)
                 }, {
                     if (isMail)
@@ -376,7 +375,7 @@ class PlmFreeCadUiService implements WebAttributes {
                             row {
                                 if (i.commentVersion && !p) {
                                     rowColumn {
-                                        rowFieldRaw Asciidoc.getContentHtml(i.commentVersion, urlFileRoot), Style.MARKDOWN_BODY
+                                        rowFieldRaw Asciidoc.getContentHtml(i.commentVersion, urlFileRoot, false), Style.MARKDOWN_BODY
                                     }
                                 } else if (!p) {
                                     rowColumn {
@@ -391,7 +390,7 @@ class PlmFreeCadUiService implements WebAttributes {
                             if (p) {
                                 row {
                                     if (i.commentVersion && p.commentVersion != i.commentVersion) {
-                                        rowFieldRaw Asciidoc.getContentHtml(i.commentVersion, urlFileRoot), Style.MARKDOWN_BODY
+                                        rowFieldRaw Asciidoc.getContentHtml(i.commentVersion, urlFileRoot, false), Style.MARKDOWN_BODY
                                     }
                                     StringBuffer diff = new StringBuffer()
                                     diff << "<ul>"
@@ -592,7 +591,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def zipFile = zipPart(part)
         if (new File(filePath).exists()) return
         synchronized (singleton) {
-            if (new File('/tmp/model').exists()) FileUtils.forceDelete(new File('/tmp/model'))
+            if (new File('/tmp/model').exists()) new File('/tmp/model').deleteDir()
             "unzip ${zipFile.path} -d /tmp/model".execute()
             String conv = """\
             import sys, os
@@ -657,7 +656,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def zipFile = zipPart(part)
         if (new File("${glbPath + '/' + part.plmContentShaOne + '.glb'}").exists()) return
         synchronized (singleton) {
-            if (new File('/tmp/model').exists()) FileUtils.forceDelete(new File('/tmp/model'))
+            if (new File('/tmp/model').exists()) new File('/tmp/model').deleteDir()
             "unzip ${zipFile.path} -d /tmp/model".execute()
             String conv = """\
             import sys
