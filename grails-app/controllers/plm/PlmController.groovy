@@ -97,7 +97,7 @@ class PlmController implements WebAttributes {
         taackUiService.show(
                 plmFreeCadUiService.buildFreeCadPartBlockShow(
                         part, partVersion, false, isHistory),
-                buildMenu(),
+                isHistory ? null : buildMenu(),
                 "isHistory")
     }
 
