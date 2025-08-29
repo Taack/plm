@@ -1,6 +1,7 @@
 package plm
 
 import attachement.AttachmentUiService
+import attachment.Attachment
 import crew.config.SupportedLanguage
 import grails.compiler.GrailsCompileStatic
 import grails.gorm.transactions.Transactional
@@ -9,16 +10,23 @@ import grails.web.api.WebAttributes
 import org.codehaus.groovy.runtime.MethodClosure
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.web.multipart.MultipartRequest
-import attachment.Attachment
 import taack.ast.type.FieldInfo
 import taack.domain.TaackAttachmentService
 import taack.domain.TaackMetaModelService
 import taack.render.TaackSaveService
 import taack.render.TaackUiService
+import taack.ui.TaackUi
 import taack.ui.dsl.UiBlockSpecifier
 import taack.ui.dsl.UiFormSpecifier
 import taack.ui.dsl.UiMenuSpecifier
+import taack.ui.dsl.UiShowSpecifier
 import taack.ui.dsl.common.ActionIcon
+import taack.ui.dsl.form.editor.EditorOption
+import taack.ui.dump.Parameter
+import taack.wysiwyg.Asciidoc
+import taack.wysiwyg.TaackAsciidocPlantUML
+import taack.wysiwyg.TaackAsciidocTable
+import taack.wysiwyg.TaackBaseAsciidocSpans
 
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
@@ -83,12 +91,16 @@ class PlmController implements WebAttributes {
             modal {
                 form(new UiFormSpecifier().ui(part) {
                     section {
-                        field part.commentVersion_
+                        innerFormAction this.&previewAsciidoc as MC
+                        EditorOption.EditorOptionBuilder editor = EditorOption.getBuilder()
+                        editor.addSpanRegexes(TaackBaseAsciidocSpans.spans)
+                        editor.addSpanRegexes(TaackAsciidocTable.spans)
+                        editor.addSpanRegexes(TaackAsciidocPlantUML.spans)
+//                        editor.uploadFileAction(CmsController.&dropEditor as MethodClosure, [cmsPage: cmsPage.id, l: language.toString()])
+                        fieldEditor part.commentVersion_, editor.build()
                     }
                     formAction this.&saveComment as MC
-                }) {
-                    label('coucou')
-                }
+                })
             }
         })
     }
@@ -99,6 +111,16 @@ class PlmController implements WebAttributes {
                         part, partVersion, false, isHistory),
                 isHistory ? null : buildMenu(),
                 "isHistory")
+    }
+
+    def previewAsciidoc(PlmFreeCadPart part) {
+        String urlFileRoot = new Parameter().urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: part.id])
+
+        taackUiService.show TaackUi.createModal {
+            show(new UiShowSpecifier().ui {
+                field Asciidoc.getContentHtml(part.commentVersion, urlFileRoot, false)
+            })
+        }
     }
 
     def previewPart(PlmFreeCadPart part, Long partVersion, String timestamp) {
