@@ -2,6 +2,7 @@ package plm
 
 import attachement.AttachmentUiService
 import attachment.Attachment
+import attachment.config.AttachmentContentType
 import crew.config.SupportedLanguage
 import grails.compiler.GrailsCompileStatic
 import grails.gorm.transactions.Transactional
@@ -9,6 +10,8 @@ import grails.plugin.springsecurity.annotation.Secured
 import grails.web.api.WebAttributes
 import org.codehaus.groovy.runtime.MethodClosure
 import org.codehaus.groovy.runtime.MethodClosure as MC
+import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.multipart.MultipartHttpServletRequest
 import org.springframework.web.multipart.MultipartRequest
 import taack.ast.type.FieldInfo
 import taack.domain.TaackAttachmentService
@@ -38,6 +41,7 @@ class PlmController implements WebAttributes {
     PlmSearchService plmSearchService
     TaackAttachmentService taackAttachmentService
     AttachmentUiService attachmentUiService
+    ConvertersToAsciidocService convertersToAsciidocService
 
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
@@ -96,7 +100,7 @@ class PlmController implements WebAttributes {
                         editor.addSpanRegexes(TaackBaseAsciidocSpans.spans)
                         editor.addSpanRegexes(TaackAsciidocTable.spans)
                         editor.addSpanRegexes(TaackAsciidocPlantUML.spans)
-//                        editor.uploadFileAction(CmsController.&dropEditor as MethodClosure, [cmsPage: cmsPage.id, l: language.toString()])
+                        editor.uploadFileAction(this.&dropEditor as MethodClosure, [id: part.id])
                         fieldEditor part.commentVersion_, editor.build()
                     }
                     formAction this.&saveComment as MC
@@ -176,14 +180,47 @@ class PlmController implements WebAttributes {
 
     def downloadBinCommentVersionFiles(PlmFreeCadPart part, String path) {
         part = part.nextVersion ?: part
+
         Attachment a = part.commentVersionAttachmentList.find {
-            it.originalName == path.replace('/', '')
+            it.originalName == path.substring(1)
         }
         if (a) {
             if (a.contentType.startsWith("image")) {
                 taackAttachmentService.downloadAttachment(a, true)
             } else taackAttachmentService.downloadAttachment(a)
+        } else if (path.startsWith('/diag-')) {
+            File f = new File(Asciidoc.pathAsciidocGenerated + '/' + path)
+            if (f.exists()) {
+                response.setContentType('image/svg+xml')
+                response.setHeader('Content-disposition', "attachment;filename=${URLEncoder.encode(path, 'UTF-8')}")
+                response.outputStream << f.bytes
+            } else {
+                log.error "No file: ${f.path}"
+            }
         }
+
         return false
+    }
+
+
+    def dropEditor(PlmFreeCadPart part) {
+        if (params.get('onpaste')) {
+            render "${convertersToAsciidocService.convertFromHtml(params.get('onpaste') as String)}"
+        } else {
+
+            final List<MultipartFile> mfl = (request as MultipartHttpServletRequest).getFiles('filePath')
+            final mf = mfl.first()
+
+            if ([AttachmentContentType.SHEET_ODS.mimeType, AttachmentContentType.LO_TEXT.mimeType].contains(mf.contentType)) {
+                render convertersToAsciidocService.convert(part, mf.inputStream)
+            } else {
+                Attachment attachment = taackSaveService.save(Attachment)
+                if (attachment && part) {
+                    part.addToCommentVersionAttachmentList(attachment)
+                }
+                render "image::${attachment.originalName}[]"
+            }
+        }
+
     }
 }
