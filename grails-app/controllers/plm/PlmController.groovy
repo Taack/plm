@@ -122,7 +122,7 @@ class PlmController implements WebAttributes {
 
         taackUiService.show TaackUi.createModal {
             show(new UiShowSpecifier().ui {
-                field Asciidoc.getContentHtml(part.commentVersion, urlFileRoot, false)
+                inlineHtml Asciidoc.getContentHtml(part.commentVersion, urlFileRoot, false), 'asciidocMain'
             })
         }
     }

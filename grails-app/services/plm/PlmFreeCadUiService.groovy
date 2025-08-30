@@ -340,7 +340,8 @@ class PlmFreeCadUiService implements WebAttributes {
             if (!isHistory) {
                 show new UiShowSpecifier().ui {
                     String asciidoc = Asciidoc.getContentHtml(part.commentVersion, urlFileRoot, false)
-                    inlineHtml(asciidoc)
+                    println asciidoc
+                    inlineHtml(asciidoc, 'asciidocMain')
                 }, {
                     if (isMail)
                         menuIcon ActionIcon.SHOW, PlmController.&showPart as MC, part.id
