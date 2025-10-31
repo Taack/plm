@@ -100,7 +100,7 @@ class PlmController implements WebAttributes {
                         editor.addSpanRegexes(TaackBaseAsciidocSpans.spans)
                         editor.addSpanRegexes(TaackAsciidocTable.spans)
                         editor.addSpanRegexes(TaackAsciidocPlantUML.spans)
-                        editor.uploadFileAction(this.&dropEditor as MethodClosure, [id: part.id])
+                        editor.onDropAction(this.&dropEditor as MethodClosure, [id: part.id])
                         fieldEditor part.commentVersion_, editor.build()
                     }
                     formAction this.&saveComment as MC

@@ -1,18 +1,9 @@
-buildscript {
-    dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.9.5'
-    }
-}
-
 plugins {
+    id 'com.google.protobuf' version '0.9.4'
     id 'taack-grails-plugin'
 }
 
 apply plugin: 'com.google.protobuf'
-//
-//dependencies {
-//    implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
-//}
 
 protobuf {
 //    generatedFilesBaseDir = "$projectDir/src/"
