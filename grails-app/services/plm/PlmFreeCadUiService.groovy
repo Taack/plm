@@ -2,12 +2,13 @@ package plm
 
 import attachement.AttachmentUiService
 import attachment.Term
+import crew.AttachmentController
 import crew.User
 import grails.compiler.GrailsCompileStatic
 import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.web.api.WebAttributes
-import org.apache.commons.io.FileUtils
+import jakarta.annotation.PostConstruct
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.beans.factory.annotation.Value
 import plm.freecad.FreecadPlm
@@ -15,14 +16,15 @@ import taack.ast.type.FieldInfo
 import taack.domain.TaackFilter
 import taack.domain.TaackFilterService
 import taack.ui.dsl.*
+import taack.ui.dsl.block.BlockSpec
 import taack.ui.dsl.common.ActionIcon
 import taack.ui.dsl.common.IconStyle
 import taack.ui.dsl.common.Style
 import taack.ui.dsl.filter.expression.FilterExpression
 import taack.ui.dsl.filter.expression.Operator
-import taack.wysiwyg.Markdown
+import taack.ui.dump.Parameter
+import taack.wysiwyg.Asciidoc
 
-import javax.annotation.PostConstruct
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
@@ -89,10 +91,10 @@ class PlmFreeCadUiService implements WebAttributes {
 
     @PostConstruct
     void init() {
-        FileUtils.forceMkdir(new File(storePath))
-        FileUtils.forceMkdir(new File(glbPath))
-        FileUtils.forceMkdir(new File(previewPath))
-        FileUtils.forceMkdir(new File(zipPath))
+        new File(storePath).mkdirs()
+        new File(glbPath).mkdirs()
+        new File(previewPath).mkdirs()
+        new File(zipPath).mkdirs()
         log.info "singleInstance = $singleInstance, xvfbRun = $xvfbRun, useWeston = $useWeston, offscreen = $offscreen"
         if (!new File(freecadPath).exists()) {
             log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
@@ -213,6 +215,7 @@ class PlmFreeCadUiService implements WebAttributes {
         new UiFormSpecifier().ui part, {
             field part.commentVersion_
             field part.status_
+            ajaxField part.tags_, AttachmentController.&selectTermM2O as MC
             formAction PlmController.&savePart as MC
         }
     }
@@ -284,7 +287,7 @@ class PlmFreeCadUiService implements WebAttributes {
         if (fieldInfoTo && fieldInfoTo.value) to = fieldInfoTo.value.toString()
 
         if (from != to) {
-            String i18n = tr('content.became.from.to.label', tr(fieldInfoFrom), from, to)
+            String i18n = tr('content.became.from.to.label', tr(fieldInfoFrom), from.take(20), to.take(20))
             "<li>$i18n</li>"
         } else ''
     }
@@ -295,7 +298,7 @@ class PlmFreeCadUiService implements WebAttributes {
             part = part.getHistory()[partVersion]
         }
 
-        def showFields = new UiShowSpecifier().ui(part, {
+        def showFields = new UiShowSpecifier().ui {
             section tr('version.label'), {
                 if (part.active) field tr('version.label'), "#${part.computedVersion}"
                 if (!part.active) field Style.EMPHASIS + Style.RED, tr('not.active.label')
@@ -312,36 +315,41 @@ class PlmFreeCadUiService implements WebAttributes {
                 fieldLabeled part.lockedBy_
                 fieldLabeled part.tags_
             }
-        })
+        }
 
         def showPreview = new UiShowSpecifier().ui {
             field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}&timestamp=${part.mTimeNs}"></div>"""
         }
+        String urlFileRoot = new Parameter().urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: part?.id])
 
         UiBlockSpecifier b = new UiBlockSpecifier().ui {
             row {
-                col {
+                col BlockSpec.Width.QUARTER, {
                     show showFields
                 }
-                col {
+                col BlockSpec.Width.THREE_QUARTER, {
                     show showPreview, {
                         menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadBinPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
-                        if (!isHistory)
+                        if (!isHistory) {
                             menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
+                            menuIcon ActionIcon.ADD, PlmController.&addComment as MC, part.id
+                        }
                     }
                 }
             }
             if (!isHistory) {
-                show new UiShowSpecifier().ui(part, {
-                    field Style.MARKDOWN_BODY, Markdown.getContentHtml(part.commentVersion)
-                }), {
+                show new UiShowSpecifier().ui {
+                    String asciidoc = Asciidoc.getContentHtml(part.commentVersion, urlFileRoot, false)
+                    println asciidoc
+                    inlineHtml(asciidoc, 'asciidocMain')
+                }, {
                     if (isMail)
                         menuIcon ActionIcon.SHOW, PlmController.&showPart as MC, part.id
                 }
             }
             if (!isMail && !isHistory) {
-                if (part.attachments?.size() > 0) {
-                    table this.attachmentUiService.buildObjectAttachmentsTable(part, part.attachments)
+                if (part.commentVersionAttachmentList?.size() > 0) {
+                    table attachmentUiService.buildAttachmentsTable(null, null, null, part.commentVersionAttachmentList*.id?.toArray() as Long[])
                 }
 
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
@@ -365,14 +373,12 @@ class PlmFreeCadUiService implements WebAttributes {
                                     rowField "<b>${i.historyUserCreated.username}</b> on ${i.historyDateCreated}"
                                 }
                             }
-                            if (i.commentVersion && !p) {
-                                row {
+                            row {
+                                if (i.commentVersion && !p) {
                                     rowColumn {
-                                        rowField Markdown.getContentHtml(i.commentVersion), Style.MARKDOWN_BODY
+                                        rowFieldRaw Asciidoc.getContentHtml(i.commentVersion, urlFileRoot, false), Style.MARKDOWN_BODY
                                     }
-                                }
-                            } else if (!p) {
-                                row {
+                                } else if (!p) {
                                     rowColumn {
                                         rowField tr('initial.version.label')
                                     }
@@ -383,17 +389,16 @@ class PlmFreeCadUiService implements WebAttributes {
                                 }
                             }
                             if (p) {
-                                if (i.commentVersion && p.commentVersion != i.commentVersion) {
-                                    row {
-                                        rowColumn {
-                                            rowField Markdown.getContentHtml(i.commentVersion), Style.MARKDOWN_BODY
-                                        }
-                                    }
-                                }
+//                                if (i.commentVersion && p.commentVersion != i.commentVersion) {
+//                                    row {
+//                                        rowFieldRaw Asciidoc.getContentHtml(i.commentVersion, urlFileRoot, false), Style.MARKDOWN_BODY
+//                                    }
+//                                } else {
                                 row {
                                     StringBuffer diff = new StringBuffer()
                                     diff << "<ul>"
                                     diff << diffTr(p.plmContentShaOne_, i.plmContentShaOne_)
+                                    diff << diffTr(p.commentVersion_, i.commentVersion_)
                                     diff << diffTr(p.lockedBy_, i.lockedBy_)
                                     diff << diffTr(p.status_, i.status_)
                                     diff << diffTr(p.label_, i.label_)
@@ -406,13 +411,25 @@ class PlmFreeCadUiService implements WebAttributes {
                                     diff << diffTr(p.comment_, i.comment_)
                                     diff << diffTr(p.tags_, i.tags_)
                                     diff << "</ul>"
-                                    rowField diff.toString()
                                     rowColumn {
-                                        partVersionOcc++
-                                        rowAction 'Access Version', ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
-                                        rowFieldRaw """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
+                                        if (i.commentVersion && p.commentVersion != i.commentVersion) {
+                                            rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&previewAsciidoc as MC, i.id
+                                        }
+                                        rowField diff.toString()
+                                    }
+                                    partVersionOcc++
+                                    if (p.plmFilePath != i.plmFilePath) {
+                                        rowColumn {
+                                            rowAction 'Access Version', ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
+                                            rowFieldRaw """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
+                                        }
+                                    } else {
+                                        rowColumn {
+
+                                        }
                                     }
                                 }
+//                                }
                             }
                             p = i
                         }
@@ -590,7 +607,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def zipFile = zipPart(part)
         if (new File(filePath).exists()) return
         synchronized (singleton) {
-            if (new File('/tmp/model').exists()) FileUtils.forceDelete(new File('/tmp/model'))
+            if (new File('/tmp/model').exists()) new File('/tmp/model').deleteDir()
             "unzip ${zipFile.path} -d /tmp/model".execute()
             String conv = """\
             import sys, os
@@ -655,7 +672,7 @@ class PlmFreeCadUiService implements WebAttributes {
         def zipFile = zipPart(part)
         if (new File("${glbPath + '/' + part.plmContentShaOne + '.glb'}").exists()) return
         synchronized (singleton) {
-            if (new File('/tmp/model').exists()) FileUtils.forceDelete(new File('/tmp/model'))
+            if (new File('/tmp/model').exists()) new File('/tmp/model').deleteDir()
             "unzip ${zipFile.path} -d /tmp/model".execute()
             String conv = """\
             import sys
