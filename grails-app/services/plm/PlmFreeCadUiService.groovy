@@ -327,6 +327,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 }
                 col BlockSpec.Width.THREE_QUARTER, {
                     show showPreview, {
+                        label(tr('preview.label'))
                         menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadBinPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                         if (!isHistory) {
                             menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
@@ -338,7 +339,6 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             if (!isHistory) {
                 show new UiShowSpecifier().ui {
                     String asciidoc = Asciidoc.getContentHtml(part.commentVersion, urlFileRoot, false)
-                    println asciidoc
                     inlineHtml(asciidoc, 'asciidocMain')
                 }, {
                     if (isMail)
@@ -354,10 +354,14 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 if (!parentLinks.empty) {
                     def containerParts = parentLinks*.parentPart.findAll { it.active }
                     if (containerParts)
-                        table buildPartTable(containerParts)
+                        table buildPartTable(containerParts), {
+                            label(tr('usedIn.label'))
+                        }
                 }
                 if (!part.linkedParts.empty) {
-                    table buildLinkTableFromPart(part)
+                    table buildLinkTableFromPart(part), {
+                        label(tr('plm.links.label'))
+                    }
                 }
 
                 table new UiTableSpecifier().ui({
@@ -433,6 +437,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                         }
                     }
                 }), {
+                    label(tr('history.label'))
 //                    menuIcon ActionIcon.ADD, PlmController.&editPart as MC, part.id
                 }
             } else if (!isMail) {
