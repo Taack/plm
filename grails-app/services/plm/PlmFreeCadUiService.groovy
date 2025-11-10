@@ -5,16 +5,18 @@ import attachment.Term
 import crew.AttachmentController
 import crew.User
 import grails.compiler.GrailsCompileStatic
+import grails.config.Config
 import grails.converters.JSON
+import grails.core.support.GrailsConfigurationAware
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.web.api.WebAttributes
 import jakarta.annotation.PostConstruct
 import org.codehaus.groovy.runtime.MethodClosure as MC
-import org.springframework.beans.factory.annotation.Value
 import plm.freecad.FreecadPlm
 import taack.ast.type.FieldInfo
 import taack.domain.TaackFilter
 import taack.domain.TaackFilterService
+import taack.ui.TaackUiConfiguration
 import taack.ui.dsl.*
 import taack.ui.dsl.block.BlockSpec
 import taack.ui.dsl.common.ActionIcon
@@ -36,33 +38,30 @@ import java.util.zip.ZipOutputStream
 import static taack.render.TaackUiService.tr
 
 @GrailsCompileStatic
-class PlmFreeCadUiService implements WebAttributes {
+class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
     static final List<String> errorsInit = []
 
-    @Value('${plm.freecadPath}')
     String freecadPath
-
-    @Value('${exe.unzipPath}')
     String unzipPath
-
-    @Value('${exe.convertPath}')
     String convertPath
-
-    @Value('${plm.singleInstance}')
     Boolean singleInstance
-
-    @Value('${plm.offscreen}')
     Boolean offscreen
-
-    @Value('${plm.xvfbRun}')
     Boolean xvfbRun
-
-    @Value('${plm.useWeston}')
     Boolean useWeston
-
-    @Value('${exe.dot.path}')
     String dotPath
+
+    @Override
+    void setConfiguration(Config config) {
+        singleInstance = config.getProperty('plm.singleInstance', Boolean)
+        offscreen = config.getProperty('plm.offscreen', Boolean)
+        xvfbRun = config.getProperty('plm.xvfbRun', Boolean)
+        useWeston = config.getProperty('plm.useWeston', Boolean)
+        dotPath = config.getProperty('exe.dot.path')
+        convertPath = config.getProperty('exe.convertPath')
+        unzipPath = config.getProperty('exe.unzipPath')
+        freecadPath = config.getProperty('exe.freecadPath')
+    }
 
     TaackFilterService taackFilterService
     SpringSecurityService springSecurityService
@@ -70,8 +69,7 @@ class PlmFreeCadUiService implements WebAttributes {
 
     static final singleton = new Object()
 
-    @Value('${intranet.root}')
-    String intranetRoot
+    final private String intranetRoot = TaackUiConfiguration.root
 
     String getStorePath() {
         intranetRoot + "/plmFreecad/model"
@@ -720,4 +718,5 @@ class PlmFreeCadUiService implements WebAttributes {
 
         }
     }
+
 }
