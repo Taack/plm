@@ -343,6 +343,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                     show showPreview, {
                         label(tr('preview.label'))
                         menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadBinPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
+                        menuIcon ActionIcon.SHOW, PlmController.&preview3dPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                         if (!isHistory) {
                             menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
                             menuIcon ActionIcon.ADD, PlmController.&addComment as MC, part.id
@@ -696,9 +697,11 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         }
     }
 
-    private void create3dPreview(PlmFreeCadPart part) {
+    File create3dPreview(PlmFreeCadPart part) {
+        log.info "Preview part $part"
         def zipFile = zipPart(part)
-        if (new File("${glbPath + '/' + part.plmContentShaOne + '.glb'}").exists()) return
+        def glbFile = new File("${glbPath + '/' + part.plmContentShaOne + '.glb'}")
+        if (glbFile.exists()) return glbFile
         synchronized (singleton) {
             if (new File("$tmpPath/model").exists()) new File("$tmpPath/model").deleteDir()
             "unzip ${zipFile.path} -d $tmpPath/model".execute()
@@ -738,6 +741,12 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 log.info "$cmd"
                 Process pFreecad = cmd.execute()
                 println "Script:\n$conv"
+                int occ = 0
+
+                while (!glbFile.exists() && occ++ < 60) {
+                    sleep(1000)
+                    println "Wait $occ ${glbFile.exists()} ${glbFile.absolutePath}"
+                }
                 println "Deleting ${convPath.toString()}"
                 Files.deleteIfExists(convPath)
             }
@@ -746,6 +755,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 pWeston.waitForOrKill(1000)
             }
         }
+        return glbFile
     }
 
 }

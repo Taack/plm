@@ -7,6 +7,7 @@ import attachment.config.AttachmentContentType
 import crew.config.SupportedLanguage
 import grails.compiler.GrailsCompileStatic
 import grails.gorm.transactions.Transactional
+import grails.gsp.PageRenderer
 import grails.plugin.springsecurity.annotation.Secured
 import grails.web.api.WebAttributes
 import org.codehaus.groovy.runtime.MethodClosure
@@ -43,6 +44,7 @@ class PlmController implements WebAttributes {
     TaackAttachmentService taackAttachmentService
     AttachmentUiService attachmentUiService
     ConvertersToAsciidocService convertersToAsciidocService
+    PageRenderer groovyPageRenderer
 
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
@@ -222,6 +224,35 @@ class PlmController implements WebAttributes {
                 render "image::${attachment.originalName}[]"
             }
         }
-
     }
+
+    def preview3dPart(PlmFreeCadPart part, Long partVersion, String timestamp) {
+        if (partVersion != null) {
+            part = part.getHistory()[partVersion]
+        }
+
+        taackUiService.show(new UiBlockSpecifier().ui {
+            modal {
+                iframe('/plm/iframe3d?shaOne=' + part.plmContentShaOne, '600')
+//                custom(groovyPageRenderer.render(template: "/plm/previewGlbFile2", model: [shaOne: part.plmContentShaOne]) as String)
+            }
+        })
+    }
+
+
+    def iframe3d(String shaOne) {
+        render(template: "/plm/previewGlbFile2", model: [shaOne: shaOne])
+    }
+
+    def hdr() {
+        response.setHeader("Cache-Control", "max-age=31536000")
+        response.setHeader("Content-disposition", "attachment;filename=\"venice_sunset_1k.hdr\"")
+        response.outputStream << this.class.getResourceAsStream("/plm/venice_sunset_1k.hdr").readAllBytes()
+        return true
+    }
+
+    def stp3dFileContent(String shaOne) {
+        render(file: plmFreeCadUiService.create3dPreview(PlmFreeCadPart.findByPlmContentShaOne(shaOne)), contentType: 'application/gltf-buffer')
+    }
+
 }
