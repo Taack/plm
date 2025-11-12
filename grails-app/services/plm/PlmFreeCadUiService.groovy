@@ -311,7 +311,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
         def showFields = new UiShowSpecifier().ui {
             section tr('version.label'), {
-                if (part.active) field tr('version.label'), "#${part.computedVersion}"
+                if (part.active) fieldLabeled part.computedVersion_
                 if (!part.active) field Style.EMPHASIS + Style.RED, tr('not.active.label')
                 fieldLabeled part.dateCreated_
                 fieldLabeled part.userUpdated_
@@ -329,9 +329,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         }
 
         def showPreview = new UiShowSpecifier().ui {
-            field """<div style="text-align: center;"><img style="max-width: 250px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}&timestamp=${part.mTimeNs}"></div>"""
+            field """<div style="text-align: center;"><img style="max-width: 360px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}&timestamp=${part.mTimeNs}"></div>"""
         }
-        String urlFileRoot = new Parameter().urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: part?.id])
 
         UiBlockSpecifier b = new UiBlockSpecifier().ui {
             row {
@@ -353,7 +352,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             }
             if (!isHistory) {
                 show new UiShowSpecifier().ui {
-                    String asciidoc = Asciidoc.getContentHtml(part.commentVersion, urlFileRoot, false)
+                    String asciidoc = this.genAsciidoc(part)
                     inlineHtml(asciidoc, 'asciidocMain')
                 }, {
                     if (isMail)
@@ -393,7 +392,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                             row {
                                 if (i.commentVersion && !p) {
                                     rowColumn {
-                                        rowFieldRaw Asciidoc.getContentHtml(i.commentVersion, urlFileRoot, false), Style.MARKDOWN_BODY
+                                        rowFieldRaw this.genAsciidoc(i), Style.MARKDOWN_BODY
                                     }
                                 } else if (!p) {
                                     rowColumn {
@@ -468,6 +467,16 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         } else {
             b
         }
+    }
+
+    String genAsciidoc(PlmFreeCadPart part) {
+        String content = part.commentVersion
+        def f = new File(tmpPath + '/' + content.md5())
+        String urlFileRoot = new Parameter().urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: part.id])
+        if (!f.exists()) {
+            f << Asciidoc.getContentHtml(content, urlFileRoot, false)
+        }
+        f.text
     }
 
     JSON processProto(byte[] data) {

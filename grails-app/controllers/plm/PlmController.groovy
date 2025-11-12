@@ -1,6 +1,5 @@
 package plm
 
-
 import attachement.AttachmentUiService
 import attachment.Attachment
 import attachment.config.AttachmentContentType
@@ -27,7 +26,6 @@ import taack.ui.dsl.UiMenuSpecifier
 import taack.ui.dsl.UiShowSpecifier
 import taack.ui.dsl.common.ActionIcon
 import taack.ui.dsl.form.editor.EditorOption
-import taack.ui.dump.Parameter
 import taack.wysiwyg.Asciidoc
 import taack.wysiwyg.TaackAsciidocPlantUML
 import taack.wysiwyg.TaackAsciidocTable
@@ -121,11 +119,9 @@ class PlmController implements WebAttributes {
     }
 
     def previewAsciidoc(PlmFreeCadPart part) {
-        String urlFileRoot = new Parameter().urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: part.id])
-
         taackUiService.show TaackUi.createModal {
             show(new UiShowSpecifier().ui {
-                inlineHtml Asciidoc.getContentHtml(part.commentVersion, urlFileRoot, false), 'asciidocMain'
+                inlineHtml this.plmFreeCadUiService.genAsciidoc(part), 'asciidocMain'
             })
         }
     }
