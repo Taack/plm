@@ -221,7 +221,6 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
     UiFormSpecifier buildPartForm(PlmFreeCadPart part) {
         new UiFormSpecifier().ui part, {
-            field part.commentVersion_
             field part.status_
             field part.writeAccess_
             ajaxField part.documentCategory_, AttachmentController.&selectDocumentCategory as MC, part.documentCategory_
@@ -345,6 +344,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                         menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadBinPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                         menuIcon ActionIcon.SHOW, PlmController.&preview3dPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                         if (!isHistory) {
+                            menuIcon ActionIcon.EDIT, PlmController.&editPart as MC, part.id
                             menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
                             menuIcon ActionIcon.ADD, PlmController.&addComment as MC, part.id
                         }

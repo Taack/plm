@@ -143,13 +143,13 @@ class PlmController implements WebAttributes {
             modal {
                 form plmFreeCadUiService.buildPartForm(part)
             }
-        }, buildMenu())
+        })
     }
 
     @Transactional
     def savePart() {
         def p = new PlmFreeCadPart()
-        taackSaveService.saveThenReloadOrRenderErrors(PlmFreeCadPart, [null, p.commentVersion_, p.status_, p.documentCategory_, p.documentAccess_, p.computedVersion_] as FieldInfo[])
+        taackSaveService.saveThenReloadOrRenderErrors(PlmFreeCadPart, [null, p.status_, p.documentCategory_, p.documentAccess_, p.writeAccess_, p.computedVersion_] as FieldInfo[])
     }
 
     def model() {
