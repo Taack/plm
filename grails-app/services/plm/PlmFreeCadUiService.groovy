@@ -471,12 +471,14 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
     String genAsciidoc(PlmFreeCadPart part) {
         String content = part.commentVersion
-        def f = new File(tmpPath + '/' + content.md5())
-        String urlFileRoot = new Parameter().urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: part.id])
-        if (!f.exists()) {
-            f << Asciidoc.getContentHtml(content, urlFileRoot, false)
-        }
-        f.text
+        if (content) {
+            def f = new File(tmpPath + '/' + content.md5())
+            String urlFileRoot = new Parameter().urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: part.id])
+            if (!f.exists()) {
+                f << Asciidoc.getContentHtml(content, urlFileRoot, false)
+            }
+            f.text
+        } else ''
     }
 
     JSON processProto(byte[] data) {
