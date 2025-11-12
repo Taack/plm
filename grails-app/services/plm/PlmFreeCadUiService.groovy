@@ -1,7 +1,10 @@
 package plm
 
 import attachement.AttachmentUiService
+import attachment.DocumentAccess
+import attachment.DocumentCategory
 import attachment.Term
+import attachment.config.DocumentCategoryEnum
 import crew.AttachmentController
 import crew.User
 import grails.compiler.GrailsCompileStatic
@@ -124,6 +127,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
     UiFilterSpecifier buildPartFilter() {
         def p = new PlmFreeCadPart(active: true, nextVersion: null, status: null)
         def l = new PlmFreeCadLink()
+        def d = new DocumentCategory()
         def u = new User()
         def t = new Term()
         new UiFilterSpecifier().ui PlmFreeCadPart, {
@@ -151,7 +155,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 filterField p.plmFileLastUpdated_
             }
             section tr('tags.label'), {
-                filterField p.tags_, t.name_
+                filterField p.documentCategory_, d.tags_, t.name_
             }
         }
     }
@@ -159,6 +163,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
     UiTableSpecifier buildLinkTableFromPart(PlmFreeCadPart part) {
         def l = new PlmFreeCadLink()
         def p = new PlmFreeCadPart()
+        def d = new DocumentCategory()
         def u = new User()
         new UiTableSpecifier().ui {
             header {
@@ -179,7 +184,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                     sortableFieldHeader l.linkCopyOnChange_
                     sortableFieldHeader l.part_, p.label_
                 }
-                label l.part_, p.tags_
+                label l.part_, p.documentCategory_, d.tags_
             }
 
             iterate(taackFilterService.getBuilder(PlmFreeCadLink)
@@ -204,7 +209,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                     rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, o.part.id
                     rowField o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject
                 }
-                rowField o.part.tags*.name?.join(', ')
+                rowField o.part.documentCategory?.tags*.name?.join(', ')
             }
         }
     }
@@ -213,7 +218,9 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         new UiFormSpecifier().ui part, {
             field part.commentVersion_
             field part.status_
-            ajaxField part.tags_, AttachmentController.&selectTermM2O as MC
+            field part.writeAccess_
+            ajaxField part.documentCategory_, AttachmentController.&selectDocumentCategory as MC, part.documentCategory_
+            ajaxField part.documentAccess_, AttachmentController.&selectDocumentAccess as MC, part.documentAccess_
             formAction PlmController.&savePart as MC
         }
     }
@@ -273,7 +280,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                     rowField obj.label, Style.BLUE
                     rowField obj.status_
                 }
-                rowField obj.tags*.name?.join(', ')
+                rowField obj.documentCategory?.tags*.name?.join(', ')
             }
         }
     }
@@ -311,7 +318,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 fieldLabeled part.plmContentType_
                 fieldLabeled Style.EMPHASIS, part.status_
                 fieldLabeled part.lockedBy_
-                fieldLabeled part.tags_
+                fieldLabeled part.documentCategory?.tags_
             }
         }
 
@@ -411,7 +418,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                                     diff << diffTr(p.plmFileUserCreated_, i.plmFileUserCreated_)
                                     diff << diffTr(p.plmFileUserUpdated_, i.plmFileUserUpdated_)
                                     diff << diffTr(p.comment_, i.comment_)
-                                    diff << diffTr(p.tags_, i.tags_)
+                                    diff << diffTr(p.documentCategory?.tags_, i.documentCategory?.tags_)
                                     diff << "</ul>"
                                     rowColumn {
                                         if (i.commentVersion && p.commentVersion != i.commentVersion) {
@@ -462,7 +469,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         def u = springSecurityService.currentUser as User
         Map<String, PlmFreeCadPart> loToP = [:]
         Map<String, List<PlmFreeCadPart>> pToLo = [:]
-        def dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        def dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX")
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
         d.each {
             def f = it.value
@@ -507,6 +514,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                     pp.originalName = f.name
                     pp.cTimeNs = f.getCTimeNs()
                     pp.mTimeNs = f.getUTimeNs()
+                    pp.documentCategory = DocumentCategory.findOrCreateByCategory(DocumentCategoryEnum.OTHER)
+                    pp.documentAccess = DocumentAccess.findOrCreateByIsInternalAndIsRestrictedToMyBusinessUnitAndIsRestrictedToMySubsidiaryAndIsRestrictedToMyManagersAndIsRestrictedToEmbeddingObjects(false, false, false, false, true)
                     pp.save(flush: true, failOnError: true)
                     if (pp.hasErrors()) log.error "${pp.errors}"
                 }
@@ -528,6 +537,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 pl.userUpdated = u
                 pl.linkTransform = plpb.value.linkTransform
                 pl.linkClaimChild = plpb.value.linkClaimChild
+
                 switch (plpb.value.linkCopyOnChange) {
                     case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.Disabled:
                         pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.DISABLED
@@ -720,7 +730,6 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 println "killing weston"
                 pWeston.waitForOrKill(1000)
             }
-
         }
     }
 

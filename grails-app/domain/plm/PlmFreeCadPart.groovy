@@ -1,11 +1,10 @@
 package plm
 
-
+import attachment.Attachment
+import attachment.TaackDocument
+import crew.User
 import grails.compiler.GrailsCompileStatic
 import groovy.transform.CompileStatic
-import attachment.Attachment
-import attachment.Term
-import crew.User
 import taack.ast.annotation.TaackFieldEnum
 import taack.domain.IDomainHistory
 import taack.domain.IEnumTransition2
@@ -36,14 +35,9 @@ enum PlmFreeCadPartStatus implements IEnumTransition2<User> {
 
 @GrailsCompileStatic
 @TaackFieldEnum
-class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
-    Date dateCreated
-    Date lastUpdated
+class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadPart> {
 
     Long computedVersion = 0
-
-    User userCreated
-    User userUpdated
 
     User lockedBy
 
@@ -63,7 +57,6 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
     String commentVersion
 
     Set<PlmFreeCadLink> plmLinks
-    Set<Term> tags
 
     Long creationOrder = Long.MAX_VALUE
     Boolean active = true
@@ -77,6 +70,8 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
 
     static constraints = {
         lockedBy nullable: true
+        documentAccess nullable: true
+        documentCategory nullable: true
         plmFileLastUpdated nullable: true
         plmFileUserCreated nullable: true
         comment nullable: true
@@ -92,7 +87,6 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
             plmLinks                    : PlmFreeCadLink,
             plmLinksOld                 : PlmFreeCadLink,
             commentVersionAttachmentList: Attachment,
-            tags                        : Term,
     ]
 
     static mapping = {
@@ -132,9 +126,6 @@ class PlmFreeCadPart implements IDomainHistory<PlmFreeCadPart> {
             oldPart.status = status
             plmLinks.each {
                 oldPart.addToPlmLinks(it)
-            }
-            tags.each {
-                oldPart.addToTags(it)
             }
             return oldPart
         }

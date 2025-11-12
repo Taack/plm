@@ -1,23 +1,23 @@
 plugins {
-    id 'com.google.protobuf' version '0.9.4'
+//    id 'com.google.protobuf' version '0.9.4'
     id 'taack-grails-plugin'
 }
 
 //apply plugin: 'com.google.protobuf'
-
-protobuf {
-//    generatedFilesBaseDir = "$projectDir/src/"
-    protoc {
-        artifact = "com.google.protobuf:protoc:${protobufVersion}"
-    }
-//    generateProtoTasks {
-//        all().configureEach { task ->
-//            task.builtins {
-//                java {}
-//            }
-//        }
+//
+//protobuf {
+////    generatedFilesBaseDir = "$projectDir/src/"
+//    protoc {
+//        artifact = "com.google.protobuf:protoc:${protobufVersion}"
 //    }
-}
+////    generateProtoTasks {
+////        all().configureEach { task ->
+////            task.builtins {
+////                java {}
+////            }
+////        }
+////    }
+//}
 
 //sourceSets {
 //    main {
