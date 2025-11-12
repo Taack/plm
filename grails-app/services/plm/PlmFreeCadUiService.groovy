@@ -90,12 +90,17 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         intranetRoot + "/plmFreecad/zip"
     }
 
+    String getTmpPath() {
+        intranetRoot + "/plmFreecad/tmp"
+    }
+
     @PostConstruct
     void init() {
         new File(storePath).mkdirs()
         new File(glbPath).mkdirs()
         new File(previewPath).mkdirs()
         new File(zipPath).mkdirs()
+        new File(tmpPath).mkdirs()
         log.info "singleInstance = $singleInstance, xvfbRun = $xvfbRun, useWeston = $useWeston, offscreen = $offscreen"
         if (!new File(freecadPath).exists()) {
             log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
@@ -303,6 +308,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             part = part.getHistory()[partVersion]
         }
 
+        log.info "Showing ${part}"
+
         def showFields = new UiShowSpecifier().ui {
             section tr('version.label'), {
                 if (part.active) field tr('version.label'), "#${part.computedVersion}"
@@ -424,7 +431,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                                         if (i.commentVersion && p.commentVersion != i.commentVersion) {
                                             rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&previewAsciidoc as MC, i.id
                                         }
-                                        rowField diff.toString()
+                                        rowFieldRaw diff.toString()
                                     }
                                     partVersionOcc++
                                     if (p.plmFilePath != i.plmFilePath) {
@@ -514,8 +521,12 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                     pp.originalName = f.name
                     pp.cTimeNs = f.getCTimeNs()
                     pp.mTimeNs = f.getUTimeNs()
-                    pp.documentCategory = DocumentCategory.findOrCreateByCategory(DocumentCategoryEnum.OTHER)
-                    pp.documentAccess = DocumentAccess.findOrCreateByIsInternalAndIsRestrictedToMyBusinessUnitAndIsRestrictedToMySubsidiaryAndIsRestrictedToMyManagersAndIsRestrictedToEmbeddingObjects(false, false, false, false, true)
+
+                    DocumentAccess documentAccess = DocumentAccess.findOrCreateByIsInternalAndIsRestrictedToMyBusinessUnitAndIsRestrictedToMySubsidiaryAndIsRestrictedToMyManagersAndIsRestrictedToEmbeddingObjects(false, false, false, false, true)
+                    DocumentCategory documentCategory = DocumentCategory.findOrCreateByCategory(DocumentCategoryEnum.OTHER)
+
+                    pp.documentCategory = documentCategory
+                    pp.documentAccess = documentAccess
                     pp.save(flush: true, failOnError: true)
                     if (pp.hasErrors()) log.error "${pp.errors}"
                 }
@@ -528,32 +539,36 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         }
         l.each { plpb ->
             def part = loToP[plpb.key]
-            pToLo[plpb.key]?.each { parent ->
-                def pl = PlmFreeCadLink.findByPartAndParentPart(part, parent)
-                if (!pl) {
-                    pl = new PlmFreeCadLink(part: part, partLinkVersion: part.computedVersion, parentPart: parent, userCreated: u)
-                }
-                pl.linkedObject = plpb.value.linkedObject
-                pl.userUpdated = u
-                pl.linkTransform = plpb.value.linkTransform
-                pl.linkClaimChild = plpb.value.linkClaimChild
+            if (part) {
+                pToLo[plpb.key]?.each { parent ->
+                    def pl = PlmFreeCadLink.findByPartAndParentPart(part, parent)
+                    if (!pl) {
+                        pl = new PlmFreeCadLink(part: part, partLinkVersion: part.computedVersion, parentPart: parent, userCreated: u)
+                    }
+                    pl.linkedObject = plpb.value.linkedObject
+                    pl.userUpdated = u
+                    pl.linkTransform = plpb.value.linkTransform
+                    pl.linkClaimChild = plpb.value.linkClaimChild
 
-                switch (plpb.value.linkCopyOnChange) {
-                    case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.Disabled:
-                        pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.DISABLED
-                        break
-                    case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.Enabled:
-                        pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.ENABLED
-                        break
-                    case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.Owned:
-                        pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.OWNED
-                        break
-                    case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED:
-                        log.error 'FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED'
-                        break
+                    switch (plpb.value.linkCopyOnChange) {
+                        case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.Disabled:
+                            pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.DISABLED
+                            break
+                        case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.Enabled:
+                            pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.ENABLED
+                            break
+                        case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.Owned:
+                            pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.OWNED
+                            break
+                        case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED:
+                            log.error 'FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED'
+                            break
+                    }
+                    pl.save(flush: true, failOnError: true)
+                    if (pl.hasErrors()) log.error "${pl.errors}"
                 }
-                pl.save(flush: true, failOnError: true)
-                if (pl.hasErrors()) log.error "${pl.errors}"
+            } else {
+                log.error("No part for ${plpb.key} in protobuf !!!")
             }
         }
         [success: true, message: 'OK'] as JSON
@@ -620,12 +635,12 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         def zipFile = zipPart(part)
         if (new File(filePath).exists()) return
         synchronized (singleton) {
-            if (new File('/tmp/model').exists()) new File('/tmp/model').deleteDir()
-            "unzip ${zipFile.path} -d /tmp/model".execute()
+            if (new File("$tmpPath/model").exists()) new File("$tmpPath/model").deleteDir()
+            "unzip ${zipFile.path} -d $tmpPath/model".execute()
             String conv = """\
             import sys, os
                         
-            step = "/tmp/model/${partFileName(part).replace("\"", "'")}"
+            step = "$tmpPath/model/${partFileName(part).replace("\"", "'")}"
             webp = '${filePath}'
             
             if (os.path.isfile(webp)):
@@ -685,14 +700,14 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         def zipFile = zipPart(part)
         if (new File("${glbPath + '/' + part.plmContentShaOne + '.glb'}").exists()) return
         synchronized (singleton) {
-            if (new File('/tmp/model').exists()) new File('/tmp/model').deleteDir()
-            "unzip ${zipFile.path} -d /tmp/model".execute()
+            if (new File("$tmpPath/model").exists()) new File("$tmpPath/model").deleteDir()
+            "unzip ${zipFile.path} -d $tmpPath/model".execute()
             String conv = """\
             import sys
             import ImportGui
             from PySide import QtGui, QtCore
                         
-            step = "/tmp/model/${partFileName(part).replace("\"", "'")}"
+            step = "$tmpPath/model/${partFileName(part).replace("\"", "'")}"
             glb = '${glbPath + '/' + part.plmContentShaOne + ".glb"}'
             
             d = App.openDocument(step)

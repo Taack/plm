@@ -123,8 +123,10 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
             oldPart.comment = comment
             oldPart.label = label
             oldPart.commentVersion = commentVersion
+            oldPart.documentAccess = documentAccess
+            oldPart.documentCategory = documentCategory
             oldPart.status = status
-            plmLinks.each {
+            plmLinks?.each {
                 oldPart.addToPlmLinks(it)
             }
             return oldPart
