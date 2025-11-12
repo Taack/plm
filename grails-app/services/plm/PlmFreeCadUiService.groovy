@@ -60,7 +60,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         offscreen = config.getProperty('plm.offscreen', Boolean)
         xvfbRun = config.getProperty('plm.xvfbRun', Boolean)
         useWeston = config.getProperty('plm.useWeston', Boolean)
-        dotPath = config.getProperty('exe.dotPath')
+        dotPath = config.getProperty('exe.dot.path')
         convertPath = config.getProperty('exe.convertPath')
         unzipPath = config.getProperty('exe.unzipPath')
         freecadPath = config.getProperty('plm.freecadPath')
