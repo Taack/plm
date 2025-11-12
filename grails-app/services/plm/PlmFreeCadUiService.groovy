@@ -683,7 +683,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 String pWestonCmd = "/usr/bin/weston --no-config --socket=wl-freecad --backend=headless"
                 log.info "$pWestonCmd"
                 pWeston = pWestonCmd.execute()
-                cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
+                // export XDG_RUNTIME_DIR=/home/tut/xdg
+                cmd = "env WAYLAND_DISPLAY=wl-freecad QT_QPA_PLATFORM=wayland ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
             } else if (xvfbRun) {
                 cmd = "${xvfbRun ? "/usr/bin/xvfb-run " : ""}${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
             } else if (offscreen) {
