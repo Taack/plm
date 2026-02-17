@@ -42,7 +42,6 @@ class PlmController implements WebAttributes {
     TaackAttachmentService taackAttachmentService
     AttachmentUiService attachmentUiService
     ConvertersToAsciidocService convertersToAsciidocService
-    PageRenderer groovyPageRenderer
 
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
