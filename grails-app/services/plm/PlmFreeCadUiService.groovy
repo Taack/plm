@@ -49,17 +49,11 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
     String unzipPath
     String convertPath
     Boolean singleInstance
-    Boolean offscreen
-    Boolean xvfbRun
-    Boolean useWeston
     String dotPath
 
     @Override
     void setConfiguration(Config config) {
         singleInstance = config.getProperty('plm.singleInstance', Boolean)
-        offscreen = config.getProperty('plm.offscreen', Boolean)
-        xvfbRun = config.getProperty('plm.xvfbRun', Boolean)
-        useWeston = config.getProperty('plm.useWeston', Boolean)
         dotPath = config.getProperty('exe.dot.path')
         convertPath = config.getProperty('exe.convertPath')
         unzipPath = config.getProperty('exe.unzipPath')
@@ -101,7 +95,6 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         new File(previewPath).mkdirs()
         new File(zipPath).mkdirs()
         new File(tmpPath).mkdirs()
-        log.info "singleInstance = $singleInstance, xvfbRun = $xvfbRun, useWeston = $useWeston, offscreen = $offscreen"
         if (!new File(freecadPath).exists()) {
             log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
             errorsInit.add 'Freecad path not configured ... Stopping'
@@ -112,7 +105,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             errorsInit.add 'unzip path not configured ... Stopping'
         }
 
-        if (useWeston && !new File("/usr/bin/weston").exists()) {
+        if (!new File("/usr/bin/weston").exists()) {
             log.error "useWeston is true in server/grails-app/conf/Application.yml but no weston"
             errorsInit.add 'weston not found ... Stopping'
         }
@@ -126,7 +119,6 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             log.error "no dot executable in $dotPath. please, install graphviz"
             errorsInit.add '"dot" executable not found ... Stopping'
         }
-
     }
 
     UiFilterSpecifier buildPartFilter() {
@@ -405,11 +397,6 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                                 }
                             }
                             if (p) {
-//                                if (i.commentVersion && p.commentVersion != i.commentVersion) {
-//                                    row {
-//                                        rowFieldRaw Asciidoc.getContentHtml(i.commentVersion, urlFileRoot, false), Style.MARKDOWN_BODY
-//                                    }
-//                                } else {
                                 row {
                                     StringBuffer diff = new StringBuffer()
                                     diff << "<ul>"
@@ -445,14 +432,12 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                                         }
                                     }
                                 }
-//                                }
                             }
                             p = i
                         }
                     }
                 }), {
                     label(tr('history.label'))
-//                    menuIcon ActionIcon.ADD, PlmController.&editPart as MC, part.id
                 }
             } else if (!isMail) {
                 if (!part.linkedParts.empty)
@@ -644,12 +629,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
     }
 
     private void createPreview(PlmFreeCadPart part, String filePath) {
-        def zipFile = zipPart(part)
         if (new File(filePath).exists()) return
-        synchronized (singleton) {
-            if (new File("$tmpPath/model").exists()) new File("$tmpPath/model").deleteDir()
-            "unzip ${zipFile.path} -d $tmpPath/model".execute()
-            String conv = """\
+        String conv = """\
             import sys, os
                         
             step = "$tmpPath/model/${partFileName(part).replace("\"", "'")}"
@@ -674,50 +655,13 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             Gui.runCommand('Std_CloseAllWindows',0)
             Gui.runCommand('Std_Quit',0)
             """.stripIndent()
-            Path convPath = Files.createTempFile("FreeCAD-Script", ".py")
-            File convFile = convPath.toFile()
-            convFile.append(conv)
-            String cmd
-            Process pWeston
-            if (useWeston) {
-                String pWestonCmd = "/usr/bin/weston --no-config --socket=wl-freecad --backend=headless"
-                log.info "$pWestonCmd"
-                pWeston = pWestonCmd.execute()
-                // export XDG_RUNTIME_DIR=/home/tut/xdg
-                cmd = "env WAYLAND_DISPLAY=wl-freecad QT_QPA_PLATFORM=wayland ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
-            } else if (xvfbRun) {
-                cmd = "${xvfbRun ? "/usr/bin/xvfb-run " : ""}${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
-            } else if (offscreen) {
-                cmd = "env QT_QPA_PLATFORM=offscreen ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
-            }
-            if (cmd) {
-                log.info "$cmd"
-                Process pFreecad = cmd.execute()
-                int occ = 0
-                println "Script:\n$conv"
-                while (!new File(filePath).exists() && occ++ < 60) {
-                    sleep(1000)
-                    println "Wait $occ ${new File(filePath).exists()} ${filePath}"
-                }
-                println "Deleting ${convPath.toString()}"
-                Files.deleteIfExists(convPath)
-            }
-            if (useWeston && pWeston) {
-                println "killing weston"
-                pWeston.waitForOrKill(1000)
-            }
-        }
+        executePythonScript(conv, part, new File(filePath))
     }
 
     File create3dPreview(PlmFreeCadPart part) {
         log.info "Preview part $part"
-        def zipFile = zipPart(part)
         def glbFile = new File("${glbPath + '/' + part.plmContentShaOne + '.glb'}")
-        if (glbFile.exists()) return glbFile
-        synchronized (singleton) {
-            if (new File("$tmpPath/model").exists()) new File("$tmpPath/model").deleteDir()
-            "unzip ${zipFile.path} -d $tmpPath/model".execute()
-            String conv = """\
+        String conv = """\
             import sys
             import ImportGui
             from PySide import QtGui, QtCore
@@ -736,38 +680,41 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             Gui.runCommand('Std_CloseAllWindows',0)
             Gui.runCommand('Std_Quit',0)
             """.stripIndent()
+        return executePythonScript(conv, part, glbFile)
+    }
+
+    File executePythonScript(String conv, PlmFreeCadPart part, File outputFile) {
+        log.info "executePythonScript: $conv"
+        if (outputFile.exists()) return outputFile
+
+        def zipFile = zipPart(part)
+        synchronized (singleton) {
+            if (new File("$tmpPath/model").exists()) new File("$tmpPath/model").deleteDir()
+            "unzip ${zipFile.path} -d $tmpPath/model".execute()
             Path convPath = Files.createTempFile("FreeCAD-Script", ".py")
             File convFile = convPath.toFile()
             convFile.append(conv)
-            String cmd
-            Process pWeston
-            if (useWeston) {
-                String pWestonCmd = "/usr/bin/weston --no-config --socket=wl-freecad --backend=headless"
-                log.info "$pWestonCmd"
-                pWeston = pWestonCmd.execute()
-                cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
-            } else {
-                cmd = "${xvfbRun ? "/usr/bin/xvfb-run " : ""}${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
-            }
-            if (cmd) {
-                log.info "$cmd"
-                Process pFreecad = cmd.execute()
-                println "Script:\n$conv"
-                int occ = 0
+            String pWestonCmd = "/usr/bin/weston --no-config --socket=wl-freecad --backend=headless"
+            log.info "$pWestonCmd"
+            Process pWeston = pWestonCmd.execute()
+            String cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
+            log.info "$cmd"
+            Process pFreecad = cmd.execute()
+            log.info "Script:\n$conv"
+            int occ = 0
 
-                while (!glbFile.exists() && occ++ < 60) {
-                    sleep(1000)
-                    println "Wait $occ ${glbFile.exists()} ${glbFile.absolutePath}"
-                }
-                println "Deleting ${convPath.toString()}"
-                Files.deleteIfExists(convPath)
+            while (!outputFile.exists() && occ++ < 60 && pFreecad.isAlive()) {
+                sleep(1000)
+                log.info "Wait $occ ${outputFile.exists()} ${outputFile.absolutePath}"
             }
-            if (useWeston && pWeston) {
-                println "killing weston"
+
+            log.info "Deleting ${convPath.toString()}"
+            Files.deleteIfExists(convPath)
+            if (false && pWeston.isAlive()) {
+                log.info "killing weston"
                 pWeston.waitForOrKill(1000)
             }
         }
-        return glbFile
+        return outputFile
     }
-
 }
