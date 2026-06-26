@@ -697,7 +697,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             String pWestonCmd = "/usr/bin/weston --no-config --socket=wl-freecad --backend=headless"
             log.info "$pWestonCmd"
             Process pWeston = pWestonCmd.execute()
-            String cmd = "env WAYLAND_DISPLAY=wl-freecad ${freecadPath} ${singleInstance ? '--single-instance' : ''} ${convFile.path}"
+            String cmd = "${freecadPath} ${convFile.path}"
             log.info "$cmd"
             Process pFreecad = cmd.execute()
             log.info "Script:\n$conv"
@@ -710,7 +710,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
             log.info "Deleting ${convPath.toString()}"
             Files.deleteIfExists(convPath)
-            if (false && pWeston.isAlive()) {
+            if (pFreecad.isAlive() && pWeston.isAlive()) {
                 log.info "killing weston"
                 pWeston.waitForOrKill(1000)
             }
