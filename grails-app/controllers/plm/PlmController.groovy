@@ -6,7 +6,6 @@ import attachment.config.AttachmentContentType
 import crew.config.SupportedLanguage
 import grails.compiler.GrailsCompileStatic
 import grails.gorm.transactions.Transactional
-import grails.gsp.PageRenderer
 import grails.plugin.springsecurity.annotation.Secured
 import grails.web.api.WebAttributes
 import org.codehaus.groovy.runtime.MethodClosure
@@ -159,9 +158,17 @@ class PlmController implements WebAttributes {
     def addAttachment(PlmFreeCadPart part) {
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
-                form(this.attachmentUiService.buildAttachmentForm(new Attachment()))
+                inline(this.attachmentUiService.buildAttachmentsBlock(this.&importAttachment as MethodClosure, part.id))
             }
         })
+    }
+
+    @Transactional
+    @Secured(['ROLE_ADMIN', 'ROLE_CONSOLATOR_ADMIN'])
+    def importAttachment(Attachment attachment) {
+        PlmFreeCadPart part = PlmFreeCadPart.get(params.long('objectId'))
+        part.addToCommentVersionAttachmentList(attachment)
+        taackUiService.ajaxReload()
     }
 
     @Transactional
@@ -200,7 +207,7 @@ class PlmController implements WebAttributes {
         return false
     }
 
-
+    @Transactional
     def dropEditor(PlmFreeCadPart part) {
         if (params.get('onpaste')) {
             render "${convertersToAsciidocService.convertFromHtml(params.get('onpaste') as String)}"
@@ -236,7 +243,7 @@ class PlmController implements WebAttributes {
 
 
     def iframe3d(String shaOne) {
-        render(template: "/plm/previewGlbFile2", model: [shaOne: shaOne])
+        render([template: "/plm/previewGlbFile2", model: [shaOne: shaOne]] as Map)
     }
 
     def hdr() {
@@ -247,7 +254,7 @@ class PlmController implements WebAttributes {
     }
 
     def stp3dFileContent(String shaOne) {
-        render(file: plmFreeCadUiService.create3dPreview(PlmFreeCadPart.findByPlmContentShaOne(shaOne)), contentType: 'application/gltf-buffer')
+        render([file: plmFreeCadUiService.create3dPreview(PlmFreeCadPart.findByPlmContentShaOne(shaOne)), contentType: 'application/gltf-buffer'] as Map)
     }
 
 }
