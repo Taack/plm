@@ -14,8 +14,8 @@
 <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@v0.173.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.173.0/examples/jsm/"
+      "three": "https://cdn.jsdelivr.net/npm/three@v0.185.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.185.0/examples/jsm/"
     }
   }
 </script>
