@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartRequest
 import taack.ast.type.FieldInfo
 import taack.domain.TaackAttachmentService
 import taack.domain.TaackMetaModelService
+import taack.render.TaackEditorService
 import taack.render.TaackSaveService
 import taack.render.TaackUiService
 import taack.ui.TaackUi
@@ -42,15 +43,20 @@ class PlmController implements WebAttributes {
     TaackAttachmentService taackAttachmentService
     AttachmentUiService attachmentUiService
     ConvertersToAsciidocService convertersToAsciidocService
+    TaackEditorService taackEditorService
 
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
+            menu this.&doc as MC
             menu this.&parts as MC
             menu this.&lockedParts as MC
             menuSearch this.&search as MethodClosure, q
             menuOptions(SupportedLanguage.fromContext())
-
         }
+    }
+
+    def doc() {
+        taackUiService.show(taackEditorService.asciidocBlockSpecifier(PlmController.class, '/plm/plm.adoc'), buildMenu())
     }
 
     def index() {
