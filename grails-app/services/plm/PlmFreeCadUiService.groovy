@@ -88,6 +88,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         intranetRoot + "/plmFreecad/tmp"
     }
 
+    private final File noPreview = new File(previewPath + '/' + "no-preview.webp")
+
     @PostConstruct
     void init() {
         new File(storePath).mkdirs()
@@ -95,6 +97,10 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         new File(previewPath).mkdirs()
         new File(zipPath).mkdirs()
         new File(tmpPath).mkdirs()
+        File noPreview = new File(previewPath + '/' + "no-preview.webp")
+        if (!noPreview.exists())
+            new FileOutputStream(noPreview) << this.class.getResourceAsStream("/plm/no-preview.webp").readAllBytes()
+
         if (!new File(freecadPath).exists()) {
             log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
             errorsInit.add 'Freecad path not configured ... Stopping'
@@ -633,26 +639,36 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         if (new File(filePath).exists()) return
         String conv = """\
             import sys, os
-                        
+            from PySide import QtGui, QtCore, QtWidgets
+
             step = "$tmpPath/model/${partFileName(part).replace("\"", "'")}"
             webp = '${filePath}'
             
             if (os.path.isfile(webp)):
               print("File exists, exiting ...")
             else:
-              d = App.openDocument(step)
-              FreeCADGui.ActiveDocument.ActiveView.setAnimationEnabled(False)
-              print("Document Opened...")
-              print("FreeCADGui.ActiveDocument.ActiveView " + str(FreeCADGui.ActiveDocument.ActiveView))            
-              FreeCADGui.ActiveDocument.ActiveView.viewIsometric()
-              Gui.SendMsgToActiveView("OrthographicCamera")
-              Gui.SendMsgToActiveView("ViewAxo")
-              Gui.SendMsgToActiveView("ViewFit")
-              print("Next Save Image ...")
-              App.ParamGet("User parameter:BaseApp/Preferences/View").SetString("SavePicture", "FramebufferObject")
-              FreeCADGui.ActiveDocument.ActiveView.saveImage(webp, 1448, 1760, 'Transparent')
-              print("Saved, exiting...")
-          
+              try:
+                d = App.openDocument(step)
+                App.ActiveDocument.recompute()
+                mw = FreeCADGui.getMainWindow()
+                mw.deleteLater()
+                mdi = mw.findChildren(QtGui.QMdiSubWindow)
+                box = mw.findChild(QtWidgets.QDialogButtonBox)
+                if box is not None:
+                    box.button(QtWidgets.QDialogButtonBox.Ok).click()
+                FreeCADGui.ActiveDocument.ActiveView.setAnimationEnabled(False)
+                FreeCADGui.ActiveDocument.ActiveView.viewIsometric()
+                Gui.SendMsgToActiveView("OrthographicCamera")
+                Gui.SendMsgToActiveView("ViewAxo")
+                Gui.SendMsgToActiveView("ViewFit")
+                print("Next Save Image ...")
+                App.ParamGet("User parameter:BaseApp/Preferences/View").SetString("SavePicture", "FramebufferObject")
+                FreeCADGui.ActiveDocument.ActiveView.saveImage(webp, 1448, 1760, 'Transparent')
+                print("Saved, exiting...")
+              except:
+                print("An exception occurred 222")
+
+            QtGui.qApp.quit()
             Gui.runCommand('Std_CloseAllWindows',0)
             Gui.runCommand('Std_Quit',0)
             """.stripIndent()
@@ -665,19 +681,28 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         String conv = """\
             import sys
             import ImportGui
-            from PySide import QtGui, QtCore
+            from PySide import QtGui, QtCore, QtWidgets
                         
             step = "$tmpPath/model/${partFileName(part).replace("\"", "'")}"
             glb = '${glbPath + '/' + part.plmContentShaOne + ".glb"}'
-            
-            d = App.openDocument(step)
-            mw=FreeCADGui.getMainWindow()
-            mdi=mw.findChildren(QtGui.QMdiSubWindow)
-            
-            ImportGui.export(FreeCAD.ActiveDocument.RootObjects, glb)
-                        
-            App.closeDocument(d.Name)
+            if (os.path.isfile(glb)):
+              print("File exists, exiting ...")
+            else:
+              try:
+                d = App.openDocument(step)
+                #App.ActiveDocument.recompute()
+                #mw=FreeCADGui.getMainWindow()
+                #mw.deleteLater()
+                #mdi=mw.findChildren(QtGui.QMdiSubWindow)
+                #box = mw.findChild(QtWidgets.QDialogButtonBox)
+                #if box is not None:
+                #    box.button(QtWidgets.QDialogButtonBox.Ok).click()
+                ImportGui.export(FreeCAD.ActiveDocument.RootObjects, glb)            
+                App.closeDocument(d.Name)
+              except:
+                print("An exception occurred 222")
 
+            QtGui.qApp.quit()
             Gui.runCommand('Std_CloseAllWindows',0)
             Gui.runCommand('Std_Quit',0)
             """.stripIndent()
@@ -704,7 +729,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             log.info "Script:\n$conv"
             int occ = 0
 
-            while (!outputFile.exists() && occ++ < 60 && pFreecad.isAlive()) {
+            while (pFreecad.isAlive() && !outputFile.exists() && occ++ < 50) {
                 sleep(1000)
                 log.info "Wait $occ ${outputFile.exists()} ${outputFile.absolutePath}"
             }
@@ -716,6 +741,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 pWeston.waitForOrKill(1000)
             }
         }
+        if (!outputFile.exists()) Files.createSymbolicLink(outputFile.toPath(), noPreview.toPath())
         return outputFile
     }
 }

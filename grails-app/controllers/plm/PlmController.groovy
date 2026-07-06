@@ -164,9 +164,17 @@ class PlmController implements WebAttributes {
     def addAttachment(PlmFreeCadPart part) {
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
-                form(this.attachmentUiService.buildAttachmentForm(new Attachment()))
+                inline(this.attachmentUiService.buildAttachmentsBlock(this.&importAttachment as MethodClosure, part.id))
             }
         })
+    }
+
+    @Transactional
+    @Secured(['ROLE_ADMIN', 'ROLE_CONSOLATOR_ADMIN'])
+    def importAttachment(Attachment attachment) {
+        PlmFreeCadPart part = PlmFreeCadPart.get(params.long('objectId'))
+        part.addToCommentVersionAttachmentList(attachment)
+        taackUiService.ajaxReload()
     }
 
     @Transactional
@@ -205,7 +213,7 @@ class PlmController implements WebAttributes {
         return false
     }
 
-
+    @Transactional
     def dropEditor(PlmFreeCadPart part) {
         if (params.get('onpaste')) {
             render "${convertersToAsciidocService.convertFromHtml(params.get('onpaste') as String)}"
