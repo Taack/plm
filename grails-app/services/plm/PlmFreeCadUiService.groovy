@@ -250,6 +250,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             }
 
             TaackFilter.FilterBuilder tfb = taackFilterService.getBuilder(PlmFreeCadPart)
+                    .setMaxNumberOfLine(20)
                     .setSortOrder(TaackFilter.Order.DESC, p.dateCreated_)
                     .addFilter(f)
 

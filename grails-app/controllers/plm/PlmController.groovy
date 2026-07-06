@@ -6,7 +6,6 @@ import attachment.config.AttachmentContentType
 import crew.config.SupportedLanguage
 import grails.compiler.GrailsCompileStatic
 import grails.gorm.transactions.Transactional
-import grails.gsp.PageRenderer
 import grails.plugin.springsecurity.annotation.Secured
 import grails.web.api.WebAttributes
 import org.codehaus.groovy.runtime.MethodClosure
@@ -47,9 +46,9 @@ class PlmController implements WebAttributes {
 
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
-            menu this.&doc as MC
             menu this.&parts as MC
             menu this.&lockedParts as MC
+            menuIcon ActionIcon.HELP, this.&doc as MC
             menuSearch this.&search as MethodClosure, q
             menuOptions(SupportedLanguage.fromContext())
         }
@@ -242,7 +241,7 @@ class PlmController implements WebAttributes {
 
 
     def iframe3d(String shaOne) {
-        render(template: "/plm/previewGlbFile2", model: [shaOne: shaOne])
+        render([template: "/plm/previewGlbFile2", model: [shaOne: shaOne]] as Map)
     }
 
     def hdr() {
@@ -253,7 +252,7 @@ class PlmController implements WebAttributes {
     }
 
     def stp3dFileContent(String shaOne) {
-        render(file: plmFreeCadUiService.create3dPreview(PlmFreeCadPart.findByPlmContentShaOne(shaOne)), contentType: 'application/gltf-buffer')
+        render([file: plmFreeCadUiService.create3dPreview(PlmFreeCadPart.findByPlmContentShaOne(shaOne)), contentType: 'application/gltf-buffer'] as Map)
     }
 
 }
