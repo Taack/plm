@@ -53,11 +53,11 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
     @Override
     void setConfiguration(Config config) {
-        singleInstance = config.getProperty('plm.singleInstance', Boolean)
-        dotPath = config.getProperty('exe.dot.path')
-        convertPath = config.getProperty('exe.convertPath')
-        unzipPath = config.getProperty('exe.unzipPath')
-        freecadPath = config.getProperty('plm.freecadPath')
+        singleInstance = config.getProperty('plm.singleInstance', Boolean) ?: false
+        dotPath = config.getProperty('exe.dot.path') ?: ""
+        convertPath = config.getProperty('exe.convertPath') ?: ""
+        unzipPath = config.getProperty('exe.unzipPath') ?: ""
+        freecadPath = config.getProperty('plm.freecadPath') ?: ""
     }
 
     TaackFilterService taackFilterService
@@ -103,12 +103,12 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
         if (!new File(freecadPath).exists()) {
             log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
-            errorsInit.add 'Freecad path not configured ... Stopping'
+            errorsInit.add 'Freecad path not configured via "plm.freecadPath" ... Stopping'
         }
 
         if (!new File(unzipPath).exists()) {
             log.error "configure plm.unzipPath in server/grails-app/conf/Application.yml"
-            errorsInit.add 'unzip path not configured ... Stopping'
+            errorsInit.add 'unzip path not configured via "exe.unzipPath" ... Stopping'
         }
 
         if (!new File("/usr/bin/weston").exists()) {
@@ -118,12 +118,12 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
         if (!new File(convertPath).exists()) {
             log.error "no convert in $convertPath. please, install ImageMagick"
-            errorsInit.add 'convert not found ... Stopping'
+            errorsInit.add 'convert not found via "exe.convertPath"... Stopping'
         }
 
         if (!new File(dotPath).exists()) {
             log.error "no dot executable in $dotPath. please, install graphviz"
-            errorsInit.add '"dot" executable not found ... Stopping'
+            errorsInit.add '"dot" executable not found via "exe.dot.path"... Stopping'
         }
     }
 
@@ -360,7 +360,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             }
             if (!isMail && !isHistory) {
                 if (part.commentVersionAttachmentList?.size() > 0) {
-                    table attachmentUiService.buildAttachmentsTable(null, null, null, part.commentVersionAttachmentList*.id?.toArray() as Long[])
+                    table attachmentUiService.buildAttachmentsTable(part.commentVersionAttachmentList*.id?.toArray() as Long[])
                 }
 
                 List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
