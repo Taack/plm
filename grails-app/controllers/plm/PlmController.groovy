@@ -91,8 +91,11 @@ class PlmController implements WebAttributes {
     }
 
     @Transactional
-    def saveComment() {
-        taackSaveService.saveThenReloadOrRenderErrors(PlmFreeCadPart)
+    def saveComment(PlmFreeCadPart part) {
+        if (part.id) {
+            part.comment = params['comment']
+        }
+        taackUiService.ajaxReload()
     }
 
     def addComment(PlmFreeCadPart part) {

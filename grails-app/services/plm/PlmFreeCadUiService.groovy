@@ -389,11 +389,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                                 }
                             }
                             row {
-                                if (i.commentVersion && !p) {
-                                    rowColumn {
-                                        rowFieldRaw this.genAsciidoc(i), Style.MARKDOWN_BODY
-                                    }
-                                } else if (!p) {
+                                if (!p) {
                                     rowColumn {
                                         rowField tr('initial.version.label')
                                     }
