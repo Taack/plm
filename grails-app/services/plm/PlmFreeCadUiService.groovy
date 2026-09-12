@@ -227,7 +227,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         }
     }
 
-    UiTableSpecifier buildPartTable(Collection<PlmFreeCadPart> freeCadParts = null) {
+    UiTableSpecifier buildPartTable(Collection<PlmFreeCadPart> freeCadParts = null, UiFilterSpecifier additionalFileter = null) {
         def p = new PlmFreeCadPart(active: true, nextVersion: null)
         def u = new User()
         new UiTableSpecifier().ui {
@@ -254,6 +254,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             def f = new UiFilterSpecifier().sec PlmFreeCadPart, {
                 filterFieldExpressionBool(new FilterExpression(null as Object, Operator.EQ, p.nextVersion_))
             }
+
+            f.join(additionalFileter)
 
             TaackFilter.FilterBuilder tfb = taackFilterService.getBuilder(PlmFreeCadPart)
                     .setMaxNumberOfLine(20)

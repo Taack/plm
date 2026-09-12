@@ -21,10 +21,13 @@ import taack.render.TaackSaveService
 import taack.render.TaackUiService
 import taack.ui.TaackUi
 import taack.ui.dsl.UiBlockSpecifier
+import taack.ui.dsl.UiFilterSpecifier
 import taack.ui.dsl.UiFormSpecifier
 import taack.ui.dsl.UiMenuSpecifier
 import taack.ui.dsl.UiShowSpecifier
 import taack.ui.dsl.common.ActionIcon
+import taack.ui.dsl.filter.expression.FilterExpression
+import taack.ui.dsl.filter.expression.Operator
 import taack.ui.dsl.form.editor.EditorOption
 import taack.wysiwyg.Asciidoc
 import taack.wysiwyg.TaackAsciidocPlantUML
@@ -47,6 +50,7 @@ class PlmController implements WebAttributes {
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
             menu this.&parts as MC
+            menu this.&parentParts as MC
             menu this.&lockedParts as MC
             menuIcon ActionIcon.HELP, this.&doc as MC
             menuSearch this.&search as MethodClosure, q
@@ -79,15 +83,45 @@ class PlmController implements WebAttributes {
     }
 
     def parts() {
+        UiFilterSpecifier f = new UiFilterSpecifier().sec PlmFreeCadPart, {
+            PlmFreeCadPart p = new PlmFreeCadPart()
+            filterFieldExpressionBool(new FilterExpression(
+                    [PlmFreeCadPartStatus.LOCKED, PlmFreeCadPartStatus.OBSOLETE],
+                    Operator.NI, p.status_))
+        }
+
         taackUiService.show(new UiBlockSpecifier().ui {
-            tableFilter(plmFreeCadUiService.buildPartFilter(), plmFreeCadUiService.buildPartTable(), {
+            tableFilter(plmFreeCadUiService.buildPartFilter(), plmFreeCadUiService.buildPartTable(null, f), {
+                menuIcon ActionIcon.GRAPH, this.&model as MC
+            })
+        }, buildMenu())
+    }
+
+    def parentParts() {
+        UiFilterSpecifier f = new UiFilterSpecifier().sec PlmFreeCadPart, {
+            PlmFreeCadPart p = new PlmFreeCadPart()
+            filterFieldExpressionBool(new FilterExpression(Operator.IS_NOT_EMPTY, p.plmLinks_))
+        }
+        taackUiService.show(new UiBlockSpecifier().ui {
+            tableFilter(plmFreeCadUiService.buildPartFilter(), plmFreeCadUiService.buildPartTable(null, f), {
                 menuIcon ActionIcon.GRAPH, this.&model as MC
             })
         }, buildMenu())
     }
 
     def lockedParts() {
-        render 'Not done Yet ..'
+        UiFilterSpecifier f = new UiFilterSpecifier().sec PlmFreeCadPart, {
+            PlmFreeCadPart p = new PlmFreeCadPart()
+            filterFieldExpressionBool(new FilterExpression(
+                    [PlmFreeCadPartStatus.LOCKED, PlmFreeCadPartStatus.OBSOLETE],
+                    Operator.IN, p.status_))
+        }
+
+        taackUiService.show(new UiBlockSpecifier().ui {
+            tableFilter(plmFreeCadUiService.buildPartFilter(), plmFreeCadUiService.buildPartTable(null, f), {
+                menuIcon ActionIcon.GRAPH, this.&model as MC
+            })
+        }, buildMenu())
     }
 
     @Transactional
