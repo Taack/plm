@@ -126,9 +126,9 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
             oldPart.documentCategory = documentCategory
             oldPart.status = status
 
-            plmLinks?.each {
-                oldPart.addToPlmLinks(it)
-            }
+//            plmLinks?.each {
+//                oldPart.addToPlmLinks(it)
+//            }
 
             return oldPart
         }

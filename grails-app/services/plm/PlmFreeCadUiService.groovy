@@ -502,6 +502,10 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                         pp.userCreated = u
                     } else {
                         def old = pp.cloneDirectObjectData()
+                        pp.plmLinks?.each {
+                            old.addToPlmLinks(it)
+                        }
+
                         old.userUpdated = u
                         old.save(flush: true)
                         if (old.hasErrors()) log.error "${old.errors}"
