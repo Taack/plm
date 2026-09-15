@@ -506,17 +506,13 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                         partToBeCloned.userCreated = u
                     } else {
                         PlmFreeCadPart oldPart = partToBeCloned.cloneDirectObjectData()
+                        partToBeCloned.plmLinks?.each { PlmFreeCadLink lIt ->
+                            oldPart.addToPlmLinks(lIt)
+                        }
                         oldPart.userUpdated = u
                         oldPart.save(flush: true)
                         if (oldPart.hasErrors()) log.error "${oldPart.errors}"
-                        def old = pp.cloneDirectObjectData()
-                        pp.plmLinks?.each {
-                            old.addToPlmLinks(it)
-                        }
 
-                        old.userUpdated = u
-                        old.save(flush: true)
-                        if (old.hasErrors()) log.error "${old.errors}"
                     }
                     partToBeCloned.userUpdated = u
                     File file = new File(storePath + '/' + sha1 + '.' + ext)
