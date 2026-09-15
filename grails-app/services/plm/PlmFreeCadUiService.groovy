@@ -231,7 +231,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         }
     }
 
-    UiTableSpecifier buildPartTable(Collection<PlmFreeCadPart> freeCadParts = null) {
+    UiTableSpecifier buildPartTable(Collection<PlmFreeCadPart> freeCadParts = null, UiFilterSpecifier additionalFileter = null) {
         def p = new PlmFreeCadPart(active: true, nextVersion: null)
         def u = new User()
         new UiTableSpecifier().ui {
@@ -258,6 +258,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             def f = new UiFilterSpecifier().sec PlmFreeCadPart, {
                 filterFieldExpressionBool(new FilterExpression(null as Object, Operator.EQ, p.nextVersion_))
             }
+
+            f.join(additionalFileter)
 
             TaackFilter.FilterBuilder tfb = taackFilterService.getBuilder(PlmFreeCadPart)
                     .setMaxNumberOfLine(20)
@@ -393,11 +395,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                                 }
                             }
                             row {
-                                if (i.commentVersion && !p) {
-                                    rowColumn {
-                                        rowFieldRaw this.genAsciidoc(i), Style.MARKDOWN_BODY
-                                    }
-                                } else if (!p) {
+                                if (!p) {
                                     rowColumn {
                                         rowField tr('initial.version.label')
                                     }
@@ -511,6 +509,14 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                         oldPart.userUpdated = u
                         oldPart.save(flush: true)
                         if (oldPart.hasErrors()) log.error "${oldPart.errors}"
+                        def old = pp.cloneDirectObjectData()
+                        pp.plmLinks?.each {
+                            old.addToPlmLinks(it)
+                        }
+
+                        old.userUpdated = u
+                        old.save(flush: true)
+                        if (old.hasErrors()) log.error "${old.errors}"
                     }
                     partToBeCloned.userUpdated = u
                     File file = new File(storePath + '/' + sha1 + '.' + ext)

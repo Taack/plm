@@ -85,7 +85,6 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
 
     static hasMany = [
             plmLinks                    : PlmFreeCadLink,
-            plmLinksOld                 : PlmFreeCadLink,
             commentVersionAttachmentList: Attachment,
     ]
 
@@ -96,7 +95,7 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
         computedVersion column: '`version`'
     }
 
-    static mappedBy = [plmLinks: "parentPart", plmLinksOld: "none"]
+    static mappedBy = [plmLinks: "parentPart"]
 
     @Override
     PlmFreeCadPart cloneDirectObjectData() {
@@ -126,9 +125,11 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
             oldPart.documentAccess = documentAccess
             oldPart.documentCategory = documentCategory
             oldPart.status = status
-            plmLinks?.each {
-                oldPart.addToPlmLinks(it)
-            }
+
+//            plmLinks?.each {
+//                oldPart.addToPlmLinks(it)
+//            }
+
             return oldPart
         }
         return null
