@@ -20,7 +20,11 @@ import taack.ast.type.FieldInfo
 import taack.domain.TaackFilter
 import taack.domain.TaackFilterService
 import taack.ui.TaackUiConfiguration
-import taack.ui.dsl.*
+import taack.ui.dsl.UiBlockSpecifier
+import taack.ui.dsl.UiFilterSpecifier
+import taack.ui.dsl.UiFormSpecifier
+import taack.ui.dsl.UiShowSpecifier
+import taack.ui.dsl.UiTableSpecifier
 import taack.ui.dsl.block.BlockSpec
 import taack.ui.dsl.common.ActionIcon
 import taack.ui.dsl.common.IconStyle
@@ -464,7 +468,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
     String genAsciidoc(PlmFreeCadPart part) {
         String content = part.commentVersion
         if (content) {
-            def f = new File(tmpPath + '/' + content.md5())
+            File f = new File(tmpPath + '/' + content.md5())
             String urlFileRoot = new Parameter().urlMapped(PlmController.&downloadBinCommentVersionFiles as MC, [id: part.id])
             if (!f.exists()) {
                 f << Asciidoc.getContentHtml(content, urlFileRoot, false)
@@ -474,105 +478,105 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
     }
 
     JSON processProto(byte[] data) {
-        def bucket = FreecadPlm.Bucket.parseFrom data
-        def l = bucket.linksMap
-        def d = bucket.plmFilesMap
-        def u = springSecurityService.currentUser as User
-        Map<String, PlmFreeCadPart> loToP = [:]
-        Map<String, List<PlmFreeCadPart>> pToLo = [:]
-        def dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX")
+        FreecadPlm.Bucket bucket = FreecadPlm.Bucket.parseFrom data
+        Map<String, FreecadPlm.PlmLink> linksMap = bucket.linksMap
+        Map<String, FreecadPlm.PlmFile> plmFilesMap = bucket.plmFilesMap
+        User u = springSecurityService.currentUser as User
+        Map<String, PlmFreeCadPart> objNameToPart = [:]
+        Map<String, List<PlmFreeCadPart>> partLinkedPartNameToParts = [:]
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX")
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
-        d.each {
-            def f = it.value
-            def c = f.fileContent.toByteArray()
-            def sha1 = MessageDigest.getInstance('SHA1').digest(c).encodeHex().toString()
-            def exists = PlmFreeCadPart.findByPlmContentShaOne(sha1)
-            def ext = f.fileName.substring(f.fileName.lastIndexOf('.') + 1)
+        plmFilesMap.each { Map.Entry<String, FreecadPlm.PlmFile> entryIt ->
+            FreecadPlm.PlmFile plmFile = entryIt.value
+            byte[] fileContent = plmFile.fileContent.toByteArray()
+            String sha1 = MessageDigest.getInstance('SHA1').digest(fileContent).encodeHex().toString()
+            PlmFreeCadPart existingPart = PlmFreeCadPart.findByPlmContentShaOne(sha1)
+            String ext = plmFile.fileName.substring(plmFile.fileName.lastIndexOf('.') + 1)
 
-            if (f.id == null || f.id.isBlank()) {
-                log.error "PlmFile without ID: ${f.name} $exists"
-                return ([success: false, message: "PlmFile without ID: ${f.name} $exists"] as JSON)
-            } else if (f.fileName.contains('"')) {
-                log.error "PlmFile fileName contains double quotes: ${f.fileName} $exists"
-                return ([success: false, message: "PlmFile label contains double quotes: ${f.label} $exists"] as JSON)
+            if (plmFile.id == null || plmFile.id.isBlank()) {
+                log.error "PlmFile without ID: ${plmFile.name} $existingPart"
+                return ([success: false, message: "PlmFile without ID: ${plmFile.name} $existingPart"] as JSON)
+            } else if (plmFile.fileName.contains('"')) {
+                log.error "PlmFile fileName contains double quotes: ${plmFile.fileName} $existingPart"
+                return ([success: false, message: "PlmFile label contains double quotes: ${plmFile.label} $existingPart"] as JSON)
             } else {
-                log.info "Upload PlmFile: ${f.name} with id: ${f.id}, exists: ${exists}"
-                PlmFreeCadPart pp = PlmFreeCadPart.findByFileId(f.id)
-                if (!exists) {
-                    if (!pp) {
-                        pp = new PlmFreeCadPart()
-                        pp.userCreated = u
+                PlmFreeCadPart partToBeCloned = PlmFreeCadPart.findByFileIdAndNextVersionIsNull(plmFile.id)
+                log.info "Upload PlmFile: ${plmFile.name} with id: ${plmFile.id}, already exists: ${existingPart}, part to be cloned ${partToBeCloned}"
+                if (!existingPart) {
+                    if (!partToBeCloned) {
+                        partToBeCloned = new PlmFreeCadPart()
+                        partToBeCloned.userCreated = u
                     } else {
-                        def old = pp.cloneDirectObjectData()
-                        old.userUpdated = u
-                        old.save(flush: true)
-                        if (old.hasErrors()) log.error "${old.errors}"
+                        PlmFreeCadPart oldPart = partToBeCloned.cloneDirectObjectData()
+                        oldPart.userUpdated = u
+                        oldPart.save(flush: true)
+                        if (oldPart.hasErrors()) log.error "${oldPart.errors}"
                     }
-                    pp.userUpdated = u
-                    def file = new File(storePath + '/' + sha1 + '.' + ext)
-                    file << c
-                    pp.plmFilePath = sha1 + '.' + ext
-                    pp.pathOnHost = f.fileName
-                    pp.fileId = f.id
-                    pp.comment = f.comment
-                    pp.label = f.label
-                    pp.plmFileLastUpdated = dateFormat.parse(f.lastModifiedDate)
-                    pp.plmFileDateCreated = dateFormat.parse(f.createdDate)
-                    pp.plmFileUserCreated = f.createdBy
-                    pp.plmFileUserUpdated = f.lastModifiedBy
-                    pp.plmContentType = Files.probeContentType(file.toPath())
-                    pp.plmContentShaOne = sha1
-                    pp.originalName = f.name
-                    pp.cTimeNs = f.getCTimeNs()
-                    pp.mTimeNs = f.getUTimeNs()
+                    partToBeCloned.userUpdated = u
+                    File file = new File(storePath + '/' + sha1 + '.' + ext)
+                    file << fileContent
+                    partToBeCloned.plmFilePath = sha1 + '.' + ext
+                    partToBeCloned.pathOnHost = plmFile.fileName
+                    partToBeCloned.fileId = plmFile.id
+                    partToBeCloned.comment = plmFile.comment
+                    partToBeCloned.label = plmFile.label
+                    partToBeCloned.plmFileLastUpdated = dateFormat.parse(plmFile.lastModifiedDate)
+                    partToBeCloned.plmFileDateCreated = dateFormat.parse(plmFile.createdDate)
+                    partToBeCloned.plmFileUserCreated = plmFile.createdBy
+                    partToBeCloned.plmFileUserUpdated = plmFile.lastModifiedBy
+                    partToBeCloned.plmContentType = Files.probeContentType(file.toPath())
+                    partToBeCloned.plmContentShaOne = sha1
+                    partToBeCloned.originalName = plmFile.name
+                    partToBeCloned.cTimeNs = plmFile.getCTimeNs()
+                    partToBeCloned.mTimeNs = plmFile.getUTimeNs()
 
                     DocumentAccess documentAccess = DocumentAccess.findOrCreateByIsInternalAndIsRestrictedToMyBusinessUnitAndIsRestrictedToMySubsidiaryAndIsRestrictedToMyManagersAndIsRestrictedToEmbeddingObjects(false, false, false, false, true)
                     DocumentCategory documentCategory = DocumentCategory.findOrCreateByCategory(DocumentCategoryEnum.OTHER)
 
-                    pp.documentCategory = documentCategory
-                    pp.documentAccess = documentAccess
-                    pp.save(flush: true, failOnError: true)
-                    if (pp.hasErrors()) log.error "${pp.errors}"
+                    partToBeCloned.documentCategory = documentCategory
+                    partToBeCloned.documentAccess = documentAccess
+                    partToBeCloned.save(flush: true, failOnError: true)
+                    if (partToBeCloned.hasErrors()) log.error "${partToBeCloned.errors}"
                 }
-                loToP.put(f.name, exists ?: pp)
-                f.externalLinkList.each {
-                    pToLo[it] ?= []
-                    pToLo[it].add(exists ?: pp)
+                objNameToPart.put(plmFile.name, existingPart ?: partToBeCloned)
+                plmFile.externalLinkList.each { String lIt ->
+                    partLinkedPartNameToParts[lIt] ?= []
+                    partLinkedPartNameToParts[lIt].add(existingPart ?: partToBeCloned)
                 }
             }
         }
-        l.each { plpb ->
-            def part = loToP[plpb.key]
+        linksMap.each { entry ->
+            PlmFreeCadPart part = objNameToPart[entry.key]
             if (part) {
-                pToLo[plpb.key]?.each { parent ->
-                    def pl = PlmFreeCadLink.findByPartAndParentPart(part, parent)
-                    if (!pl) {
-                        pl = new PlmFreeCadLink(part: part, partLinkVersion: part.computedVersion, parentPart: parent, userCreated: u)
+                partLinkedPartNameToParts[entry.key]?.each { parent ->
+                    PlmFreeCadLink link = PlmFreeCadLink.findByPartAndParentPart(part, parent)
+                    if (!link) {
+                        link = new PlmFreeCadLink(part: part, partLinkVersion: part.computedVersion, parentPart: parent, userCreated: u)
                     }
-                    pl.linkedObject = plpb.value.linkedObject
-                    pl.userUpdated = u
-                    pl.linkTransform = plpb.value.linkTransform
-                    pl.linkClaimChild = plpb.value.linkClaimChild
+                    link.linkedObject = entry.value.linkedObject
+                    link.userUpdated = u
+                    link.linkTransform = entry.value.linkTransform
+                    link.linkClaimChild = entry.value.linkClaimChild
 
-                    switch (plpb.value.linkCopyOnChange) {
+                    switch (entry.value.linkCopyOnChange) {
                         case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.Disabled:
-                            pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.DISABLED
+                            link.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.DISABLED
                             break
                         case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.Enabled:
-                            pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.ENABLED
+                            link.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.ENABLED
                             break
                         case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.Owned:
-                            pl.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.OWNED
+                            link.linkCopyOnChange = PlmFreeCadLinkCopyOnChange.OWNED
                             break
                         case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED:
                             log.error 'FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED'
                             break
                     }
-                    pl.save(flush: true, failOnError: true)
-                    if (pl.hasErrors()) log.error "${pl.errors}"
+                    link.save(flush: true, failOnError: true)
+                    if (link.hasErrors()) log.error "${link.errors}"
                 }
             } else {
-                log.error("No part for ${plpb.key} in protobuf !!!")
+                log.error("No part for ${entry.key} in protobuf !!!")
             }
         }
         [success: true, message: 'OK'] as JSON
