@@ -355,105 +355,115 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                     }
                 }
             }
-            if (!isHistory) {
-                show new UiShowSpecifier().ui {
-                    String asciidoc = this.genAsciidoc(part)
-                    inlineHtml(asciidoc, 'asciidocMain')
-                }, {
-                    if (isMail)
-                        menuIcon ActionIcon.SHOW, PlmController.&showPart as MC, part.id
-                }
-            }
-            if (!isMail && !isHistory) {
-                if (part.commentVersionAttachmentList?.size() > 0) {
-                    table attachmentUiService.buildAttachmentsTable(part.commentVersionAttachmentList*.id?.toArray() as Long[])
-                }
+            tabs {
+                if (!isMail && !isHistory) {
+                    tab(tr('tab.history.label')) {
+                        table new UiTableSpecifier().ui({
+                            def h = part.history
+                            PlmFreeCadPart p = null
+                            if (h) {
+                                long partVersionOcc = 0
+                                for (def i : h) {
+                                    row {
+                                        rowColumn 2, {
+                                            rowField "<b>${i.historyUserCreated.username}</b> on ${i.historyDateCreated}"
+                                        }
+                                    }
+                                    row {
+                                        if (!p) {
+                                            rowColumn {
+                                                rowField tr('initial.version.label')
+                                            }
+                                            rowColumn {
+                                                rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
+                                                rowFieldRaw """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
+                                            }
+                                        }
+                                    }
+                                    if (p) {
+                                        row {
+                                            StringBuffer diff = new StringBuffer()
+                                            diff << "<ul>"
+                                            diff << diffTr(p.plmContentShaOne_, i.plmContentShaOne_)
+                                            diff << diffTr(p.commentVersion_, i.commentVersion_)
+                                            diff << diffTr(p.lockedBy_, i.lockedBy_)
+                                            diff << diffTr(p.status_, i.status_)
+                                            diff << diffTr(p.label_, i.label_)
+                                            diff << diffTr(p.originalName_, i.originalName_)
+                                            diff << diffTr(p.plmContentType_, i.plmContentType_)
+                                            diff << diffTr(p.plmFileLastUpdated_, i.plmFileLastUpdated_)
+                                            diff << diffTr(p.plmFileDateCreated_, i.plmFileDateCreated_)
+                                            diff << diffTr(p.plmFileUserCreated_, i.plmFileUserCreated_)
+                                            diff << diffTr(p.plmFileUserUpdated_, i.plmFileUserUpdated_)
+                                            diff << diffTr(p.comment_, i.comment_)
+                                            diff << diffTr(p.documentCategory?.tags_, i.documentCategory?.tags_)
+                                            diff << "</ul>"
+                                            rowColumn {
+                                                if (i.commentVersion && p.commentVersion != i.commentVersion) {
+                                                    rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&previewAsciidoc as MC, i.id
+                                                }
+                                                rowFieldRaw diff.toString()
+                                            }
+                                            partVersionOcc++
+                                            if (p.plmFilePath != i.plmFilePath) {
+                                                rowColumn {
+                                                    rowAction 'Access Version', ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
+                                                    rowFieldRaw """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
+                                                }
+                                            } else {
+                                                rowColumn {
 
-                List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
-                if (!parentLinks.empty) {
-                    def containerParts = parentLinks*.parentPart.findAll { it.active }
-                    if (containerParts)
-                        table buildPartTable(containerParts), {
-                            label(tr('usedIn.label'))
-                        }
-                }
-                if (!part.linkedParts.empty) {
-                    table buildLinkTableFromPart(part), {
-                        label(tr('plm.links.label'))
+                                                }
+                                            }
+                                        }
+                                    }
+                                    p = i
+                                }
+                            }
+                        })
                     }
                 }
-
-                table new UiTableSpecifier().ui({
-                    def h = part.history
-                    PlmFreeCadPart p = null
-                    if (h) {
-                        long partVersionOcc = 0
-                        for (def i : h) {
-                            row {
-                                rowColumn 2, {
-                                    rowField "<b>${i.historyUserCreated.username}</b> on ${i.historyDateCreated}"
-                                }
-                            }
-                            row {
-                                if (!p) {
-                                    rowColumn {
-                                        rowField tr('initial.version.label')
-                                    }
-                                    rowColumn {
-                                        rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
-                                        rowFieldRaw """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
-                                    }
-                                }
-                            }
-                            if (p) {
-                                row {
-                                    StringBuffer diff = new StringBuffer()
-                                    diff << "<ul>"
-                                    diff << diffTr(p.plmContentShaOne_, i.plmContentShaOne_)
-                                    diff << diffTr(p.commentVersion_, i.commentVersion_)
-                                    diff << diffTr(p.lockedBy_, i.lockedBy_)
-                                    diff << diffTr(p.status_, i.status_)
-                                    diff << diffTr(p.label_, i.label_)
-                                    diff << diffTr(p.originalName_, i.originalName_)
-                                    diff << diffTr(p.plmContentType_, i.plmContentType_)
-                                    diff << diffTr(p.plmFileLastUpdated_, i.plmFileLastUpdated_)
-                                    diff << diffTr(p.plmFileDateCreated_, i.plmFileDateCreated_)
-                                    diff << diffTr(p.plmFileUserCreated_, i.plmFileUserCreated_)
-                                    diff << diffTr(p.plmFileUserUpdated_, i.plmFileUserUpdated_)
-                                    diff << diffTr(p.comment_, i.comment_)
-                                    diff << diffTr(p.documentCategory?.tags_, i.documentCategory?.tags_)
-                                    diff << "</ul>"
-                                    rowColumn {
-                                        if (i.commentVersion && p.commentVersion != i.commentVersion) {
-                                            rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&previewAsciidoc as MC, i.id
-                                        }
-                                        rowFieldRaw diff.toString()
-                                    }
-                                    partVersionOcc++
-                                    if (p.plmFilePath != i.plmFilePath) {
-                                        rowColumn {
-                                            rowAction 'Access Version', ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, part.id, [partVersion: partVersionOcc, isHistory: true]
-                                            rowFieldRaw """<div style="text-align: center;"><img style="max-width: 125px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${partVersionOcc}&timestamp=${part.mTimeNs}"></div>"""
-                                        }
-                                    } else {
-                                        rowColumn {
-
-                                        }
-                                    }
-                                }
-                            }
-                            p = i
+                if (!isHistory) {
+                    tab(tr('tab.comment.label')) {
+                        show new UiShowSpecifier().ui {
+                            String asciidoc = this.genAsciidoc(part)
+                            inlineHtml(asciidoc, 'asciidocMain')
+                        }, {
+                            if (isMail)
+                                menuIcon ActionIcon.SHOW, PlmController.&showPart as MC, part.id
                         }
                     }
-                }), {
-                    label(tr('history.label'))
                 }
-            } else if (!isMail) {
-                if (!part.linkedParts.empty)
-                    table buildLinkTableFromPart(part)
+
+                if (!isMail && !isHistory) {
+//                if (part.commentVersionAttachmentList?.size() > 0) {
+                    tab(tr('tab.attachments.label')) {
+                        table attachmentUiService.buildAttachmentsTable(part.commentVersionAttachmentList*.id?.toArray() as Long[])
+                    }
+//                }
+
+                    tab(tr('tab.hierarchy.label')) {
+                        List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
+                        if (!parentLinks.empty) {
+                            def containerParts = parentLinks*.parentPart.findAll { it.active }
+                            if (containerParts)
+                                table buildPartTable(containerParts), {
+                                    label(tr('usedIn.label'))
+                                }
+                        }
+                        if (!part.linkedParts.empty) {
+                            table buildLinkTableFromPart(part), {
+                                label(tr('plm.links.label'))
+                            }
+                        }
+                    }
+
+                } else if (!isMail) {
+                    if (!part.linkedParts.empty)
+                        table buildLinkTableFromPart(part)
+                }
             }
         }
-
         if (isHistory) {
             new UiBlockSpecifier().ui {
                 modal(b.closure)
@@ -750,4 +760,5 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         if (!outputFile.exists()) Files.createSymbolicLink(outputFile.toPath(), noPreview.toPath())
         return outputFile
     }
+
 }
