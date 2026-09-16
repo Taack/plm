@@ -7,7 +7,7 @@ Then use the corresponding `freecad-app-link-distrib.sh` or `freecad-app-link-fl
 
 Download Server:
 ```bash
-$ wget https://github.com/Taack/plm/releases/download/v2026.09.15/server-0.6.jar
+$ wget https://github.com/Taack/plm/releases/download/v2026.09.17/server-0.6.jar
 ```
 
 Check Java version > 25:
