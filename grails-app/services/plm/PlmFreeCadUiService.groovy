@@ -560,6 +560,10 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             PlmFreeCadPart part = objNameToPart[entry.key]
             if (part) {
                 partLinkedPartNameToParts[entry.key]?.each { parent ->
+                    if (parent.id == part.id) {
+                        log.warn("Cyclic dependency for part ${part}")
+                        return
+                    }
                     PlmFreeCadLink link = PlmFreeCadLink.findByPartAndParentPart(part, parent)
                     if (!link) {
                         link = new PlmFreeCadLink(part: part, partLinkVersion: part.computedVersion, parentPart: parent, userCreated: u)
