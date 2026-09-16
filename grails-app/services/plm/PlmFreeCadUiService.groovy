@@ -349,8 +349,6 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                         menuIcon ActionIcon.SHOW, PlmController.&preview3dPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                         if (!isHistory) {
                             menuIcon ActionIcon.EDIT, PlmController.&editPart as MC, part.id
-                            menuIcon ActionIcon.IMPORT, PlmController.&addAttachment as MC, part.id
-                            menuIcon ActionIcon.ADD, PlmController.&addComment as MC, part.id
                         }
                     }
                 }
@@ -429,6 +427,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                             String asciidoc = this.genAsciidoc(part)
                             inlineHtml(asciidoc, 'asciidocMain')
                         }, {
+                            menuIcon ActionIcon.EDIT, PlmController.&addComment as MC, part.id
                             if (isMail)
                                 menuIcon ActionIcon.SHOW, PlmController.&showPart as MC, part.id
                         }
@@ -436,11 +435,11 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 }
 
                 if (!isMail && !isHistory) {
-//                if (part.commentVersionAttachmentList?.size() > 0) {
                     tab(tr('tab.attachments.label')) {
-                        table attachmentUiService.buildAttachmentsTable(part.commentVersionAttachmentList*.id?.toArray() as Long[])
+                        table attachmentUiService.buildAttachmentsTable(part.commentVersionAttachmentList*.id?.toArray() as Long[]), {
+                            menuIcon ActionIcon.ADD, PlmController.&addAttachment as MC, part.id
+                        }
                     }
-//                }
 
                     tab(tr('tab.hierarchy.label')) {
                         List<PlmFreeCadLink> parentLinks = PlmFreeCadLink.findAllByPart(part)
