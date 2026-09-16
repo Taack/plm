@@ -221,6 +221,75 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         }
     }
 
+    UiTableSpecifier buildLinkTableFromPartHierachycal(PlmFreeCadPart part) {
+        def l = new PlmFreeCadLink()
+        def p = new PlmFreeCadPart()
+        def d = new DocumentCategory()
+        def u = new User()
+        new UiTableSpecifier().ui {
+            header {
+                label tr('preview.label')
+                column {
+                    label l.dateCreated_
+                    label l.userCreated_, u.username_
+                }
+                column {
+                    label l.lastUpdated_
+                    label l.userUpdated_, u.username_
+                }
+                column {
+                    label l.linkClaimChild_
+                    label l.linkTransform_
+                }
+                column {
+                    label l.linkCopyOnChange_
+                    label l.part_, p.label_
+                }
+                label l.part_, p.documentCategory_, d.tags_
+            }
+
+            int count = 0
+            Closure rec
+            rec = { List<PlmFreeCadLink> mus, int level ->
+                rowIndent({
+                    level++
+                    for (PlmFreeCadLink o : mus) {
+                        count++
+                        boolean muHasChildren = !o.part.plmLinks?.empty
+                        rowTree muHasChildren, {
+                            rowColumn {
+                                rowFieldRaw """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${o.part.id}?partVersion=${o.partLinkVersion}&timestamp=${o.part.mTimeNs}"></div>"""
+                            }
+                            rowColumn {
+                                rowField o.dateCreated_
+                                rowField o.userCreated.username
+                            }
+                            rowColumn {
+                                rowField o.lastUpdated_
+                                rowField o.userUpdated.username
+                            }
+                            rowColumn {
+                                rowField o.linkClaimChild?.toString()
+                                rowField o.linkTransform?.toString()
+                            }
+                            rowColumn {
+                                rowField o.linkCopyOnChange?.toString()
+                                rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, o.part.id
+                                rowField o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject
+                            }
+                            rowField o.part.documentCategory?.tags*.name?.join(', ')
+                        }
+                        if (muHasChildren) {
+                            rec(o.part.plmLinks?.sort {it.id }, level)
+                        }
+                    }
+                })
+            }
+
+            rec(part.plmLinks?.sort {it.id }, 0)
+        }
+    }
+
     UiFormSpecifier buildPartForm(PlmFreeCadPart part) {
         new UiFormSpecifier().ui part, {
             field part.status_
@@ -451,7 +520,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                                 }
                         }
                         if (!part.linkedParts.empty) {
-                            table buildLinkTableFromPart(part), {
+                            table buildLinkTableFromPartHierachycal(part), {
                                 label(tr('plm.links.label'))
                             }
                         }
