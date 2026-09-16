@@ -280,13 +280,13 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                             rowField o.part.documentCategory?.tags*.name?.join(', ')
                         }
                         if (muHasChildren) {
-                            rec(o.part.plmLinks?.sort {it.id }, level)
+                            rec(o.part.plmLinks?.sort { it.id }, level)
                         }
                     }
                 })
             }
 
-            rec(part.plmLinks?.sort {it.id }, 0)
+            rec(part.plmLinks?.sort { it.id }, 0)
         }
     }
 
@@ -294,9 +294,15 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         new UiFormSpecifier().ui part, {
             field part.status_
             field part.writeAccess_
-            ajaxField part.documentCategory_, AttachmentController.&selectDocumentCategory as MC, part.documentCategory_
             ajaxField part.documentAccess_, AttachmentController.&selectDocumentAccess as MC, part.documentAccess_
             formAction PlmController.&savePart as MC
+        }
+    }
+
+    UiFormSpecifier buildPartFormCategory(PlmFreeCadPart part) {
+        new UiFormSpecifier().ui part, {
+            ajaxField part.documentCategory_, AttachmentController.&selectDocumentCategory as MC, part.documentCategory_
+            formAction PlmController.&savePartCategory as MC
         }
     }
 
@@ -370,7 +376,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         if (fieldInfoTo && fieldInfoTo.value) to = fieldInfoTo.value.toString()
 
         if (from != to) {
-            String i18n = tr('content.became.from.to.label', tr(fieldInfoFrom), from.take(20), to.take(20))
+            String i18n = tr('content.became.from.to.label', fieldInfoFrom ? tr(fieldInfoFrom) : fieldInfoTo ? tr(fieldInfoTo) : ' unknown ', from.take(20), to.take(20))
             "<li>$i18n</li>"
         } else ''
     }
@@ -398,6 +404,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 fieldLabeled part.plmContentType_
                 fieldLabeled Style.EMPHASIS, part.status_
                 fieldLabeled part.lockedBy_
+                showAction ActionIcon.EDIT * IconStyle.SCALE_DOWN * IconStyle.LEFT, PlmController.&editPartCategory as MC, part.id
                 fieldLabeled part.documentCategory?.tags_
             }
         }
@@ -611,7 +618,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                     partToBeCloned.mTimeNs = plmFile.getUTimeNs()
 
                     DocumentAccess documentAccess = DocumentAccess.findOrCreateByIsInternalAndIsRestrictedToMyBusinessUnitAndIsRestrictedToMySubsidiaryAndIsRestrictedToMyManagersAndIsRestrictedToEmbeddingObjects(false, false, false, false, true)
-                    DocumentCategory documentCategory = DocumentCategory.findOrCreateByCategory(DocumentCategoryEnum.OTHER)
+                    DocumentCategory documentCategory = new DocumentCategory(category: DocumentCategoryEnum.OTHER)
 
                     partToBeCloned.documentCategory = documentCategory
                     partToBeCloned.documentAccess = documentAccess

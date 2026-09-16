@@ -2,6 +2,7 @@ package plm
 
 import attachement.AttachmentUiService
 import attachment.Attachment
+import attachment.DocumentCategory
 import attachment.config.AttachmentContentType
 import crew.config.SupportedLanguage
 import grails.compiler.GrailsCompileStatic
@@ -183,10 +184,26 @@ class PlmController implements WebAttributes {
         })
     }
 
+    def editPartCategory(PlmFreeCadPart part) {
+        taackUiService.show(new UiBlockSpecifier().ui {
+            modal {
+                form plmFreeCadUiService.buildPartFormCategory(part)
+            }
+        })
+    }
+
     @Transactional
     def savePart() {
         def p = new PlmFreeCadPart()
-        taackSaveService.saveThenReloadOrRenderErrors(PlmFreeCadPart, [null, p.status_, p.documentCategory_, p.documentAccess_, p.writeAccess_, p.computedVersion_] as FieldInfo[])
+        taackSaveService.saveThenReloadOrRenderErrors(PlmFreeCadPart, [null, p.status_, p.documentAccess_, p.writeAccess_, p.computedVersion_] as FieldInfo[])
+    }
+
+    @Transactional
+    def savePartCategory(PlmFreeCadPart part) {
+        if (part.id) {
+            part.documentCategory = DocumentCategory.get(params.long('documentCategory'))
+        }
+        taackUiService.ajaxReload()
     }
 
     def model() {
