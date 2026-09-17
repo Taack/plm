@@ -512,7 +512,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
                 if (!isMail && !isHistory) {
                     tab(tr('tab.attachments.label')) {
-                        table attachmentUiService.buildAttachmentsTable(part.commentVersionAttachmentList*.id?.toArray() as Long[]), {
+                        table attachmentUiService.buildAttachmentsTable(PlmController.&onDrop as MC, part.id, (part.commentVersionAttachmentList*.id ?: [0]) as Long[]), {
                             menuIcon ActionIcon.ADD, PlmController.&addAttachment as MC, part.id
                         }
                     }

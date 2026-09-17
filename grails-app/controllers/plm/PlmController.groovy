@@ -317,4 +317,13 @@ class PlmController implements WebAttributes {
         render([file: plmFreeCadUiService.create3dPreview(PlmFreeCadPart.findByPlmContentShaOne(shaOne)), contentType: 'application/gltf-buffer'] as Map)
     }
 
+    @Transactional
+    def onDrop(PlmFreeCadPart part) {
+        final List<MultipartFile> mfl = (request as MultipartHttpServletRequest).getFiles('filePath')
+        mfl.each {
+            part.addToCommentVersionAttachmentList(taackAttachmentService.createAttachment(it))
+        }
+        taackUiService.ajaxReload()
+    }
+
 }
