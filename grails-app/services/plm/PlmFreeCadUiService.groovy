@@ -48,20 +48,41 @@ import static taack.render.TaackUiService.tr
 class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
     static final List<String> errorsInit = []
+    static final boolean IS_LINUX = System.getProperty('os.name').toLowerCase().contains('linux')
 
     String freecadPath
     String unzipPath
     String convertPath
-    Boolean singleInstance
     String dotPath
+    String westonPath
+    Boolean singleInstance
+    // Headless true starts a weston server for the freecad window
+    boolean headless
 
     @Override
     void setConfiguration(Config config) {
         singleInstance = config.getProperty('plm.singleInstance', Boolean) ?: false
-        dotPath = config.getProperty('exe.dot.path') ?: ""
-        convertPath = config.getProperty('exe.convertPath') ?: ""
-        unzipPath = config.getProperty('exe.unzipPath') ?: ""
-        freecadPath = config.getProperty('plm.freecadPath') ?: ""
+        headless = config.getProperty('plm.headless', Boolean, IS_LINUX)
+        dotPath = resolveExecutable(config.getProperty('exe.dot.path') ?: 'dot')
+        convertPath = resolveExecutable(config.getProperty('exe.convertPath') ?: 'convert')
+        unzipPath = resolveExecutable(config.getProperty('exe.unzipPath') ?: 'unzip')
+        westonPath = resolveExecutable(config.getProperty('exe.westonPath') ?: 'weston')
+        freecadPath = resolveExecutable(config.getProperty('plm.freecadPath') ?: 'freecad')
+    }
+
+    /** A value containing a path separator is used as is; a bare command name is searched on the process PATH. */
+    private static String resolveExecutable(String configured) {
+        if (configured.contains(File.separator)) return configured
+        List<String> pathDirs = (System.getenv('PATH') ?: '').tokenize(File.pathSeparator)
+        File found = pathDirs.collect { String dir -> new File(dir, configured) }.find { File f -> f.canExecute() } as File
+        found ? found.path : configured
+    }
+
+    private void requireExecutable(String path, String configKey, String installHint) {
+        if (new File(path).canExecute()) return
+        String message = "'$path' is not executable. $installHint, or set $configKey to its full path"
+        log.error message
+        errorsInit.add message
     }
 
     TaackFilterService taackFilterService
@@ -105,29 +126,13 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         if (!noPreview.exists())
             new FileOutputStream(noPreview) << this.class.getResourceAsStream("/plm/no-preview.webp").readAllBytes()
 
-        if (!new File(freecadPath).exists()) {
-            log.error "configure plm.freecadPath in server/grails-app/conf/Application.yml"
-            errorsInit.add 'Freecad path not configured via "plm.freecadPath" ... Stopping'
-        }
-
-        if (!new File(unzipPath).exists()) {
-            log.error "configure plm.unzipPath in server/grails-app/conf/Application.yml"
-            errorsInit.add 'unzip path not configured via "exe.unzipPath" ... Stopping'
-        }
-
-        if (!new File("/usr/bin/weston").exists()) {
-            log.error "useWeston is true in server/grails-app/conf/Application.yml but no weston"
-            errorsInit.add 'weston not found ... Stopping'
-        }
-
-        if (!new File(convertPath).exists()) {
-            log.error "no convert in $convertPath. please, install ImageMagick"
-            errorsInit.add 'convert not found via "exe.convertPath"... Stopping'
-        }
-
-        if (!new File(dotPath).exists()) {
-            log.error "no dot executable in $dotPath. please, install graphviz"
-            errorsInit.add '"dot" executable not found via "exe.dot.path"... Stopping'
+        log.info "PLM tools: freecad=$freecadPath dot=$dotPath convert=$convertPath unzip=$unzipPath weston=${headless ? westonPath : 'not used'}"
+        requireExecutable freecadPath, 'plm.freecadPath', 'Install FreeCAD and link one of the freecad-app-link-*.sh scripts as ~/freecad-app-link'
+        requireExecutable unzipPath, 'exe.unzipPath', 'Install unzip'
+        requireExecutable convertPath, 'exe.convertPath', 'Install ImageMagick (apt install imagemagick / brew install imagemagick)'
+        requireExecutable dotPath, 'exe.dot.path', 'Install graphviz (apt install graphviz / brew install graphviz)'
+        if (headless) {
+            requireExecutable westonPath, 'exe.westonPath', 'Install weston (apt install weston) or set plm.headless to false'
         }
     }
 
@@ -512,7 +517,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
                 if (!isMail && !isHistory) {
                     tab(tr('tab.attachments.label')) {
-                        table attachmentUiService.buildAttachmentsTable(PlmController.&onDrop as MC, part.id, (part.commentVersionAttachmentList*.id ?: [0]) as Long[]), {
+                        table attachmentUiService.buildObjectAttachmentsDropTable(part, part.commentVersionAttachmentList, PlmController.&onDrop as MC), {
                             menuIcon ActionIcon.ADD, PlmController.&addAttachment as MC, part.id
                         }
                     }
@@ -815,9 +820,12 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             Path convPath = Files.createTempFile("FreeCAD-Script", ".py")
             File convFile = convPath.toFile()
             convFile.append(conv)
-            String pWestonCmd = "/usr/bin/weston --no-config --socket=wl-freecad --backend=headless"
-            log.info "$pWestonCmd"
-            Process pWeston = pWestonCmd.execute()
+            Process pWeston = null
+            if (headless) {
+                String pWestonCmd = "$westonPath --no-config --socket=wl-freecad --backend=headless"
+                log.info "$pWestonCmd"
+                pWeston = pWestonCmd.execute()
+            }
             String cmd = "${freecadPath} ${convFile.path}"
             log.info "$cmd"
             Process pFreecad = cmd.execute()
@@ -831,7 +839,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
             log.info "Deleting ${convPath.toString()}"
             Files.deleteIfExists(convPath)
-            if (pFreecad.isAlive() && pWeston.isAlive()) {
+            if (pFreecad.isAlive() && pWeston?.isAlive()) {
                 log.info "killing weston"
                 pWeston.waitForOrKill(1000)
             }
