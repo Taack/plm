@@ -381,7 +381,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         if (fieldInfoTo && fieldInfoTo.value) to = fieldInfoTo.value.toString()
 
         if (from != to) {
-            String i18n = tr('content.became.from.to.label', fieldInfoFrom ? tr(fieldInfoFrom) : fieldInfoTo ? tr(fieldInfoTo) : ' unknown ', from.take(20), to.take(20))
+            String i18n = tr('content.became.from.to.label', fieldInfoFrom ? tr(fieldInfoFrom) : fieldInfoTo ? tr(fieldInfoTo) : ' unknown ', from.take(30), to.take(30))
             "<li>$i18n</li>"
         } else ''
     }
