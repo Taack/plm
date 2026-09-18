@@ -9,7 +9,7 @@ On Linux, **weston** can be used to get FreeCAD working with a headless display.
 
 Download Server:
 ```bash
-$ wget https://github.com/Taack/plm/releases/download/v2026.09.17/server-0.6.jar
+$ wget https://github.com/Taack/plm/releases/download/v2026.09.18/server-0.6.jar
 ```
 
 Check Java version > 25:
@@ -24,6 +24,9 @@ $ java -jar server-0.6.jar
 ```
 
 You are done, access the server [http://localhost:9442/](http://localhost:9442/), connect with `admin` / `ChangeIt` credentials.
+
+
+<img width="1666" height="1812" alt="plm-2026-09-18" src="https://github.com/user-attachments/assets/17f195da-930b-4549-b75d-ea993fe0cf36" />
 
 
 
