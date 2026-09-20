@@ -431,6 +431,10 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                         if (!isHistory) {
                             menuIcon ActionIcon.EDIT, PlmController.&editPart as MC, part.id
                         }
+                        PlmFreeCadPart baseParent = part.forkFrom()
+                        if (baseParent) {
+                            menuIcon PlmActionIcon.PARENT * IconStyle.SCALE_DOWN * IconStyle.RIGHT, PlmController.&showPart as MC, baseParent.id
+                        }
                     }
                 }
             }
