@@ -186,4 +186,26 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
     Collection<PlmFreeCadPart> getAllLinkedParts() {
         linkedPartsFromParts([this])
     }
+
+    PlmFreeCadPart forkFrom() {
+        if (fileId.contains('/')) {
+            int counter = fileId.count('/')
+            String[] elements = fileId.split('/')
+            StringBuilder parentId = new StringBuilder()
+            for (int i = 0; i < counter; i++) {
+                if (i > 0) parentId.append('/')
+                parentId.append(elements[i])
+            }
+            return PlmFreeCadPart.findByFileId(parentId.toString())
+        }
+        return null
+    }
+
+    List<PlmFreeCadPart> forks() {
+        PlmFreeCadPart.findAllByFileIdLike(fileId + '/%')
+    }
+
+    int forkLevel() {
+        fileId.count('/')
+    }
 }

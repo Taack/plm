@@ -218,8 +218,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 }
                 rowColumn {
                     rowField o.linkCopyOnChange?.toString()
-                    rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, o.part.id
-                    rowField o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject
+                    rowAction o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject, PlmController.&showPart as MC, o.part.id
                 }
                 rowField o.part.documentCategory?.tags*.name?.join(', ')
             }
@@ -279,8 +278,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                             }
                             rowColumn {
                                 rowField o.linkCopyOnChange?.toString()
-                                rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, o.part.id
-                                rowField o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject
+                                rowAction o.part.label + '-v' + o.partLinkVersion + ' #' + o.linkedObject, PlmController.&showPart as MC, o.part.id
                             }
                             rowField o.part.documentCategory?.tags*.name?.join(', ')
                         }
@@ -365,8 +363,10 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                     rowField obj.computedVersion_
                 }
                 rowColumn {
-                    rowAction ActionIcon.SHOW * IconStyle.SCALE_DOWN, PlmController.&showPart as MC, obj.id
-                    rowField obj.label, Style.BLUE
+                    PlmFreeCadPart forkedFrom = obj.forkFrom()
+                    if (forkedFrom)
+                        rowAction tr('based.on.label'), PlmActionIcon.PARENT * IconStyle.SCALE_DOWN * IconStyle.RIGHT, PlmController.&showPart as MC, forkedFrom.id
+                    rowAction obj.label, PlmController.&showPart as MC, obj.id
                     rowField obj.status_
                 }
                 rowField obj.documentCategory?.tags*.name?.join(', ')
@@ -537,7 +537,15 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                             }
                         }
                     }
+                    tab(tr('duplicates.label')) {
+                        List<PlmFreeCadPart> forks = part.forks()
+                        if (!forks.empty) {
+                            table buildPartTable(forks), {
+                                label(tr('other.history.label'))
+                            }
+                        }
 
+                    }
                 } else if (!isMail) {
                     if (!part.linkedParts.empty)
                         table buildLinkTableFromPart(part)
