@@ -1,4 +1,4 @@
-Video of the latest version: [using Taack PLM Workbench 2026-09-11](https://youtu.be/28JkqJMlMrM).
+Video of the latest version: [using Taack PLM Workbench 2026-09-20](https://youtu.be/YNbKiaUQY94).
 
 Demo server installation (Linux/Mac):
 
