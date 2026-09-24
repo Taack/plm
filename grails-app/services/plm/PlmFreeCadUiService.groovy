@@ -225,7 +225,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         }
     }
 
-    UiTableSpecifier buildLinkTableFromPartHierachycal(PlmFreeCadPart part) {
+    UiTableSpecifier buildLinkTableFromPartHierarchical(PlmFreeCadPart part) {
         def l = new PlmFreeCadLink()
         def p = new PlmFreeCadPart()
         def d = new DocumentCategory()
@@ -316,12 +316,12 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             header {
                 label tr('preview.label')
                 column {
-                    sortableFieldHeader p.userCreated_, u.username_
                     sortableFieldHeader p.dateCreated_
+                    sortableFieldHeader p.userCreated_, u.username_
                 }
                 column {
-                    sortableFieldHeader p.userUpdated_, u.username_
                     sortableFieldHeader p.lastUpdated_
+                    sortableFieldHeader p.userUpdated_, u.username_
                 }
                 column {
                     sortableFieldHeader p.lockedBy_, u.username_
@@ -401,6 +401,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 fieldLabeled part.dateCreated_
                 fieldLabeled part.userUpdated_
                 fieldLabeled part.originalName_
+                fieldLabeled part.comment_
                 fieldLabeled part.plmContentType_
                 fieldLabeled part.plmFileLastUpdated_
                 fieldLabeled part.plmFileUserUpdated_
@@ -536,7 +537,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                                 }
                         }
                         if (!part.linkedParts.empty) {
-                            table buildLinkTableFromPartHierachycal(part), {
+                            table buildLinkTableFromPartHierarchical(part), {
                                 label(tr('plm.links.label'))
                             }
                         }
