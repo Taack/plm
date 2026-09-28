@@ -602,7 +602,11 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 sha1 = plmFile.sha1Hex
                 InputStream zipFileContentIs = zipFile.getInputStream(zipFile.getEntry(sha1))
                 MessageDigest digest = MessageDigest.getInstance("SHA1")
-                zipFileContentIs = new DigestInputStream(zipFileContentIs, digest)
+                try (DigestInputStream dis = new DigestInputStream(zipFileContentIs, digest)) {
+                    byte[] buffer = new byte[8192]
+                    while (dis.read(buffer) != -1) {
+                    }
+                }
                 String computedSha1 = digest.digest().encodeHex().toString()
                 if (computedSha1 != sha1) {
                     log.warn("Sha1($sha1) != computedSha1($computedSha1)")
