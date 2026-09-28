@@ -18,6 +18,7 @@ message PlmFile {
   bytes fileContent = 11;
   int64 cTimeNs = 13;
   int64 uTimeNs = 14;
+  string sha1hex = 15;
 }
 
 message PlmLink {
@@ -39,4 +40,4 @@ message Bucket {
   map<string, PlmLink> links = 2;
 }
 
-// protoc -I=app/protobuf-source/src/main/protoJava/ --python_out=~/tmp/py app/protobuf-source/src/main/protoJava/freecad_plm.proto
+// protoc-29.6-linux-x86_64/bin/protoc --python_out=/home/auo/tmp/py --java_out=/home/auo/tmp/java app/plm/src/main/proto/freecad_plm.proto
