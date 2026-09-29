@@ -19,6 +19,7 @@ message PlmFile {
   int64 cTimeNs = 13;
   int64 uTimeNs = 14;
   string sha1hex = 15;
+  bytes filePreview = 16;
 }
 
 message PlmLink {
@@ -35,9 +36,18 @@ message PlmLink {
   string plmFile = 6;
 }
 
+enum ServerStatus {
+  OK_PROTO = 0;
+  NOK_PROTO = 1;
+  OK_FILES = 2;
+  NOK_FILES = 3;
+}
+
 message Bucket {
   map<string, PlmFile> plmFiles = 1;
   map<string, PlmLink> links = 2;
+  repeated string serverSha1Files = 3;
+  ServerStatus status = 4;
 }
 
 // protoc-29.6-linux-x86_64/bin/protoc --python_out=/home/auo/tmp/py --java_out=/home/auo/tmp/java app/plm/src/main/proto/freecad_plm.proto
