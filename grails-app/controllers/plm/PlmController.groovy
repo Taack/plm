@@ -35,6 +35,11 @@ import taack.wysiwyg.TaackAsciidocPlantUML
 import taack.wysiwyg.TaackAsciidocTable
 import taack.wysiwyg.TaackBaseAsciidocSpans
 
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
+
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
 class PlmController implements WebAttributes {
@@ -73,7 +78,13 @@ class PlmController implements WebAttributes {
     @Transactional
     def uploadProto() {
         def proto = (request as MultipartRequest).getFile('proto.bin')
-        render plmFreeCadUiService.processProto(proto.bytes)
+        File zipProto = Files.createTempFile("proto", "zip").toFile()
+        zipProto << proto.bytes
+        try (var zipFile = new ZipFile(zipProto)) {
+            render plmFreeCadUiService.processProto(zipFile)
+        } catch(IOException e) {
+            render "NOK ${e}"
+        }
     }
 
     def downloadBinPart(PlmFreeCadPart part, Long partVersion) {
