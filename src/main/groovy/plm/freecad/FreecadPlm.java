@@ -25,6 +25,141 @@ public final class FreecadPlm {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
+  /**
+   * Protobuf enum {@code plm.freecad.ServerStatus}
+   */
+  public enum ServerStatus
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>OK_PROTO = 0;</code>
+     */
+    OK_PROTO(0),
+    /**
+     * <code>NOK_PROTO = 1;</code>
+     */
+    NOK_PROTO(1),
+    /**
+     * <code>OK_FILES = 2;</code>
+     */
+    OK_FILES(2),
+    /**
+     * <code>NOK_FILES = 3;</code>
+     */
+    NOK_FILES(3),
+    UNRECOGNIZED(-1),
+    ;
+
+    static {
+      com.google.protobuf.RuntimeVersion.validateProtobufGencodeVersion(
+        com.google.protobuf.RuntimeVersion.RuntimeDomain.PUBLIC,
+        /* major= */ 4,
+        /* minor= */ 29,
+        /* patch= */ 6,
+        /* suffix= */ "",
+        ServerStatus.class.getName());
+    }
+    /**
+     * <code>OK_PROTO = 0;</code>
+     */
+    public static final int OK_PROTO_VALUE = 0;
+    /**
+     * <code>NOK_PROTO = 1;</code>
+     */
+    public static final int NOK_PROTO_VALUE = 1;
+    /**
+     * <code>OK_FILES = 2;</code>
+     */
+    public static final int OK_FILES_VALUE = 2;
+    /**
+     * <code>NOK_FILES = 3;</code>
+     */
+    public static final int NOK_FILES_VALUE = 3;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @Deprecated
+    public static ServerStatus valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static ServerStatus forNumber(int value) {
+      switch (value) {
+        case 0: return OK_PROTO;
+        case 1: return NOK_PROTO;
+        case 2: return OK_FILES;
+        case 3: return NOK_FILES;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<ServerStatus>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        ServerStatus> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<ServerStatus>() {
+            public ServerStatus findValueByNumber(int number) {
+              return ServerStatus.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return FreecadPlm.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final ServerStatus[] VALUES = values();
+
+    public static ServerStatus valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private ServerStatus(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:plm.freecad.ServerStatus)
+  }
+
   public interface PlmFileOrBuilder extends
       // @@protoc_insertion_point(interface_extends:plm.freecad.PlmFile)
       com.google.protobuf.MessageOrBuilder {
@@ -203,6 +338,12 @@ public final class FreecadPlm {
      */
     com.google.protobuf.ByteString
         getSha1HexBytes();
+
+    /**
+     * <code>bytes filePreview = 16;</code>
+     * @return The filePreview.
+     */
+    com.google.protobuf.ByteString getFilePreview();
   }
   /**
    * Protobuf type {@code plm.freecad.PlmFile}
@@ -240,6 +381,7 @@ public final class FreecadPlm {
           com.google.protobuf.LazyStringArrayList.emptyList();
       fileContent_ = com.google.protobuf.ByteString.EMPTY;
       sha1Hex_ = "";
+      filePreview_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -754,6 +896,17 @@ public final class FreecadPlm {
       }
     }
 
+    public static final int FILEPREVIEW_FIELD_NUMBER = 16;
+    private com.google.protobuf.ByteString filePreview_ = com.google.protobuf.ByteString.EMPTY;
+    /**
+     * <code>bytes filePreview = 16;</code>
+     * @return The filePreview.
+     */
+    @Override
+    public com.google.protobuf.ByteString getFilePreview() {
+      return filePreview_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @Override
     public final boolean isInitialized() {
@@ -812,6 +965,9 @@ public final class FreecadPlm {
       }
       if (!com.google.protobuf.GeneratedMessage.isStringEmpty(sha1Hex_)) {
         com.google.protobuf.GeneratedMessage.writeString(output, 15, sha1Hex_);
+      }
+      if (!filePreview_.isEmpty()) {
+        output.writeBytes(16, filePreview_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -875,6 +1031,10 @@ public final class FreecadPlm {
       if (!com.google.protobuf.GeneratedMessage.isStringEmpty(sha1Hex_)) {
         size += com.google.protobuf.GeneratedMessage.computeStringSize(15, sha1Hex_);
       }
+      if (!filePreview_.isEmpty()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(16, filePreview_);
+      }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
@@ -920,6 +1080,8 @@ public final class FreecadPlm {
           != other.getUTimeNs()) return false;
       if (!getSha1Hex()
           .equals(other.getSha1Hex())) return false;
+      if (!getFilePreview()
+          .equals(other.getFilePreview())) return false;
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -965,6 +1127,8 @@ public final class FreecadPlm {
           getUTimeNs());
       hash = (37 * hash) + SHA1HEX_FIELD_NUMBER;
       hash = (53 * hash) + getSha1Hex().hashCode();
+      hash = (37 * hash) + FILEPREVIEW_FIELD_NUMBER;
+      hash = (53 * hash) + getFilePreview().hashCode();
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1112,6 +1276,7 @@ public final class FreecadPlm {
         cTimeNs_ = 0L;
         uTimeNs_ = 0L;
         sha1Hex_ = "";
+        filePreview_ = com.google.protobuf.ByteString.EMPTY;
         return this;
       }
 
@@ -1190,6 +1355,9 @@ public final class FreecadPlm {
         }
         if (((from_bitField0_ & 0x00004000) != 0)) {
           result.sha1Hex_ = sha1Hex_;
+        }
+        if (((from_bitField0_ & 0x00008000) != 0)) {
+          result.filePreview_ = filePreview_;
         }
       }
 
@@ -1278,6 +1446,9 @@ public final class FreecadPlm {
           sha1Hex_ = other.sha1Hex_;
           bitField0_ |= 0x00004000;
           onChanged();
+        }
+        if (other.getFilePreview() != com.google.protobuf.ByteString.EMPTY) {
+          setFilePreview(other.getFilePreview());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
@@ -1381,6 +1552,11 @@ public final class FreecadPlm {
                 bitField0_ |= 0x00004000;
                 break;
               } // case 122
+              case 130: {
+                filePreview_ = input.readBytes();
+                bitField0_ |= 0x00008000;
+                break;
+              } // case 130
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -2393,6 +2569,38 @@ public final class FreecadPlm {
         checkByteStringIsUtf8(value);
         sha1Hex_ = value;
         bitField0_ |= 0x00004000;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString filePreview_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>bytes filePreview = 16;</code>
+       * @return The filePreview.
+       */
+      @Override
+      public com.google.protobuf.ByteString getFilePreview() {
+        return filePreview_;
+      }
+      /**
+       * <code>bytes filePreview = 16;</code>
+       * @param value The filePreview to set.
+       * @return This builder for chaining.
+       */
+      public Builder setFilePreview(com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        filePreview_ = value;
+        bitField0_ |= 0x00008000;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>bytes filePreview = 16;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearFilePreview() {
+        bitField0_ = (bitField0_ & ~0x00008000);
+        filePreview_ = getDefaultInstance().getFilePreview();
         onChanged();
         return this;
       }
@@ -3628,6 +3836,42 @@ PlmLink defaultValue);
      */
     PlmLink getLinksOrThrow(
         String key);
+
+    /**
+     * <code>repeated string serverSha1Files = 3;</code>
+     * @return A list containing the serverSha1Files.
+     */
+    java.util.List<String>
+        getServerSha1FilesList();
+    /**
+     * <code>repeated string serverSha1Files = 3;</code>
+     * @return The count of serverSha1Files.
+     */
+    int getServerSha1FilesCount();
+    /**
+     * <code>repeated string serverSha1Files = 3;</code>
+     * @param index The index of the element to return.
+     * @return The serverSha1Files at the given index.
+     */
+    String getServerSha1Files(int index);
+    /**
+     * <code>repeated string serverSha1Files = 3;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the serverSha1Files at the given index.
+     */
+    com.google.protobuf.ByteString
+        getServerSha1FilesBytes(int index);
+
+    /**
+     * <code>.plm.freecad.ServerStatus status = 4;</code>
+     * @return The enum numeric value on the wire for status.
+     */
+    int getStatusValue();
+    /**
+     * <code>.plm.freecad.ServerStatus status = 4;</code>
+     * @return The status.
+     */
+    ServerStatus getStatus();
   }
   /**
    * Protobuf type {@code plm.freecad.Bucket}
@@ -3651,6 +3895,9 @@ PlmLink defaultValue);
       super(builder);
     }
     private Bucket() {
+      serverSha1Files_ =
+          com.google.protobuf.LazyStringArrayList.emptyList();
+      status_ = 0;
     }
 
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -3838,6 +4085,61 @@ PlmLink defaultValue) {
       return map.get(key);
     }
 
+    public static final int SERVERSHA1FILES_FIELD_NUMBER = 3;
+    @SuppressWarnings("serial")
+    private com.google.protobuf.LazyStringArrayList serverSha1Files_ =
+        com.google.protobuf.LazyStringArrayList.emptyList();
+    /**
+     * <code>repeated string serverSha1Files = 3;</code>
+     * @return A list containing the serverSha1Files.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getServerSha1FilesList() {
+      return serverSha1Files_;
+    }
+    /**
+     * <code>repeated string serverSha1Files = 3;</code>
+     * @return The count of serverSha1Files.
+     */
+    public int getServerSha1FilesCount() {
+      return serverSha1Files_.size();
+    }
+    /**
+     * <code>repeated string serverSha1Files = 3;</code>
+     * @param index The index of the element to return.
+     * @return The serverSha1Files at the given index.
+     */
+    public String getServerSha1Files(int index) {
+      return serverSha1Files_.get(index);
+    }
+    /**
+     * <code>repeated string serverSha1Files = 3;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the serverSha1Files at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getServerSha1FilesBytes(int index) {
+      return serverSha1Files_.getByteString(index);
+    }
+
+    public static final int STATUS_FIELD_NUMBER = 4;
+    private int status_ = 0;
+    /**
+     * <code>.plm.freecad.ServerStatus status = 4;</code>
+     * @return The enum numeric value on the wire for status.
+     */
+    @Override public int getStatusValue() {
+      return status_;
+    }
+    /**
+     * <code>.plm.freecad.ServerStatus status = 4;</code>
+     * @return The status.
+     */
+    @Override public ServerStatus getStatus() {
+      ServerStatus result = ServerStatus.forNumber(status_);
+      return result == null ? ServerStatus.UNRECOGNIZED : result;
+    }
+
     private byte memoizedIsInitialized = -1;
     @Override
     public final boolean isInitialized() {
@@ -3864,6 +4166,12 @@ PlmLink defaultValue) {
           internalGetLinks(),
           LinksDefaultEntryHolder.defaultEntry,
           2);
+      for (int i = 0; i < serverSha1Files_.size(); i++) {
+        com.google.protobuf.GeneratedMessage.writeString(output, 3, serverSha1Files_.getRaw(i));
+      }
+      if (status_ != ServerStatus.OK_PROTO.getNumber()) {
+        output.writeEnum(4, status_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -3893,6 +4201,18 @@ PlmLink defaultValue) {
         size += com.google.protobuf.CodedOutputStream
             .computeMessageSize(2, links__);
       }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < serverSha1Files_.size(); i++) {
+          dataSize += computeStringSizeNoTag(serverSha1Files_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getServerSha1FilesList().size();
+      }
+      if (status_ != ServerStatus.OK_PROTO.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(4, status_);
+      }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
@@ -3912,6 +4232,9 @@ PlmLink defaultValue) {
           other.internalGetPlmFiles())) return false;
       if (!internalGetLinks().equals(
           other.internalGetLinks())) return false;
+      if (!getServerSha1FilesList()
+          .equals(other.getServerSha1FilesList())) return false;
+      if (status_ != other.status_) return false;
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -3931,6 +4254,12 @@ PlmLink defaultValue) {
         hash = (37 * hash) + LINKS_FIELD_NUMBER;
         hash = (53 * hash) + internalGetLinks().hashCode();
       }
+      if (getServerSha1FilesCount() > 0) {
+        hash = (37 * hash) + SERVERSHA1FILES_FIELD_NUMBER;
+        hash = (53 * hash) + getServerSha1FilesList().hashCode();
+      }
+      hash = (37 * hash) + STATUS_FIELD_NUMBER;
+      hash = (53 * hash) + status_;
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -4090,6 +4419,9 @@ PlmLink defaultValue) {
         bitField0_ = 0;
         internalGetMutablePlmFiles().clear();
         internalGetMutableLinks().clear();
+        serverSha1Files_ =
+            com.google.protobuf.LazyStringArrayList.emptyList();
+        status_ = 0;
         return this;
       }
 
@@ -4129,6 +4461,13 @@ PlmLink defaultValue) {
         if (((from_bitField0_ & 0x00000002) != 0)) {
           result.links_ = internalGetLinks().build(LinksDefaultEntryHolder.defaultEntry);
         }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          serverSha1Files_.makeImmutable();
+          result.serverSha1Files_ = serverSha1Files_;
+        }
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.status_ = status_;
+        }
       }
 
       @Override
@@ -4149,6 +4488,19 @@ PlmLink defaultValue) {
         internalGetMutableLinks().mergeFrom(
             other.internalGetLinks());
         bitField0_ |= 0x00000002;
+        if (!other.serverSha1Files_.isEmpty()) {
+          if (serverSha1Files_.isEmpty()) {
+            serverSha1Files_ = other.serverSha1Files_;
+            bitField0_ |= 0x00000004;
+          } else {
+            ensureServerSha1FilesIsMutable();
+            serverSha1Files_.addAll(other.serverSha1Files_);
+          }
+          onChanged();
+        }
+        if (other.status_ != 0) {
+          setStatusValue(other.getStatusValue());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
@@ -4193,6 +4545,17 @@ PlmLink defaultValue) {
                 bitField0_ |= 0x00000002;
                 break;
               } // case 18
+              case 26: {
+                String s = input.readStringRequireUtf8();
+                ensureServerSha1FilesIsMutable();
+                serverSha1Files_.add(s);
+                break;
+              } // case 26
+              case 32: {
+                status_ = input.readEnum();
+                bitField0_ |= 0x00000008;
+                break;
+              } // case 32
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -4520,6 +4883,170 @@ PlmLink defaultValue) {
         return (PlmLink.Builder) entry;
       }
 
+      private com.google.protobuf.LazyStringArrayList serverSha1Files_ =
+          com.google.protobuf.LazyStringArrayList.emptyList();
+      private void ensureServerSha1FilesIsMutable() {
+        if (!serverSha1Files_.isModifiable()) {
+          serverSha1Files_ = new com.google.protobuf.LazyStringArrayList(serverSha1Files_);
+        }
+        bitField0_ |= 0x00000004;
+      }
+      /**
+       * <code>repeated string serverSha1Files = 3;</code>
+       * @return A list containing the serverSha1Files.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getServerSha1FilesList() {
+        serverSha1Files_.makeImmutable();
+        return serverSha1Files_;
+      }
+      /**
+       * <code>repeated string serverSha1Files = 3;</code>
+       * @return The count of serverSha1Files.
+       */
+      public int getServerSha1FilesCount() {
+        return serverSha1Files_.size();
+      }
+      /**
+       * <code>repeated string serverSha1Files = 3;</code>
+       * @param index The index of the element to return.
+       * @return The serverSha1Files at the given index.
+       */
+      public String getServerSha1Files(int index) {
+        return serverSha1Files_.get(index);
+      }
+      /**
+       * <code>repeated string serverSha1Files = 3;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the serverSha1Files at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getServerSha1FilesBytes(int index) {
+        return serverSha1Files_.getByteString(index);
+      }
+      /**
+       * <code>repeated string serverSha1Files = 3;</code>
+       * @param index The index to set the value at.
+       * @param value The serverSha1Files to set.
+       * @return This builder for chaining.
+       */
+      public Builder setServerSha1Files(
+          int index, String value) {
+        if (value == null) { throw new NullPointerException(); }
+        ensureServerSha1FilesIsMutable();
+        serverSha1Files_.set(index, value);
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string serverSha1Files = 3;</code>
+       * @param value The serverSha1Files to add.
+       * @return This builder for chaining.
+       */
+      public Builder addServerSha1Files(
+          String value) {
+        if (value == null) { throw new NullPointerException(); }
+        ensureServerSha1FilesIsMutable();
+        serverSha1Files_.add(value);
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string serverSha1Files = 3;</code>
+       * @param values The serverSha1Files to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllServerSha1Files(
+          Iterable<String> values) {
+        ensureServerSha1FilesIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, serverSha1Files_);
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string serverSha1Files = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearServerSha1Files() {
+        serverSha1Files_ =
+          com.google.protobuf.LazyStringArrayList.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000004);;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string serverSha1Files = 3;</code>
+       * @param value The bytes of the serverSha1Files to add.
+       * @return This builder for chaining.
+       */
+      public Builder addServerSha1FilesBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        ensureServerSha1FilesIsMutable();
+        serverSha1Files_.add(value);
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+
+      private int status_ = 0;
+      /**
+       * <code>.plm.freecad.ServerStatus status = 4;</code>
+       * @return The enum numeric value on the wire for status.
+       */
+      @Override public int getStatusValue() {
+        return status_;
+      }
+      /**
+       * <code>.plm.freecad.ServerStatus status = 4;</code>
+       * @param value The enum numeric value on the wire for status to set.
+       * @return This builder for chaining.
+       */
+      public Builder setStatusValue(int value) {
+        status_ = value;
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.plm.freecad.ServerStatus status = 4;</code>
+       * @return The status.
+       */
+      @Override
+      public ServerStatus getStatus() {
+        ServerStatus result = ServerStatus.forNumber(status_);
+        return result == null ? ServerStatus.UNRECOGNIZED : result;
+      }
+      /**
+       * <code>.plm.freecad.ServerStatus status = 4;</code>
+       * @param value The status to set.
+       * @return This builder for chaining.
+       */
+      public Builder setStatus(ServerStatus value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000008;
+        status_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.plm.freecad.ServerStatus status = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearStatus() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        status_ = 0;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:plm.freecad.Bucket)
     }
 
@@ -4606,27 +5133,31 @@ PlmLink defaultValue) {
   static {
     String[] descriptorData = {
       "\n(app/plm/src/main/proto/freecad_plm.pro" +
-      "to\022\013plm.freecad\"\236\002\n\007PlmFile\022\n\n\002id\030\001 \001(\t\022" +
+      "to\022\013plm.freecad\"\263\002\n\007PlmFile\022\n\n\002id\030\001 \001(\t\022" +
       "\014\n\004name\030\014 \001(\t\022\020\n\010fileName\030\002 \001(\t\022\r\n\005label" +
       "\030\003 \001(\t\022\026\n\016lastModifiedBy\030\004 \001(\t\022\030\n\020lastMo" +
       "difiedDate\030\005 \001(\t\022\017\n\007comment\030\006 \001(\t\022\017\n\007com" +
       "pany\030\007 \001(\t\022\021\n\tcreatedBy\030\010 \001(\t\022\023\n\013created" +
       "Date\030\t \001(\t\022\024\n\014externalLink\030\n \003(\t\022\023\n\013file" +
       "Content\030\013 \001(\014\022\017\n\007cTimeNs\030\r \001(\003\022\017\n\007uTimeN" +
-      "s\030\016 \001(\003\022\017\n\007sha1hex\030\017 \001(\t\"\361\001\n\007PlmLink\022\024\n\014" +
-      "linkedObject\030\001 \001(\t\022\026\n\016linkClaimChild\030\002 \001" +
-      "(\010\022\025\n\rlinkTransform\030\003 \001(\010\022C\n\020linkCopyOnC" +
-      "hange\030\004 \001(\0162).plm.freecad.PlmLink.LinkCo" +
-      "pyOnChangeEnum\022\r\n\005scale\030\005 \001(\001\022\017\n\007plmFile" +
-      "\030\006 \001(\t\"<\n\024LinkCopyOnChangeEnum\022\014\n\010Disabl" +
-      "ed\020\000\022\013\n\007Enabled\020\001\022\t\n\005Owned\020\002\"\367\001\n\006Bucket\022" +
-      "3\n\010plmFiles\030\001 \003(\0132!.plm.freecad.Bucket.P" +
-      "lmFilesEntry\022-\n\005links\030\002 \003(\0132\036.plm.freeca" +
-      "d.Bucket.LinksEntry\032E\n\rPlmFilesEntry\022\013\n\003" +
-      "key\030\001 \001(\t\022#\n\005value\030\002 \001(\0132\024.plm.freecad.P" +
-      "lmFile:\0028\001\032B\n\nLinksEntry\022\013\n\003key\030\001 \001(\t\022#\n" +
-      "\005value\030\002 \001(\0132\024.plm.freecad.PlmLink:\0028\001b\006" +
-      "proto3"
+      "s\030\016 \001(\003\022\017\n\007sha1hex\030\017 \001(\t\022\023\n\013filePreview\030" +
+      "\020 \001(\014\"\361\001\n\007PlmLink\022\024\n\014linkedObject\030\001 \001(\t\022" +
+      "\026\n\016linkClaimChild\030\002 \001(\010\022\025\n\rlinkTransform" +
+      "\030\003 \001(\010\022C\n\020linkCopyOnChange\030\004 \001(\0162).plm.f" +
+      "reecad.PlmLink.LinkCopyOnChangeEnum\022\r\n\005s" +
+      "cale\030\005 \001(\001\022\017\n\007plmFile\030\006 \001(\t\"<\n\024LinkCopyO" +
+      "nChangeEnum\022\014\n\010Disabled\020\000\022\013\n\007Enabled\020\001\022\t" +
+      "\n\005Owned\020\002\"\273\002\n\006Bucket\0223\n\010plmFiles\030\001 \003(\0132!" +
+      ".plm.freecad.Bucket.PlmFilesEntry\022-\n\005lin" +
+      "ks\030\002 \003(\0132\036.plm.freecad.Bucket.LinksEntry" +
+      "\022\027\n\017serverSha1Files\030\003 \003(\t\022)\n\006status\030\004 \001(" +
+      "\0162\031.plm.freecad.ServerStatus\032E\n\rPlmFiles" +
+      "Entry\022\013\n\003key\030\001 \001(\t\022#\n\005value\030\002 \001(\0132\024.plm." +
+      "freecad.PlmFile:\0028\001\032B\n\nLinksEntry\022\013\n\003key" +
+      "\030\001 \001(\t\022#\n\005value\030\002 \001(\0132\024.plm.freecad.PlmL" +
+      "ink:\0028\001*H\n\014ServerStatus\022\014\n\010OK_PROTO\020\000\022\r\n" +
+      "\tNOK_PROTO\020\001\022\014\n\010OK_FILES\020\002\022\r\n\tNOK_FILES\020" +
+      "\003b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -4637,7 +5168,7 @@ PlmLink defaultValue) {
     internal_static_plm_freecad_PlmFile_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_plm_freecad_PlmFile_descriptor,
-        new String[] { "Id", "Name", "FileName", "Label", "LastModifiedBy", "LastModifiedDate", "Comment", "Company", "CreatedBy", "CreatedDate", "ExternalLink", "FileContent", "CTimeNs", "UTimeNs", "Sha1Hex", });
+        new String[] { "Id", "Name", "FileName", "Label", "LastModifiedBy", "LastModifiedDate", "Comment", "Company", "CreatedBy", "CreatedDate", "ExternalLink", "FileContent", "CTimeNs", "UTimeNs", "Sha1Hex", "FilePreview", });
     internal_static_plm_freecad_PlmLink_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_plm_freecad_PlmLink_fieldAccessorTable = new
@@ -4649,7 +5180,7 @@ PlmLink defaultValue) {
     internal_static_plm_freecad_Bucket_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_plm_freecad_Bucket_descriptor,
-        new String[] { "PlmFiles", "Links", });
+        new String[] { "PlmFiles", "Links", "ServerSha1Files", "Status", });
     internal_static_plm_freecad_Bucket_PlmFilesEntry_descriptor =
       internal_static_plm_freecad_Bucket_descriptor.getNestedTypes().get(0);
     internal_static_plm_freecad_Bucket_PlmFilesEntry_fieldAccessorTable = new

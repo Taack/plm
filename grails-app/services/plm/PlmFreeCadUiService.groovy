@@ -31,6 +31,8 @@ import taack.ui.dump.Parameter
 import taack.wysiwyg.Asciidoc
 
 import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
@@ -609,6 +611,10 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                     return [success: false, message: 'NOK'] as JSON
                 }
                 fileContentIs = zipFile.getInputStream(zipFile.getEntry(sha1))
+                if (!plmFile.filePreview.isEmpty()) {
+                    Path filePreviewPath = Paths.get(previewPath, sha1 + '.png')
+                    filePreviewPath.toFile() << plmFile.filePreview.toByteArray()
+                }
             }
             PlmFreeCadPart existingPart = PlmFreeCadPart.findByPlmContentShaOne(sha1)
             String ext = plmFile.fileName.substring(plmFile.fileName.lastIndexOf('.') + 1)
@@ -758,45 +764,37 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         String filePath = previewPath + '/' + part.plmContentShaOne + '.png'
         if (new File(filePath).exists())
             return new File(filePath)
-        else {
-            try {
-                createPreview(part, filePath)
-            } catch (Throwable t) {
-                log.error(t.message)
-                t.printStackTrace()
-            }
-        }
-        return new File(filePath)
+        else return noPreview
     }
 
-    private void createPreview(PlmFreeCadPart part, String filePath) {
-        if (new File(filePath).exists()) return
-
-        String fc_part = "${storePath}/${part.plmFilePath}"
-
-        byte[] buffer = new byte[1024]
-
-        new ZipInputStream(new FileInputStream(fc_part)).withCloseable { zis ->
-            ZipEntry zipEntry = zis.getNextEntry()
-
-            while (zipEntry != null) {
-
-                if (zipEntry.name.endsWith("/Thumbnail.png") || zipEntry.name == "Thumbnail.png") {
-                    new FileOutputStream(filePath).withCloseable { fos ->
-                        int len
-                        while ((len = zis.read(buffer)) > 0) {
-                            fos.write(buffer, 0, len)
-                        }
-                    }
-
-                    break
-                }
-
-                zis.closeEntry()
-                zipEntry = zis.getNextEntry()
-            }
-        }
-    }
+//    private void createPreview(PlmFreeCadPart part, String filePath) {
+//        if (new File(filePath).exists()) return
+//
+//        String fc_part = "${storePath}/${part.plmFilePath}"
+//
+//        byte[] buffer = new byte[1024]
+//
+//        new ZipInputStream(new FileInputStream(fc_part)).withCloseable { zis ->
+//            ZipEntry zipEntry = zis.getNextEntry()
+//
+//            while (zipEntry != null) {
+//
+//                if (zipEntry.name.endsWith("/Thumbnail.png") || zipEntry.name == "Thumbnail.png") {
+//                    new FileOutputStream(filePath).withCloseable { fos ->
+//                        int len
+//                        while ((len = zis.read(buffer)) > 0) {
+//                            fos.write(buffer, 0, len)
+//                        }
+//                    }
+//
+//                    break
+//                }
+//
+//                zis.closeEntry()
+//                zipEntry = zis.getNextEntry()
+//            }
+//        }
+//    }
 
 //    private void createPreview(PlmFreeCadPart part, String filePath) {
 //        if (new File(filePath).exists()) return
