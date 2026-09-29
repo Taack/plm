@@ -21,11 +21,7 @@ import taack.render.TaackEditorService
 import taack.render.TaackSaveService
 import taack.render.TaackUiService
 import taack.ui.TaackUi
-import taack.ui.dsl.UiBlockSpecifier
-import taack.ui.dsl.UiFilterSpecifier
-import taack.ui.dsl.UiFormSpecifier
-import taack.ui.dsl.UiMenuSpecifier
-import taack.ui.dsl.UiShowSpecifier
+import taack.ui.dsl.*
 import taack.ui.dsl.common.ActionIcon
 import taack.ui.dsl.filter.expression.FilterExpression
 import taack.ui.dsl.filter.expression.Operator
@@ -36,9 +32,7 @@ import taack.wysiwyg.TaackAsciidocTable
 import taack.wysiwyg.TaackBaseAsciidocSpans
 
 import java.nio.file.Files
-import java.nio.file.Path
 import java.util.zip.ZipFile
-import java.util.zip.ZipInputStream
 
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
@@ -299,34 +293,34 @@ class PlmController implements WebAttributes {
         }
     }
 
-    def preview3dPart(PlmFreeCadPart part, Long partVersion, String timestamp) {
-        if (partVersion != null) {
-            part = part.getHistory()[partVersion]
-        }
+//    def preview3dPart(PlmFreeCadPart part, Long partVersion, String timestamp) {
+//        if (partVersion != null) {
+//            part = part.getHistory()[partVersion]
+//        }
+//
+//        taackUiService.show(new UiBlockSpecifier().ui {
+//            modal {
+//                iframe('/plm/iframe3d?shaOne=' + part.plmContentShaOne, '600')
+////                custom(groovyPageRenderer.render(template: "/plm/previewGlbFile2", model: [shaOne: part.plmContentShaOne]) as String)
+//            }
+//        })
+//    }
 
-        taackUiService.show(new UiBlockSpecifier().ui {
-            modal {
-                iframe('/plm/iframe3d?shaOne=' + part.plmContentShaOne, '600')
-//                custom(groovyPageRenderer.render(template: "/plm/previewGlbFile2", model: [shaOne: part.plmContentShaOne]) as String)
-            }
-        })
-    }
 
+//    def iframe3d(String shaOne) {
+//        render([template: "/plm/previewGlbFile2", model: [shaOne: shaOne]] as Map)
+//    }
+//
+//    def hdr() {
+//        response.setHeader("Cache-Control", "max-age=31536000")
+//        response.setHeader("Content-disposition", "attachment;filename=\"venice_sunset_1k.hdr\"")
+//        response.outputStream << this.class.getResourceAsStream("/plm/venice_sunset_1k.hdr").readAllBytes()
+//        return true
+//    }
 
-    def iframe3d(String shaOne) {
-        render([template: "/plm/previewGlbFile2", model: [shaOne: shaOne]] as Map)
-    }
-
-    def hdr() {
-        response.setHeader("Cache-Control", "max-age=31536000")
-        response.setHeader("Content-disposition", "attachment;filename=\"venice_sunset_1k.hdr\"")
-        response.outputStream << this.class.getResourceAsStream("/plm/venice_sunset_1k.hdr").readAllBytes()
-        return true
-    }
-
-    def stp3dFileContent(String shaOne) {
-        render([file: plmFreeCadUiService.create3dPreview(PlmFreeCadPart.findByPlmContentShaOne(shaOne)), contentType: 'application/gltf-buffer'] as Map)
-    }
+//    def stp3dFileContent(String shaOne) {
+//        render([file: plmFreeCadUiService.create3dPreview(PlmFreeCadPart.findByPlmContentShaOne(shaOne)), contentType: 'application/gltf-buffer'] as Map)
+//    }
 
     @Transactional
     def onDrop(PlmFreeCadPart part) {

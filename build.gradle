@@ -1,6 +1,6 @@
 plugins {
 //    id 'com.google.protobuf' version '0.9.4'
-    id 'taack-grails-assets-plugin'
+    id 'taack-grails-plugin'
 }
 
 //apply plugin: 'com.google.protobuf'
