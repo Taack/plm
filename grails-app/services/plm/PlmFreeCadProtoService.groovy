@@ -1,35 +1,16 @@
 package plm
 
-import attachement.AttachmentUiService
+
 import attachment.DocumentAccess
 import attachment.DocumentCategory
-import attachment.Term
 import attachment.config.DocumentCategoryEnum
-import crew.AttachmentController
 import crew.User
 import grails.compiler.GrailsCompileStatic
-import grails.config.Config
 import grails.converters.JSON
-import grails.core.support.GrailsConfigurationAware
 import grails.plugin.springsecurity.SpringSecurityService
-import grails.web.api.WebAttributes
-import jakarta.annotation.PostConstruct
-import org.codehaus.groovy.runtime.MethodClosure as MC
 import plm.freecad.FreecadPlm
 import plm.freecad.FreecadPlm.PlmFile
-import taack.ast.type.FieldInfo
-import taack.domain.TaackFilter
-import taack.domain.TaackFilterService
 import taack.ui.TaackUiConfiguration
-import taack.ui.dsl.*
-import taack.ui.dsl.block.BlockSpec
-import taack.ui.dsl.common.ActionIcon
-import taack.ui.dsl.common.IconStyle
-import taack.ui.dsl.common.Style
-import taack.ui.dsl.filter.expression.FilterExpression
-import taack.ui.dsl.filter.expression.Operator
-import taack.ui.dump.Parameter
-import taack.wysiwyg.Asciidoc
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -38,11 +19,7 @@ import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.zip.ZipEntry
-import java.util.zip.ZipException
 import java.util.zip.ZipFile
-import java.util.zip.ZipOutputStream
-
-import static taack.render.TaackUiService.tr
 
 @GrailsCompileStatic
 class PlmFreeCadProtoService {

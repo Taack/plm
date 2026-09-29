@@ -1,22 +1,18 @@
 package plm
 
 import attachement.AttachmentUiService
-import attachment.DocumentAccess
 import attachment.DocumentCategory
 import attachment.Term
-import attachment.config.DocumentCategoryEnum
 import crew.AttachmentController
 import crew.User
 import grails.compiler.GrailsCompileStatic
 import grails.config.Config
-import grails.converters.JSON
 import grails.core.support.GrailsConfigurationAware
-import grails.plugin.springsecurity.SpringSecurityService
 import grails.web.api.WebAttributes
 import jakarta.annotation.PostConstruct
 import org.codehaus.groovy.runtime.MethodClosure as MC
-import plm.freecad.FreecadPlm
 import taack.ast.type.FieldInfo
+import taack.domain.TaackAttachmentService
 import taack.domain.TaackFilter
 import taack.domain.TaackFilterService
 import taack.ui.TaackUiConfiguration
@@ -30,16 +26,8 @@ import taack.ui.dsl.filter.expression.Operator
 import taack.ui.dump.Parameter
 import taack.wysiwyg.Asciidoc
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.security.DigestInputStream
-import java.security.MessageDigest
-import java.text.SimpleDateFormat
 import java.util.zip.ZipEntry
 import java.util.zip.ZipException
-import java.util.zip.ZipFile
-import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 import static taack.render.TaackUiService.tr
@@ -48,7 +36,6 @@ import static taack.render.TaackUiService.tr
 class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
     static final List<String> errorsInit = []
-    static final boolean IS_LINUX = System.getProperty('os.name').toLowerCase().contains('linux')
 
     String convertPath
     String dotPath
@@ -75,8 +62,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
     }
 
     TaackFilterService taackFilterService
-    SpringSecurityService springSecurityService
     AttachmentUiService attachmentUiService
+    TaackAttachmentService taackAttachmentService
 
     final private String intranetRoot = TaackUiConfiguration.root
 
@@ -113,14 +100,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         if (!noPreview.exists())
             new FileOutputStream(noPreview) << this.class.getResourceAsStream("/plm/no-preview.webp").readAllBytes()
 
-//        log.info "PLM tools: freecad=$freecadPath dot=$dotPath convert=$convertPath unzip=$unzipPath weston=${headless ? westonPath : 'not used'}"
-//        requireExecutable freecadPath, 'plm.freecadPath', 'Install FreeCAD and link one of the freecad-app-link-*.sh scripts as ~/freecad-app-link'
-//        requireExecutable unzipPath, 'exe.unzipPath', 'Install unzip'
         requireExecutable convertPath, 'exe.convertPath', 'Install ImageMagick (apt install imagemagick / brew install imagemagick)'
         requireExecutable dotPath, 'exe.dot.path', 'Install graphviz (apt install graphviz / brew install graphviz)'
-//        if (headless) {
-//            requireExecutable westonPath, 'exe.westonPath', 'Install weston (apt install weston) or set plm.headless to false'
-//        }
     }
 
     UiFilterSpecifier buildPartFilter() {
@@ -389,7 +370,6 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 fieldLabeled part.userUpdated_
                 fieldLabeled part.originalName_
                 fieldLabeled part.comment_
-                fieldLabeled part.plmContentType_
                 fieldLabeled part.plmFileLastUpdated_
                 fieldLabeled part.plmFileUserUpdated_
                 fieldLabeled part.plmFileDateCreated_
@@ -605,8 +585,15 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             part = part.getHistory()[version]
         }
         String filePath = previewPath + '/' + part.plmContentShaOne + '.png'
+        String filePathWebp = previewPath + '/' + part.plmContentShaOne + '.webp'
         if (new File(filePath).exists())
             return new File(filePath)
-        else return noPreview
+        else if (new File(filePathWebp).exists()) {
+            return new File(filePathWebp)
+        } else {
+            File preview = taackAttachmentService.attachmentPreview(new File(storePath + '/' + part.plmFilePath), new File(filePathWebp))
+            if (preview.exists()) return preview
+            else return noPreview
+        }
     }
 }
