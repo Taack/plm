@@ -101,7 +101,12 @@ class PlmFreeCadProtoService {
                 sha1 = MessageDigest.getInstance('SHA1').digest(fileContent).encodeHex().toString()
             } else {
                 sha1 = plmFile.sha1Hex
-                InputStream zipFileContentIs = zipFile.getInputStream(zipFile.getEntry(sha1))
+                ZipEntry entry = zipFile.getEntry(sha1)
+                if (!entry) {
+                    log.error "Entry null for $sha1"
+                    return
+                }
+                InputStream zipFileContentIs = zipFile.getInputStream(entry)
                 MessageDigest digest = MessageDigest.getInstance("SHA1")
                 try (DigestInputStream dis = new DigestInputStream(zipFileContentIs, digest)) {
                     byte[] buffer = new byte[8192]
