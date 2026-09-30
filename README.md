@@ -1,4 +1,4 @@
-Video of the latest version: [using Taack PLM Workbench 2026-09-20](https://youtu.be/YNbKiaUQY94).
+Video of the latest version: [Taack PLM With Blender and FreeCAD](https://youtu.be/ijpgDsVXfpg).
 
 Demo server installation (Linux/Mac):
 
