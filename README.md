@@ -4,7 +4,7 @@ Demo server installation (Linux/Mac):
 
 Download Server:
 ```bash
-$ wget https://github.com/Taack/plm/releases/download/v2026.09.18/server-0.6.jar
+$ wget https://github.com/Taack/plm/releases/download/v2026.09.30/server-0.6.jar
 ```
 
 Check Java version > 25:
