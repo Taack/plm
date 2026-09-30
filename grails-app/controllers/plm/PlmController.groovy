@@ -69,18 +69,6 @@ class PlmController implements WebAttributes {
             redirect action: 'parts'
     }
 
-    @Transactional
-    def uploadProto() {
-        def proto = (request as MultipartRequest).getFile('proto.bin')
-        File zipProto = Files.createTempFile("proto", "zip").toFile()
-        zipProto << proto.bytes
-        try (var zipFile = new ZipFile(zipProto)) {
-            render plmFreeCadUiService.processProto(zipFile)
-        } catch(IOException e) {
-            render "NOK ${e}"
-        }
-    }
-
     def downloadBinPart(PlmFreeCadPart part, Long partVersion) {
         response.contentType = 'application/zip'
         response.setHeader("Content-disposition", "filename=${URLEncoder.encode("${part.originalName}${partVersion ? "-v${partVersion}" : ''}-${TaackUiService.dateFileName}.zip", 'UTF-8')}")
