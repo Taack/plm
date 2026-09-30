@@ -62,14 +62,14 @@ class PlmFreeCadProtoService {
         FreecadPlm.Bucket.Builder outbound = FreecadPlm.Bucket.newBuilder()
         outbound.setStatus(FreecadPlm.ServerStatus.NOK_FILES)
         Map<String, FreecadPlm.PlmLink> linksMap = incomingBucket.linksMap
-        Map<String, FreecadPlm.PlmFile> plmFilesMap = incomingBucket.plmFilesMap
+        Map<String, PlmFile> plmFilesMap = incomingBucket.plmFilesMap
         User u = springSecurityService.currentUser as User
         Map<String, PlmFreeCadPart> objNameToPart = [:]
         Map<String, List<PlmFreeCadPart>> partLinkedPartNameToParts = [:]
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX")
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
-        plmFilesMap.each { Map.Entry<String, FreecadPlm.PlmFile> entryIt ->
-            FreecadPlm.PlmFile plmFile = entryIt.value
+        plmFilesMap.each { Map.Entry<String, PlmFile> entryIt ->
+            PlmFile plmFile = entryIt.value
             byte[] fileContent = null
             InputStream fileContentIs = null
             String sha1 = null
@@ -79,26 +79,26 @@ class PlmFreeCadProtoService {
             } else {
                 sha1 = plmFile.sha1Hex
                 ZipEntry entry = zipFile.getEntry(sha1)
-                if (!entry) {
-                    log.error "Entry null for $sha1"
-                    return
-                }
-                InputStream zipFileContentIs = zipFile.getInputStream(entry)
-                MessageDigest digest = MessageDigest.getInstance("SHA1")
-                try (DigestInputStream dis = new DigestInputStream(zipFileContentIs, digest)) {
-                    byte[] buffer = new byte[8192]
-                    while (dis.read(buffer) != -1) {
+                if (entry) {
+                    InputStream zipFileContentIs = zipFile.getInputStream(entry)
+                    MessageDigest digest = MessageDigest.getInstance("SHA1")
+                    try (DigestInputStream dis = new DigestInputStream(zipFileContentIs, digest)) {
+                        byte[] buffer = new byte[8192]
+                        while (dis.read(buffer) != -1) {
+                        }
                     }
-                }
-                String computedSha1 = digest.digest().encodeHex().toString()
-                if (computedSha1 != sha1) {
-                    log.warn("Sha1($sha1) != computedSha1($computedSha1)")
-                    return [success: false, message: 'NOK'] as JSON
-                }
-                fileContentIs = zipFile.getInputStream(zipFile.getEntry(sha1))
-                if (!plmFile.filePreview.isEmpty()) {
-                    Path filePreviewPath = Paths.get(previewPath, sha1 + '.png')
-                    filePreviewPath.toFile() << plmFile.filePreview.toByteArray()
+                    String computedSha1 = digest.digest().encodeHex().toString()
+                    if (computedSha1 != sha1) {
+                        log.warn("Sha1($sha1) != computedSha1($computedSha1)")
+                        return [success: false, message: 'NOK'] as JSON
+                    }
+                    fileContentIs = zipFile.getInputStream(zipFile.getEntry(sha1))
+                    if (!plmFile.filePreview.isEmpty()) {
+                        Path filePreviewPath = Paths.get(previewPath, sha1 + '.png')
+                        filePreviewPath.toFile() << plmFile.filePreview.toByteArray()
+                    }
+                } else {
+                    log.info "Entry null for $sha1"
                 }
             }
             PlmFreeCadPart existingPart = PlmFreeCadPart.findByPlmContentShaOne(sha1)
