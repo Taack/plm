@@ -47,7 +47,7 @@ services:
 
 ```
 
-Download the server
+Download the server to the same location as the docker-compose.yml file
 ```bash
 $ wget https://github.com/Taack/plm/releases/download/v2026.09.30/server-0.6.jar
 ```
