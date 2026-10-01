@@ -59,7 +59,7 @@ You are done, access the server [http://localhost:9442/](http://localhost:9442/)
 <img width="1666" height="1812" alt="plm-2026-09-18" src="https://github.com/user-attachments/assets/17f195da-930b-4549-b75d-ea993fe0cf36" />
 
 
-
+Please, report framework issues to [infra](https://github.com/Taack/infra/issues) or [intranet](https://github.com/Taack/intranet/issues)
 
 
 
