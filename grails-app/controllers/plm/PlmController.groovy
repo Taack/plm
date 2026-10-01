@@ -13,7 +13,6 @@ import org.codehaus.groovy.runtime.MethodClosure
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.multipart.MultipartHttpServletRequest
-import org.springframework.web.multipart.MultipartRequest
 import taack.ast.type.FieldInfo
 import taack.domain.TaackAttachmentService
 import taack.domain.TaackMetaModelService
@@ -30,9 +29,6 @@ import taack.wysiwyg.Asciidoc
 import taack.wysiwyg.TaackAsciidocPlantUML
 import taack.wysiwyg.TaackAsciidocTable
 import taack.wysiwyg.TaackBaseAsciidocSpans
-
-import java.nio.file.Files
-import java.util.zip.ZipFile
 
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
@@ -217,7 +213,7 @@ class PlmController implements WebAttributes {
     }
 
     @Transactional
-    @Secured(['ROLE_ADMIN', 'ROLE_CONSOLATOR_ADMIN'])
+    @Secured(['ROLE_ADMIN', 'ROLE_PLM_USER'])
     def importAttachment(Attachment attachment) {
         PlmFreeCadPart part = PlmFreeCadPart.get(params.long('objectId'))
         part.addToCommentVersionAttachmentList(attachment)
