@@ -3,6 +3,7 @@ Video of the latest version: [Taack PLM With Blender and FreeCAD](https://youtu.
 Demo server installation (Linux/Mac):
 # Bare Metal Installation
 
+Download the server
 ```bash
 $ wget https://github.com/Taack/plm/releases/download/v2026.09.30/server-0.6.jar
 ```
