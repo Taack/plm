@@ -60,9 +60,9 @@ class PlmController implements WebAttributes {
 
     def index() {
         if (PlmFreeCadUiService.errorsInit.size() > 0)
-            render('Following errors occurs when checking binaries:<br>' + PlmFreeCadUiService.errorsInit.join('<br>'))
-        else
-            redirect action: 'parts'
+            log.error('Following errors occurs when checking binaries:\n' + PlmFreeCadUiService.errorsInit.join('\n'))
+
+        redirect action: 'parts'
     }
 
     def downloadBinPart(PlmFreeCadPart part, Long partVersion) {
