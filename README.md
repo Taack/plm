@@ -1,12 +1,12 @@
 Video of the latest version: [Taack PLM With Blender and FreeCAD](https://youtu.be/ijpgDsVXfpg).
 
 Demo server installation (Linux/Mac):
+# Bare Metal Installation
 
-# Download Server:
+Download the server
 ```bash
 $ wget https://github.com/Taack/plm/releases/download/v2026.09.30/server-0.6.jar
 ```
-# Bare Metal Installation
 
 Check Java version > 25:
 ```bash
@@ -36,9 +36,7 @@ services:
         RUN chmod +x /usr/bin/dot
         RUN chmod +x /usr/bin/convert
         COPY server-0.6.jar /opt/app
-        COPY freecad-app-link /root
-        CMD ["java", "-Dgrails.env=production", "-DdataSource.url=jdbc:h2:/database/taack.db;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE", "-jar", "/opt/app/serv
-er-0.6.jar"]
+        CMD ["java", "-Dgrails.env=production", "-DdataSource.url=jdbc:h2:/database/taack.db;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE", "-jar", "/opt/app/server-0.6.jar"]
     container_name: taack-plm
     restart: unless-stopped
     ports:
@@ -49,10 +47,20 @@ er-0.6.jar"]
 
 ```
 
+Download the server to the same location as the docker-compose.yml file
+```bash
+$ wget https://github.com/Taack/plm/releases/download/v2026.09.30/server-0.6.jar
+```
+Build the docker image
+```bash
+$ sudo docker compose build
+```
 
+Deloy the container 
 ```bash
 $ sudo docker compose up
 ```
+
 
 You are done, access the server [http://localhost:9442/](http://localhost:9442/), connect with `admin` / `ChangeIt` credentials.
 
