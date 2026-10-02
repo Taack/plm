@@ -7,7 +7,7 @@ import grails.plugin.springsecurity.annotation.Secured
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
 class PlmJsonController {
 
-    //expose api for tags, endpoint /plm/tags
+    //expose api for tags, endpoint /plmJson/tags
     def tags() {
         List<Term> termList = Term.list(
                 sort: 'name',
@@ -26,7 +26,7 @@ class PlmJsonController {
         render result as JSON
     }
 
-    //Create end point  /plm/partsByTag?tagId= 
+    //Create end point  /plmJson/partsByTag?tagId= 
     def partsByTag(Long tagId) {
         if (!tagId) {
             response.status = 400
@@ -71,7 +71,7 @@ class PlmJsonController {
         render result as JSON
     }
 
-    //create endpoint for searching for parts, exposes /plm/searchParts?originalName=
+    //create endpoint for searching for parts, exposes /plmJson/searchParts?originalName=
     def searchParts(String originalName) {
         if (!originalName?.trim()) {
             response.status = 400
