@@ -10,6 +10,6 @@ class PlmFreeCadSecurityService {
 
     @PostConstruct
     void init() {
-        TaackAppRegisterService.register(new TaackApp(PlmController.&index as MethodClosure, new String(this.class.getResourceAsStream("/plm/plm.svg").readAllBytes())))
+        TaackAppRegisterService.register(new TaackApp(PlmController.&parts as MethodClosure, new String(this.class.getResourceAsStream("/plm/plm.svg").readAllBytes())))
     }
 }
