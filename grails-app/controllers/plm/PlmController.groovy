@@ -3,14 +3,12 @@ package plm
 import attachement.AttachmentUiService
 import attachment.Attachment
 import attachment.DocumentCategory
-import attachment.Term
 import attachment.config.AttachmentContentType
 import crew.config.SupportedLanguage
 import grails.compiler.GrailsCompileStatic
 import grails.gorm.transactions.Transactional
 import grails.plugin.springsecurity.annotation.Secured
 import grails.web.api.WebAttributes
-import grails.converters.JSON
 import org.codehaus.groovy.runtime.MethodClosure
 import org.codehaus.groovy.runtime.MethodClosure as MC
 import org.springframework.web.multipart.MultipartFile
@@ -234,95 +232,7 @@ class PlmController implements WebAttributes {
         taackUiService.show(plmSearchService.buildSearchBlock(q), buildMenu(q))
     }
 
-    //expose api for tags, endpoint /plm/tags
-    def tags() {
-        response.contentType = 'application/json'
-    
-        def tags = Term.list(sort: 'name', order: 'asc').collect { Term tag ->
-            [
-                id    : tag.id,
-                name  : tag.name,
-                parent: tag.parent?.name
-            ]
-        }
-    
-        render tags as grails.converters.JSON
-    }
 
-    //Create end point  /plm/partsByTag?tagId= 
-    def partsByTag(Long tagId) {
-        if (!tagId) {
-            response.status = 400
-            render([error: 'tagId is required'] as JSON)
-            return
-        }
-    
-        Term tag = Term.get(tagId)
-    
-        if (!tag) {
-            response.status = 404
-            render([error: 'Tag not found', tagId: tagId] as JSON)
-            return
-        }
-    
-        List<PlmFreeCadPart> parts = PlmFreeCadPart.executeQuery(
-                '''
-                select distinct p
-                from PlmFreeCadPart p
-                join p.documentCategory dc
-                join dc.tags t
-                where t.id = :tagId
-                  and p.active = true
-                order by p.label
-                ''',
-                [tagId: tagId]
-        ) as List<PlmFreeCadPart>
-    
-        List<Map<String, Object>> result = parts.collect { PlmFreeCadPart part ->
-            [
-                id          : part.id,
-                label       : part.label,
-                originalName: part.originalName
-            ]
-        }
-    
-        response.contentType = 'application/json'
-        render result as JSON
-    }
-
-    //create endpoint for searching for parts, exposes /plm/searchParts?originalName=
-    def searchParts(String originalName) {
-        if (!originalName?.trim()) {
-            response.status = 400
-            render([error: 'originalName is required'] as JSON)
-            return
-        }
-    
-        String searchText = originalName.trim()
-    
-        List<PlmFreeCadPart> parts = PlmFreeCadPart.executeQuery(
-                '''
-                select distinct p
-                from PlmFreeCadPart p
-                where lower(p.originalName) like lower(:searchText)
-                  and p.active = true
-                order by p.originalName
-                ''',
-                [searchText: '%' + searchText + '%']
-        ) as List<PlmFreeCadPart>
-    
-        List<Map<String, Object>> result = parts.collect { PlmFreeCadPart part ->
-            [
-                id          : part.id,
-                label       : part.label,
-                originalName: part.originalName
-            ]
-        }
-    
-        response.contentType = 'application/json'
-        render result as JSON
-    }
-    
     def downloadBinCommentVersionFiles(PlmFreeCadPart part, String path) {
         part = part.nextVersion ?: part
 
