@@ -91,8 +91,8 @@ class PlmController implements WebAttributes {
 
     def parentParts() {
         UiFilterSpecifier f = new UiFilterSpecifier().sec PlmFreeCadPart, {
-            PlmFreeCadPart p = new PlmFreeCadPart()
-            filterFieldExpressionBool(new FilterExpression(Operator.IS_NOT_EMPTY, p.plmLinks_))
+            PlmFreeCadLink link = new PlmFreeCadLink()
+            filterFieldExpressionReverse(link.part_, true, new FilterExpression(null as Object, Operator.NE, link.part_))
         }
         taackUiService.show(new UiBlockSpecifier().ui {
             tableFilter(plmFreeCadUiService.buildPartFilter(), plmFreeCadUiService.buildPartTable(null, f), {
