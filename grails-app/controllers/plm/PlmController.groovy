@@ -232,7 +232,6 @@ class PlmController implements WebAttributes {
         taackUiService.show(plmSearchService.buildSearchBlock(q), buildMenu(q))
     }
 
-
     def downloadBinCommentVersionFiles(PlmFreeCadPart part, String path) {
         part = part.nextVersion ?: part
 
