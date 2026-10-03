@@ -122,11 +122,13 @@ class PlmFreeCadProtoService {
                     if (!partToBeCloned) {
                         partToBeCloned = new PlmFreeCadPart()
                         partToBeCloned.userCreated = u
+                        partToBeCloned.documentCategory = new DocumentCategory(category: DocumentCategoryEnum.OTHER)
                     } else {
                         PlmFreeCadPart oldPart = partToBeCloned.cloneDirectObjectData()
                         partToBeCloned.plmLinks?.each { PlmFreeCadLink lIt ->
                             oldPart.addToPlmLinks(lIt)
                         }
+
                         oldPart.userUpdated = u
                         oldPart.save(flush: true)
                         if (oldPart.hasErrors()) log.error "${oldPart.errors}"
@@ -152,9 +154,7 @@ class PlmFreeCadProtoService {
                     partToBeCloned.mTimeNs = plmFile.getUTimeNs()
 
                     DocumentAccess documentAccess = DocumentAccess.findOrCreateByIsInternalAndIsRestrictedToMyBusinessUnitAndIsRestrictedToMySubsidiaryAndIsRestrictedToMyManagersAndIsRestrictedToEmbeddingObjects(false, false, false, false, true)
-                    DocumentCategory documentCategory = new DocumentCategory(category: DocumentCategoryEnum.OTHER)
 
-                    partToBeCloned.documentCategory = documentCategory
                     partToBeCloned.documentAccess = documentAccess
                     partToBeCloned.save(flush: true, failOnError: true)
                     if (partToBeCloned.hasErrors()) log.error "${partToBeCloned.errors}"
