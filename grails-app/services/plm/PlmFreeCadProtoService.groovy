@@ -1,12 +1,10 @@
 package plm
 
-
 import attachment.DocumentAccess
 import attachment.DocumentCategory
 import attachment.config.DocumentCategoryEnum
 import crew.User
 import grails.compiler.GrailsCompileStatic
-import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
 import plm.freecad.FreecadPlm
 import plm.freecad.FreecadPlm.PlmFile
@@ -68,7 +66,7 @@ class PlmFreeCadProtoService {
         Map<String, List<PlmFreeCadPart>> partLinkedPartNameToParts = [:]
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX")
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
-        plmFilesMap.each { Map.Entry<String, PlmFile> entryIt ->
+        for (Map.Entry<String, PlmFile> entryIt in plmFilesMap) {
             PlmFile plmFile = entryIt.value
             byte[] fileContent = null
             InputStream fileContentIs = null
@@ -90,7 +88,7 @@ class PlmFreeCadProtoService {
                     String computedSha1 = digest.digest().encodeHex().toString()
                     if (computedSha1 != sha1) {
                         log.warn("Sha1($sha1) != computedSha1($computedSha1)")
-                        return [success: false, message: 'NOK'] as JSON
+                        return outbound.build()
                     }
                     fileContentIs = zipFile.getInputStream(zipFile.getEntry(sha1))
                     if (!plmFile.filePreview.isEmpty()) {
@@ -104,14 +102,21 @@ class PlmFreeCadProtoService {
             PlmFreeCadPart existingPart = PlmFreeCadPart.findByPlmContentShaOne(sha1)
             String ext = plmFile.fileName.substring(plmFile.fileName.lastIndexOf('.') + 1)
 
-            if (plmFile.id == null || plmFile.id.isBlank()) {
+            if (existingPart.status == PlmFreeCadPartStatus.LOCKED) {
+                log.error "Attempt to update Locked Part (from sha1): ${plmFile.name} $existingPart"
+                return outbound.build()
+            } else if (plmFile.id == null || plmFile.id.isBlank()) {
                 log.error "PlmFile without ID: ${plmFile.name} $existingPart"
-                return ([success: false, message: "PlmFile without ID: ${plmFile.name} $existingPart"] as JSON)
+                return outbound.build()
             } else if (plmFile.fileName.contains('"')) {
                 log.error "PlmFile fileName contains double quotes: ${plmFile.fileName} $existingPart"
-                return ([success: false, message: "PlmFile label contains double quotes: ${plmFile.label} $existingPart"] as JSON)
+                return outbound.build()
             } else {
                 PlmFreeCadPart partToBeCloned = PlmFreeCadPart.findByFileIdAndNextVersionIsNull(plmFile.id)
+                if (partToBeCloned.status == PlmFreeCadPartStatus.LOCKED) {
+                    log.error "Attempt to update Locked Part (from id): ${plmFile.name} $existingPart"
+                    return outbound.build()
+                }
                 log.info "Upload PlmFile: ${plmFile.name} with id: ${plmFile.id}, already exists: ${existingPart}, part to be cloned ${partToBeCloned}"
                 if (!existingPart) {
                     if (!partToBeCloned) {
