@@ -102,7 +102,7 @@ class PlmFreeCadProtoService {
             PlmFreeCadPart existingPart = PlmFreeCadPart.findByPlmContentShaOne(sha1)
             String ext = plmFile.fileName.substring(plmFile.fileName.lastIndexOf('.') + 1)
 
-            if (existingPart.status == PlmFreeCadPartStatus.LOCKED) {
+            if (existingPart?.status == PlmFreeCadPartStatus.LOCKED) {
                 log.error "Attempt to update Locked Part (from sha1): ${plmFile.name} $existingPart"
                 return outbound.build()
             } else if (plmFile.id == null || plmFile.id.isBlank()) {
@@ -113,7 +113,7 @@ class PlmFreeCadProtoService {
                 return outbound.build()
             } else {
                 PlmFreeCadPart partToBeCloned = PlmFreeCadPart.findByFileIdAndNextVersionIsNull(plmFile.id)
-                if (partToBeCloned.status == PlmFreeCadPartStatus.LOCKED) {
+                if (partToBeCloned?.status == PlmFreeCadPartStatus.LOCKED) {
                     log.error "Attempt to update Locked Part (from id): ${plmFile.name} $existingPart"
                     return outbound.build()
                 }
