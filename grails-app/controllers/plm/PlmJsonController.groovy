@@ -53,6 +53,9 @@ class PlmJsonController {
                 join dc.tags t
                 where t.id = :tagId
                   and p.active = true
+                  and p.nextVersion is null
+                  and p.pathOnHost like '%FCStd'
+                  and p.id not in (select l.part.id from PlmFreeCadLink l)
                 order by p.label
                 ''',
                 [tagId: tagId]
@@ -89,6 +92,9 @@ class PlmJsonController {
                 from PlmFreeCadPart p
                 where lower(p.originalName) like lower(:searchText)
                   and p.active = true
+                  and p.nextVersion is null
+                  and p.pathOnHost like '%FCStd'
+                  and p.id not in (select l.part.id from PlmFreeCadLink l)
                 order by p.originalName
                 ''',
                 [
