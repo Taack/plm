@@ -46,19 +46,22 @@ class PlmJsonController {
         }
 
         List<PlmFreeCadPart> parts = PlmFreeCadPart.executeQuery(
-                '''
-                select distinct p
-                from PlmFreeCadPart p
-                join p.documentCategory dc
-                join dc.tags t
-                where t.id = :tagId
-                  and p.active = true
-                  and p.nextVersion is null
-                  and p.pathOnHost like '%FCStd'
-                  and p.id not in (select l.part.id from PlmFreeCadLink l)
-                order by p.label
-                ''',
-                [tagId: tagId]
+            '''
+            select distinct p
+            from PlmFreeCadPart p
+            where p.active = true
+              and p.nextVersion is null
+              and p.pathOnHost like '%FCStd'
+              and exists (
+                  select 1
+                  from DocumentCategory dc
+                  join dc.tags t
+                  where dc.id = p.documentCategory.id
+                    and t.id = :tagId
+              )
+            order by p.label
+            ''',
+            [tagId: tagId]
         ) as List<PlmFreeCadPart>
 
         List<Map<String, Object>> result = parts.collect {
