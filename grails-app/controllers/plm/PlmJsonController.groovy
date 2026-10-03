@@ -97,7 +97,6 @@ class PlmJsonController {
                   and p.active = true
                   and p.nextVersion is null
                   and p.pathOnHost like '%FCStd'
-                  and p.id not in (select l.part.id from PlmFreeCadLink l)
                 order by p.originalName
                 ''',
                 [
