@@ -160,7 +160,7 @@ class PlmController implements WebAttributes {
     def previewPart(PlmFreeCadPart part, Long partVersion, String timestamp) {
         response.setContentType("image/webp")
         response.setHeader("Content-disposition", "filename=\"${URLEncoder.encode(part?.originalName + '-' + partVersion + '-' + timestamp + '.webp', "UTF-8")}\"")
-        response.setHeader("Cache-Control", "max-age=604800")
+        response.setHeader("Cache-Control", "max-age=3200")
         response.outputStream << (plmFreeCadUiService.preview(part, partVersion)).bytes
         return false
     }

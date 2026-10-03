@@ -64,6 +64,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
     TaackFilterService taackFilterService
     AttachmentUiService attachmentUiService
     TaackAttachmentService taackAttachmentService
+    PlmFreeCadSecurityService plmFreeCadSecurityService
 
     final private String intranetRoot = TaackUiConfiguration.root
 
@@ -317,7 +318,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             }
 
             iterate(tfb.build()) { PlmFreeCadPart obj ->
-                rowFieldRaw """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>"""
+                rowFieldRaw """${this.plmFreeCadSecurityService.canDownloadFile(obj) ? """<div style="text-align: center;"><img style="max-height: 64px; max-width: 64px;" src="/plm/previewPart/${obj.id ?: 0}?partVersion=${obj.computedVersion ?: 0}&timestamp=${obj.mTimeNs}"></div>""" : "<span />"}"""
                 rowColumn {
                     rowField obj.dateCreated_
                     rowField obj.userCreated.username

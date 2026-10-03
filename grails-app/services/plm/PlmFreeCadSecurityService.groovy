@@ -34,6 +34,7 @@ class PlmFreeCadSecurityService {
                 this.&securityCanDownloadClosure,
                 PlmController.&downloadBinPart as MethodClosure,
                 PlmController.&addComment as MethodClosure,
+                PlmController.&previewPart as MethodClosure,
                 PlmController.&editPart as MethodClosure,
                 PlmController.&editPartCategory as MethodClosure,
                 PlmController.&previewPart as MethodClosure,
