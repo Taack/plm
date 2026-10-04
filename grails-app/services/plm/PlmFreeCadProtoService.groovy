@@ -47,6 +47,14 @@ class PlmFreeCadProtoService {
             PlmFreeCadPart existingPart = PlmFreeCadPart.findByPlmContentShaOne(plmFile.sha1Hex)
             if (existingPart) {
                 log.info "existingPart for ${plmFile.sha1Hex}"
+                if (plmFile.label != existingPart.label) {
+                    log.warn "Part label becomes ${plmFile.label}"
+                    existingPart.label = plmFile.label
+                }
+                if (plmFile.fileName != existingPart.pathOnHost) {
+                    log.warn "Part path becomes ${plmFile.fileName}"
+                    existingPart.pathOnHost = plmFile.fileName
+                }
                 outbound.addServerSha1Files(plmFile.sha1Hex)
             } else {
                 log.info "no existingPart for ${plmFile.sha1Hex}"
