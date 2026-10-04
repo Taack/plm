@@ -1,11 +1,24 @@
 package plm
 
 import attachment.Term
+import grails.compiler.GrailsCompileStatic
 import grails.converters.JSON
 import grails.plugin.springsecurity.annotation.Secured
 
+@GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
 class PlmJsonController {
+
+    private static List<Map<String, Object>> prepareJson(List<PlmFreeCadPart> parts) {
+        parts.collect(({
+            PlmFreeCadPart part ->
+                [
+                        id          : part.id,
+                        label       : part.label,
+                        originalName: part.originalName
+                ]
+        } as Closure<Map<String, Object>>))
+    }
 
     //expose api for tags, endpoint /plmJson/tags
     def tags() {
@@ -14,19 +27,19 @@ class PlmJsonController {
                 order: 'asc'
         ) as List<Term>
 
-        List<Map<String, Object>> result = termList.collect { Term tag ->
+        List<Map<String, Object>> result = termList.collect(({ Term tag ->
             [
-                id    : tag.id,
-                name  : tag.name,
-                parent: tag.parent?.name
+                    id    : tag.id,
+                    name  : tag.name,
+                    parent: tag.parent?.name
             ]
-        }
+        } as Closure<Map<String, Object>>))
 
         response.contentType = 'application/json'
         render result as JSON
     }
 
-    //Create end point  /plmJson/partsByTag?tagId= 
+    //Create end point  /plmJson/partsByTag?tagId=
     def partsByTag(Long tagId) {
         if (!tagId) {
             response.status = 400
@@ -39,14 +52,14 @@ class PlmJsonController {
         if (!tag) {
             response.status = 404
             render([
-                error : 'Tag not found',
-                tagId : tagId
+                    error : 'Tag not found',
+                    tagId : tagId
             ] as JSON)
             return
         }
 
         List<PlmFreeCadPart> parts = PlmFreeCadPart.executeQuery(
-            '''
+                '''
             select distinct p
             from PlmFreeCadPart p
             where p.active = true
@@ -61,20 +74,11 @@ class PlmJsonController {
               )
             order by p.label
             ''',
-            [tagId: tagId]
+                [tagId: tagId]
         ) as List<PlmFreeCadPart>
 
-        List<Map<String, Object>> result = parts.collect {
-            PlmFreeCadPart part ->
-                [
-                    id          : part.id,
-                    label       : part.label,
-                    originalName: part.originalName
-                ]
-        }
-
         response.contentType = 'application/json'
-        render result as JSON
+        render prepareJson(parts) as JSON
     }
 
     //create endpoint for searching for parts, exposes /plmJson/searchParts?originalName=
@@ -82,7 +86,7 @@ class PlmJsonController {
         if (!originalName?.trim()) {
             response.status = 400
             render([
-                error: 'originalName is required'
+                    error: 'originalName is required'
             ] as JSON)
             return
         }
@@ -100,20 +104,12 @@ class PlmJsonController {
                 order by p.originalName
                 ''',
                 [
-                    searchText: '%' + searchText + '%'
+                        searchText: '%' + searchText + '%'
                 ]
         ) as List<PlmFreeCadPart>
 
-        List<Map<String, Object>> result = parts.collect {
-            PlmFreeCadPart part ->
-                [
-                    id          : part.id,
-                    label       : part.label,
-                    originalName: part.originalName
-                ]
-        }
 
         response.contentType = 'application/json'
-        render result as JSON
+        render prepareJson(parts) as JSON
     }
 }
