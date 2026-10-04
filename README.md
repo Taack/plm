@@ -36,11 +36,14 @@ services:
         RUN chmod +x /usr/bin/dot
         RUN chmod +x /usr/bin/convert
         COPY server-0.6.jar /opt/app
-        CMD ["java", "-Dgrails.env=production", "-DdataSource.url=jdbc:h2:/database/taack.db;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE", "-jar", "/opt/app/server-0.6.jar"]
+        CMD ["sh", "-c", "java -Dgrails.env=production -DdataSource.url='jdbc:h2:/database/taack.db;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE' -Dgrails.controllers.upload.maxFileSize=$${MAX_UPLOAD_SIZE} -Dgrails.controllers.upload.maxRequestSize=$${MAX_UPLOAD_SIZE} -jar /opt/app/server-0.6.jar"] 
+
     container_name: taack-plm
     restart: unless-stopped
     ports:
       - 9444:9442
+    environment:
+      MAX_UPLOAD_SIZE: 1073741824
     volumes:
       - ./taack-plm/database:/database
       - ./taack-plm/vault:/root/intranetFilesDev

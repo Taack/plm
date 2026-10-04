@@ -37,3 +37,16 @@ grails {
         implementation project(':crew')
     }
 }
+// ---------------------------------------------------------
+// Build information
+// ---------------------------------------------------------
+
+def buildDate = new Date().format("yyyy-MM-dd HH:mm:ss")
+
+tasks.named("processResources") {
+    filesMatching("build-info.properties") {
+        expand(
+            buildDate: buildDate
+        )
+    }
+}
