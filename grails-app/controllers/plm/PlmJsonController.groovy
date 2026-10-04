@@ -33,11 +33,14 @@ class PlmJsonController {
     
         long maximumFileUploadSize =
                 grailsApplication.config.grails.controllers.upload.maxFileSize as Long
-    
+       long maximumRequestSize =
+            grailsApplication.config.grails.controllers.upload.maxRequestSize as Long
+
         Map<String, Object> result = [
             serverBuild              : getServerBuildDate(),
             messagingProtocolVersion : "1.0",
-            maximumFileUploadSize    : maximumFileUploadSize
+            maximumFileUploadSize    : maximumFileUploadSize,
+            maxRequestSize           : maximumRequestSize
         ]
     
         response.contentType = 'application/json'
