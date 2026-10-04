@@ -20,8 +20,13 @@ class PlmJsonController {
             input.close()
         }
     }
+    String buildDate = properties.getProperty("server.build.date", "unknown")
 
-    return properties.getProperty("server.build.date", "unknown")
+    if (buildDate != "unknown") {
+        return buildDate.split(" ")[0]
+    }
+
+    return buildDate
 }
     // Endpoint: /plmJson/serverInfo
     def serverInfo() {
@@ -30,7 +35,7 @@ class PlmJsonController {
                 grailsApplication.config.grails.controllers.upload.maxFileSize as Long
     
         Map<String, Object> result = [
-            serverVersion            : getServerBuildDate(),
+            serverBuild            : getServerBuildDate(),
             messagingProtocolVersion : "1.0",
             maximumFileUploadSize    : maximumFileUploadSize
         ]
