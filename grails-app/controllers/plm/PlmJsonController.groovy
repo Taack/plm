@@ -5,8 +5,39 @@ import grails.converters.JSON
 import grails.plugin.springsecurity.annotation.Secured
 
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
-class PlmJsonController {
 
+class PlmJsonController {
+    private String getServerBuildDate() {
+    Properties properties = new Properties()
+
+    InputStream input = this.class.classLoader
+            .getResourceAsStream("build-info.properties")
+
+    if (input) {
+        try {
+            properties.load(input)
+        } finally {
+            input.close()
+        }
+    }
+
+    return properties.getProperty("server.build.date", "unknown")
+}
+    // Endpoint: /plmJson/serverInfo
+    def serverInfo() {
+    
+        long maximumFileUploadSize =
+                grailsApplication.config.grails.controllers.upload.maxFileSize as Long
+    
+        Map<String, Object> result = [
+            serverVersion            : getServerBuildDate(),
+            messagingProtocolVersion : "1.0",
+            maximumFileUploadSize    : maximumFileUploadSize
+        ]
+    
+        response.contentType = 'application/json'
+        render result as JSON
+    }
     //expose api for tags, endpoint /plmJson/tags
     def tags() {
         List<Term> termList = Term.list(
