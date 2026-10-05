@@ -1,4 +1,4 @@
-Video of the latest version: [Taack PLM With Blender and FreeCAD](https://youtu.be/ijpgDsVXfpg).
+Video of the latest version: [Taack PLM With Blender and FreeCAD](https://youtu.be/sMTuQunCXyw).
 
 Demo server installation (Linux/Mac):
 # Bare Metal Installation
