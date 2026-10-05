@@ -23,6 +23,7 @@ import java.util.zip.ZipFile
 class PlmFreeCadProtoService {
 
     SpringSecurityService springSecurityService
+    PlmFreeCadSecurityService plmFreeCadSecurityService
 
     final private String intranetRoot = TaackUiConfiguration.root
 
@@ -113,6 +114,9 @@ class PlmFreeCadProtoService {
             if (existingPart?.status == PlmFreeCadPartStatus.LOCKED) {
                 log.error "Attempt to update Locked Part (from sha1): ${plmFile.name} $existingPart"
                 return outbound.build()
+            } else if (existingPart && !plmFreeCadSecurityService.canEditFile(existingPart, u)) {
+                log.error "Attempt to update part you are not supposed to edit (from sha1): ${plmFile.name} $existingPart"
+                return outbound.build()
             } else if (plmFile.id == null || plmFile.id.isBlank()) {
                 log.error "PlmFile without ID: ${plmFile.name} $existingPart"
                 return outbound.build()
@@ -122,7 +126,10 @@ class PlmFreeCadProtoService {
             } else {
                 PlmFreeCadPart partToBeCloned = PlmFreeCadPart.findByFileIdAndNextVersionIsNull(plmFile.id)
                 if (partToBeCloned?.status == PlmFreeCadPartStatus.LOCKED) {
-                    log.error "Attempt to update Locked Part (from id): ${plmFile.name} $existingPart"
+                    log.error "Attempt to update Locked Part (from id): ${plmFile.id} $partToBeCloned"
+                    return outbound.build()
+                } else if (partToBeCloned && !plmFreeCadSecurityService.canEditFile(partToBeCloned, u)) {
+                    log.error "Attempt to update part you are not supposed to edit (from id): ${plmFile.id} $partToBeCloned"
                     return outbound.build()
                 }
                 log.info "Upload PlmFile: ${plmFile.name} with id: ${plmFile.id}, already exists: ${existingPart}, part to be cloned ${partToBeCloned}"
