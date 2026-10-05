@@ -1,8 +1,10 @@
 package plm
 
 import attachment.Term
+import crew.User
 import grails.compiler.GrailsCompileStatic
 import grails.converters.JSON
+import grails.plugin.springsecurity.SpringSecurityService
 import grails.plugin.springsecurity.annotation.Secured
 import org.springframework.beans.factory.annotation.Value
 
@@ -10,14 +12,19 @@ import org.springframework.beans.factory.annotation.Value
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
 class PlmJsonController {
 
+    PlmFreeCadSecurityService plmFreeCadSecurityService
+    SpringSecurityService springSecurityService
+
     @Value('${grails.controllers.upload.maxFileSize}')
     Long maximumFileUploadSize
 
     @Value('${grails.controllers.upload.maxRequestSize}')
     Long maximumRequestSize
 
-    private static List<Map<String, Object>> prepareParts(List<PlmFreeCadPart> parts) {
-        parts.collect { PlmFreeCadPart part ->
+    private static List<Map<String, Object>> prepareParts(List<PlmFreeCadPart> parts, User user) {
+        parts.grep { PlmFreeCadPart part ->
+            plmFreeCadSecurityService.canDownloadFile(part, user)
+        }.collect { PlmFreeCadPart part ->
                 [
                         id          : part.id,
                         label       : part.label,
@@ -119,7 +126,7 @@ class PlmJsonController {
         ) as List<PlmFreeCadPart>
 
         response.contentType = 'application/json'
-        render prepareParts(parts) as JSON
+        render prepareParts(parts, springSecurityService.currentUser as User) as JSON
     }
 
     //create endpoint for searching for parts, exposes /plmJson/searchParts?originalName=
@@ -150,6 +157,6 @@ class PlmJsonController {
         ) as List<PlmFreeCadPart>
 
         response.contentType = 'application/json'
-        render prepareParts(parts) as JSON
+        render prepareParts(parts, springSecurityService.currentUser as User) as JSON
     }
 }
