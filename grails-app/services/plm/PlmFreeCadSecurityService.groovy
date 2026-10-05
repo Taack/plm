@@ -3,6 +3,7 @@ package plm
 import attachement.AttachmentSecurityService
 import attachment.WriteAccess
 import crew.User
+import grails.compiler.GrailsCompileStatic
 import grails.plugin.springsecurity.SpringSecurityService
 import jakarta.annotation.PostConstruct
 import org.codehaus.groovy.runtime.MethodClosure
@@ -10,6 +11,7 @@ import taack.app.TaackApp
 import taack.app.TaackAppRegisterService
 import taack.render.TaackUiEnablerService
 
+@GrailsCompileStatic
 class PlmFreeCadSecurityService {
 
     static lazyInit = false
