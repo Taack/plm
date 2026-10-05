@@ -21,7 +21,7 @@ class PlmJsonController {
     @Value('${grails.controllers.upload.maxRequestSize}')
     Long maximumRequestSize
 
-    private static List<Map<String, Object>> prepareParts(List<PlmFreeCadPart> parts, User user) {
+    private List<Map<String, Object>> prepareParts(List<PlmFreeCadPart> parts, User user) {
         parts.grep { PlmFreeCadPart part ->
             plmFreeCadSecurityService.canDownloadFile(part, user)
         }.collect { PlmFreeCadPart part ->
