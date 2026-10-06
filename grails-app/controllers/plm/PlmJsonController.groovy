@@ -60,7 +60,7 @@ class PlmJsonController {
 
         Map<String, Object> result = [
                 serverBuild             : getServerBuildDate(),
-                messagingProtocolVersion: "1.0",
+                messagingProtocolVersion: "2",
                 maximumFileUploadSize   : maximumFileUploadSize,
                 maxRequestSize          : maximumRequestSize
         ] as Map<String, Object>
@@ -127,6 +127,73 @@ class PlmJsonController {
 
         response.contentType = 'application/json'
         render prepareParts(parts, springSecurityService.currentUser as User) as JSON
+    }
+
+    //create endpoint for getting status of PLM for parts, exposes /plmJson/workspaceParts
+    @Secured(["ROLE_PLM_USER"])
+    def workspaceParts() {
+    
+        def requestJson = request.JSON
+    
+        List workspaceParts = requestJson.parts ?: []
+        User user = springSecurityService.currentUser as User
+    
+        List<Map<String, Object>> resultParts = []
+    
+        workspaceParts.each { workspacePart ->
+    
+            String name = workspacePart.name
+            String relativePath = workspacePart.relativePath
+    
+            if (!name) {
+                return
+            }
+    
+            List<PlmFreeCadPart> matchingParts = PlmFreeCadPart.executeQuery(
+                    '''
+                    select p
+                    from PlmFreeCadPart p
+                    where lower(p.originalName) = lower(:originalName)
+                      and p.active = true
+                      and p.nextVersion is null
+                      and p.pathOnHost like '%FCStd'
+                    order by p.id desc
+                    ''',
+                    [originalName: name],
+                    [max: 1]
+            ) as List<PlmFreeCadPart>
+    
+            PlmFreeCadPart plmPart = matchingParts
+                    ? matchingParts[0]
+                    : null
+    
+            Map<String, Object> resultPart = [
+                    name        : name,
+                    relativePath: relativePath
+            ] as Map<String, Object>
+    
+            if (plmPart &&
+                    plmFreeCadSecurityService.canDownloadFile(plmPart, user)) {
+    
+                resultPart.existsInPlm = true
+                resultPart.plmPartId = plmPart.id
+                resultPart.latestVersion = plmPart.version
+                resultPart.plmStatus = "CURRENT"
+    
+            } else {
+    
+                resultPart.existsInPlm = false
+                resultPart.plmStatus = "NOT_IN_PLM"
+            }
+    
+            resultParts << resultPart
+        }
+    
+        response.contentType = 'application/json'
+    
+        render([
+                parts: resultParts
+        ] as JSON)
     }
 
     //create endpoint for searching for parts, exposes /plmJson/searchParts?originalName=
