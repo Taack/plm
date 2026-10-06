@@ -546,8 +546,42 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         } else ''
     }
 
+    private static String commonSuffix(List<String> paths) {
+        println paths
+        String output = null
+        int im = 100
+        for (String p in paths) {
+            if (!output) {
+                output = p
+                continue
+            }
+            String[] pl = p.split('/')
+            String[] ol = output.split('/')
+            int i = Math.min(pl.length - 2, ol.length - 2)
+            for (; i >= 0; i--) {
+                if (pl[i] != ol[i]) break
+            }
+            im = Math.min(im, i)
+            output = p
+        }
+        if (im == 100) return output
+        output.split('/')[im..-1].join('/')
+    }
+
     private static String partFilePath(PlmFreeCadPart part, PlmFreeCadPart linkPart) {
+        List<String> partPaths = PlmFreeCadPart.findAllByFileId(part.fileId)*.pathOnHost
+        String suffixPart = commonSuffix(partPaths)
+
+        List<String> linkPartPaths = PlmFreeCadPart.findAllByFileId(linkPart.fileId)*.pathOnHost
+        String suffixLinkPartPaths = commonSuffix(linkPartPaths)
+
+
+
+        println("part: ${part.pathOnHost}, linkedPart: ${linkPart.pathOnHost}")
+        println("suffixPart: ${suffixPart}, suffixLinkPartPaths: ${suffixLinkPartPaths}")
+
         "${linkPart.pathOnHost - part.pathOnHost.substring(0, part.pathOnHost.lastIndexOf('/'))}"
+        //commonSuffix([suffixPart, suffixLinkPartPaths])
     }
 
     File zipPart(PlmFreeCadPart part, Long version = null) {
