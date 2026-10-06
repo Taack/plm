@@ -81,6 +81,7 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
         plmContentShaOne nullable: true
         originalName nullable: true
         pathOnHost nullable: true
+        creationOrder unique: 'nextVersion'
     }
 
     static hasMany = [
