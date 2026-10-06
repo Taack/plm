@@ -177,7 +177,7 @@ class PlmJsonController {
     
                 resultPart.existsInPlm = true
                 resultPart.plmPartId = plmPart.id
-                resultPart.latestVersion = plmPart.version
+                resultPart.latestVersion = plmPart.computedVersion
                 resultPart.plmStatus = "CURRENT"
     
             } else {
