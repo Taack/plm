@@ -164,7 +164,10 @@ class PlmFreeCadProtoService {
                     partToBeCloned.plmFileUserUpdated = plmFile.lastModifiedBy
                     partToBeCloned.plmContentType = Files.probeContentType(file.toPath())
                     partToBeCloned.plmContentShaOne = sha1
-                    partToBeCloned.originalName = plmFile.name
+                    partToBeCloned.originalName = new File(plmFile.fileName).getName()
+                    if (partToBeCloned.originalName.toLowerCase().endsWith(".fcstd")) {
+                        partToBeCloned.originalName = partToBeCloned.originalName.substring( 0, partToBeCloned.originalName.length() - 6)
+                    }
                     partToBeCloned.cTimeNs = plmFile.getCTimeNs()
                     partToBeCloned.mTimeNs = plmFile.getUTimeNs()
 
