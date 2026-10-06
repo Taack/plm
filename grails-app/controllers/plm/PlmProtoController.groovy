@@ -25,7 +25,7 @@ class PlmProtoController {
         try (var zipFile = new ZipFile(zipProto)) {
             response.status = 200
             response.contentType = 'application/octet-stream'
-            response.outputStream << plmFreeCadProtoService.processProto(zipFile).toByteArray()
+            response.outputStream << plmFreeCadProtoService.processZippedProto(zipFile).toByteArray()
             response.outputStream.flush()
             response.outputStream.close()
         } catch (IOException e) {
@@ -43,7 +43,7 @@ class PlmProtoController {
         try (var zipFile = new ZipFile(zipProto)) {
             response.status = 200
             response.contentType = 'application/octet-stream'
-            response.outputStream << plmFreeCadProtoService.processZip(zipFile).toByteArray()
+            response.outputStream << plmFreeCadProtoService.processZippedFiles(zipFile).toByteArray()
             response.outputStream.flush()
             response.outputStream.close()
         } catch (IOException e) {

@@ -37,7 +37,7 @@ class PlmFreeCadProtoService {
 
     FreecadPlm.Bucket incomingBucket = null
 
-    FreecadPlm.Bucket processProto(ZipFile zipFile) {
+    FreecadPlm.Bucket processZippedProto(ZipFile zipFile) {
         FreecadPlm.Bucket.Builder outbound = FreecadPlm.Bucket.newBuilder()
         outbound.setStatus(FreecadPlm.ServerStatus.NOK_PROTO)
 
@@ -65,7 +65,7 @@ class PlmFreeCadProtoService {
         return outbound.build()
     }
 
-    FreecadPlm.Bucket processZip(ZipFile zipFile) {
+    FreecadPlm.Bucket processZippedFiles(ZipFile zipFile) {
         FreecadPlm.Bucket.Builder outbound = FreecadPlm.Bucket.newBuilder()
         outbound.setStatus(FreecadPlm.ServerStatus.NOK_FILES)
         Map<String, FreecadPlm.PlmLink> linksMap = incomingBucket.linksMap
