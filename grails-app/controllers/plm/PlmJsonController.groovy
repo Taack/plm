@@ -133,17 +133,19 @@ class PlmJsonController {
     @Secured(["ROLE_PLM_USER"])
     def workspaceParts() {
     
-        def requestJson = request.JSON
+        Map<String, Object> requestJson = request.JSON as Map<String, Object>
     
-        List workspaceParts = requestJson.parts ?: []
+        List<Map<String, Object>> workspaceParts =
+                (requestJson.get("parts") ?: []) as List<Map<String, Object>>
+    
         User user = springSecurityService.currentUser as User
     
         List<Map<String, Object>> resultParts = []
     
-        workspaceParts.each { workspacePart ->
+        workspaceParts.each { Map<String, Object> workspacePart ->
     
-            String name = workspacePart.name
-            String relativePath = workspacePart.relativePath
+            String name = workspacePart.get("name") as String
+            String relativePath = workspacePart.get("relativePath") as String
     
             if (!name) {
                 return
@@ -163,9 +165,8 @@ class PlmJsonController {
                     [max: 1]
             ) as List<PlmFreeCadPart>
     
-            PlmFreeCadPart plmPart = matchingParts
-                    ? matchingParts[0]
-                    : null
+            PlmFreeCadPart plmPart =
+                    matchingParts ? matchingParts[0] : null
     
             Map<String, Object> resultPart = [
                     name        : name,
@@ -175,18 +176,18 @@ class PlmJsonController {
             if (plmPart &&
                     plmFreeCadSecurityService.canDownloadFile(plmPart, user)) {
     
-                resultPart.existsInPlm = true
-                resultPart.plmPartId = plmPart.id
-                resultPart.latestVersion = plmPart.computedVersion
-                resultPart.plmStatus = "CURRENT"
+                resultPart.put("existsInPlm", true)
+                resultPart.put("plmPartId", plmPart.id)
+                resultPart.put("latestVersion", plmPart.computedVersion)
+                resultPart.put("plmStatus", "CURRENT")
     
             } else {
     
-                resultPart.existsInPlm = false
-                resultPart.plmStatus = "NOT_IN_PLM"
+                resultPart.put("existsInPlm", false)
+                resultPart.put("plmStatus", "NOT_IN_PLM")
             }
     
-            resultParts << resultPart
+            resultParts.add(resultPart)
         }
     
         response.contentType = 'application/json'
