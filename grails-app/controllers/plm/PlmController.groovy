@@ -47,7 +47,7 @@ class PlmController implements WebAttributes {
         new UiMenuSpecifier().ui {
             menu this.&parts as MC
             menu this.&parentParts as MC
-            menu this.&lockedParts as MC
+            menu this.&obsoleteParts as MC
             menuIcon ActionIcon.HELP, this.&doc as MC
             menuSearch this.&search as MethodClosure, q
             menuOptions(SupportedLanguage.fromContext())
@@ -76,7 +76,7 @@ class PlmController implements WebAttributes {
         UiFilterSpecifier f = new UiFilterSpecifier().sec PlmFreeCadPart, {
             PlmFreeCadPart p = new PlmFreeCadPart()
             filterFieldExpressionBool(new FilterExpression(
-                    [PlmFreeCadPartStatus.LOCKED, PlmFreeCadPartStatus.OBSOLETE],
+                    [PlmFreeCadPartStatus.OBSOLETE],
                     Operator.NI, p.status_))
         }
 
@@ -90,6 +90,11 @@ class PlmController implements WebAttributes {
     def parentParts() {
         UiFilterSpecifier f = new UiFilterSpecifier().sec PlmFreeCadPart, {
             PlmFreeCadLink link = new PlmFreeCadLink()
+            PlmFreeCadPart p = new PlmFreeCadPart()
+            filterFieldExpressionBool(new FilterExpression(
+                    [PlmFreeCadPartStatus.OBSOLETE],
+                    Operator.NI, p.status_))
+
             filterFieldExpressionReverse(link.part_, true, new FilterExpression(null as Object, Operator.NE, link.part_))
         }
         taackUiService.show(new UiBlockSpecifier().ui {
@@ -99,11 +104,11 @@ class PlmController implements WebAttributes {
         }, buildMenu())
     }
 
-    def lockedParts() {
+    def obsoleteParts() {
         UiFilterSpecifier f = new UiFilterSpecifier().sec PlmFreeCadPart, {
             PlmFreeCadPart p = new PlmFreeCadPart()
             filterFieldExpressionBool(new FilterExpression(
-                    [PlmFreeCadPartStatus.LOCKED, PlmFreeCadPartStatus.OBSOLETE],
+                    [PlmFreeCadPartStatus.OBSOLETE],
                     Operator.IN, p.status_))
         }
 
