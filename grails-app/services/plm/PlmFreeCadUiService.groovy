@@ -551,6 +551,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
     }
 
     File zipPart(PlmFreeCadPart part, Long version = null) {
+        log.info "part(${part.id}, ${version})"
         if (version != null) {
             part = part.getHistory()[version]
         }
@@ -558,9 +559,17 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         if (ret.exists()) ret.delete()
         FileOutputStream fos = new FileOutputStream(ret)
         ZipOutputStream zipOut = new ZipOutputStream(fos)
-        part.allLinkedParts.each {
+        Set<String> setPartFilePath = []
+        log.info "part${part.id}.allLinkedParts: ${part.allLinkedParts*.plmFilePath}"
+        for (PlmFreeCadPart it in part.allLinkedParts) {
             FileInputStream fis = new FileInputStream(new File("${storePath}/${it.plmFilePath}"))
-            ZipEntry zipEntry = new ZipEntry(partFilePath(part, it))
+            String fileEntryName = partFilePath(part, it)
+            if (setPartFilePath.contains(fileEntryName)) {
+                log.warn "Entry present in zip file: $fileEntryName"
+                continue
+            }
+            setPartFilePath.add fileEntryName
+            ZipEntry zipEntry = new ZipEntry(fileEntryName)
             zipEntry.setTime((long) (part.mTimeNs / 1000000))
             try {
                 zipOut.putNextEntry(zipEntry)
@@ -570,7 +579,6 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 while ((length = fis.read(bytes)) >= 0) {
                     zipOut.write(bytes, 0, length)
                 }
-
             } catch (ZipException ze) {
                 log.error "${ze.message}"
             }
