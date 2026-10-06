@@ -36,14 +36,16 @@ services:
         RUN chmod +x /usr/bin/dot
         RUN chmod +x /usr/bin/convert
         COPY server-0.6.jar /opt/app
-        CMD ["sh", "-c", "java -Dgrails.env=production -DdataSource.url='jdbc:h2:/database/taack.db;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE' -Dgrails.controllers.upload.maxFileSize=$${MAX_UPLOAD_SIZE} -Dgrails.controllers.upload.maxRequestSize=$${MAX_UPLOAD_SIZE} -jar /opt/app/server-0.6.jar"] 
+        CMD ["sh", "-c", "java -Dgrails.env=production -DdataSource.url='jdbc:h2:/database/taack.db;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE' -Dgrails.controllers.upload.maxFileSize=$${MAX_UPLOAD_SIZE} -Dgrails.controllers.upload.maxRequestSize=$${MAX_UPLOAD_SIZE} -Dgrails.serverURL=$${HOST_URL}} -jar /opt/app/server-0.6.jar"] 
 
     container_name: taack-plm
     restart: unless-stopped
     ports:
-      - 9444:9442
+      - 9442:9442
     environment:
-      MAX_UPLOAD_SIZE: 1073741824
+      MAX_UPLOAD_SIZE: 1073741824  #set the maximum upload file size in bytes (This is set to 1gb)
+      HOST_URL: http://<server ip>:<port>   #set the server domain name. Port is not required if using a reverse proxy
+                                            #examples https://taackplm.org http://taackplm.org:9442 or 192.168.1.20:9442
     volumes:
       - ./taack-plm/database:/database
       - ./taack-plm/vault:/root/intranetFilesDev
