@@ -10,6 +10,9 @@ import grails.util.Pair
 import org.springframework.beans.factory.annotation.Value
 import taack.domain.TaackFilter
 import taack.domain.TaackFilterService
+import taack.ui.dsl.UiFilterSpecifier
+import taack.ui.dsl.filter.expression.FilterExpression
+import taack.ui.dsl.filter.expression.Operator
 
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
@@ -63,10 +66,29 @@ class PlmJsonController {
         return buildDate
     }
 
-    def queryModel() {
+    def queryModel(Boolean isMyModel, Boolean isTopAssembly) {
         PlmFreeCadPart part = new PlmFreeCadPart()
+
+        UiFilterSpecifier nextVersionNull = new UiFilterSpecifier().sec(PlmFreeCadPart) {
+            filterFieldExpressionBool(new FilterExpression(Operator.EQ, part.nextVersion_))
+        }
+
+        if (isMyModel) {
+            nextVersionNull.join(new UiFilterSpecifier().sec(PlmFreeCadPart) {
+                filterFieldExpressionBool new FilterExpression(springSecurityService.currentUser, Operator.EQ, part.userCreated_)
+            })
+        }
+
+        if (isTopAssembly) {
+            PlmFreeCadLink link = new PlmFreeCadLink()
+            nextVersionNull.join(new UiFilterSpecifier().sec(PlmFreeCadPart) {
+                filterFieldExpressionReverse(link.part_, true, new FilterExpression(null as Object, Operator.NE, link.part_))
+            })
+        }
+
         Pair<List<PlmFreeCadPart>, Long> parts = taackFilterService.getBuilder(PlmFreeCadPart)
                 .setSortOrder(TaackFilter.Order.ASC, part.label_)
+                .addFilter(nextVersionNull)
                 .build().list() as Pair<List<PlmFreeCadPart>, Long>
         response.contentType = 'application/json'
         render prepareParts(parts.aValue, springSecurityService.currentUser as User) as JSON
