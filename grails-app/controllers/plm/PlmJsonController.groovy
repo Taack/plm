@@ -29,11 +29,15 @@ class PlmJsonController {
         parts.grep { PlmFreeCadPart part ->
             plmFreeCadSecurityService.canDownloadFile(part, user)
         }.collect { PlmFreeCadPart part ->
-                [
-                        id          : part.id,
-                        label       : part.label,
-                        originalName: part.originalName
-                ] as Map<String, Object>
+            [
+                    id                : part.id,
+                    label             : part.label,
+                    userCreated       : part.userCreated.username,
+                    status            : part.status,
+                    computedVersion   : part.computedVersion,
+                    pathOnHost        : part.pathOnHost,
+                    plmFileLastUpdated: part.plmFileLastUpdated
+            ] as Map<String, Object>
         }
     }
 
@@ -62,8 +66,8 @@ class PlmJsonController {
     def queryModel() {
         PlmFreeCadPart part = new PlmFreeCadPart()
         Pair<List<PlmFreeCadPart>, Long> parts = taackFilterService.getBuilder(PlmFreeCadPart)
-                    .setSortOrder(TaackFilter.Order.ASC, part.label_)
-                    .build().list() as Pair<List<PlmFreeCadPart>, Long>
+                .setSortOrder(TaackFilter.Order.ASC, part.label_)
+                .build().list() as Pair<List<PlmFreeCadPart>, Long>
         response.contentType = 'application/json'
         render prepareParts(parts.aValue, springSecurityService.currentUser as User) as JSON
     }
