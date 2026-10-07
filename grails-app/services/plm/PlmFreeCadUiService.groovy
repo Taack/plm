@@ -547,7 +547,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
     }
 
     private static String commonSuffix(List<String> paths) {
-        println paths
+        paths = paths.unique()
         String output = null
         int im = 100
         for (String p in paths) {
@@ -557,15 +557,26 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             }
             String[] pl = p.split('/')
             String[] ol = output.split('/')
-            int i = Math.min(pl.length - 2, ol.length - 2)
-            for (; i >= 0; i--) {
-                if (pl[i] != ol[i]) break
+//            int i = Math.min(pl.length - 2, ol.length - 2)
+            int i = 0
+            for (; i < pl.length && i < ol.length; i++) {
+                if (pl[pl.length - i - 1] != ol[ol.length - i - 1]){
+                    break
+                }
             }
+
             im = Math.min(im, i)
+            println "commonSuffix p: $p, i: $i, im: $im, ol: $ol, pl: $pl"
             output = p
         }
-        if (im == 100) return output
-        output.split('/')[im..-1].join('/')
+        println "commonSuffix ${im}"
+        String[] outputSplit = output.split('/')
+        if (im == 100 || im >= outputSplit.length) return output
+        outputSplit[outputSplit.length - im..-1].join('/')
+    }
+
+    private static List<String> prefixToRemove(String commonSuffix, List<String> paths) {
+        paths.grep { String p -> p.endsWith(commonSuffix)}.collect { String p -> p - commonSuffix }.sort().unique()
     }
 
     private static String partFilePath(PlmFreeCadPart part, PlmFreeCadPart linkPart) {
@@ -573,15 +584,13 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         String suffixPart = commonSuffix(partPaths)
 
         List<String> linkPartPaths = PlmFreeCadPart.findAllByFileId(linkPart.fileId)*.pathOnHost
-        String suffixLinkPartPaths = commonSuffix(linkPartPaths)
+        String suffixLinkPart = commonSuffix(linkPartPaths)
 
-
-
-        println("part: ${part.pathOnHost}, linkedPart: ${linkPart.pathOnHost}")
-        println("suffixPart: ${suffixPart}, suffixLinkPartPaths: ${suffixLinkPartPaths}")
-
-        "${linkPart.pathOnHost - part.pathOnHost.substring(0, part.pathOnHost.lastIndexOf('/'))}"
-        //commonSuffix([suffixPart, suffixLinkPartPaths])
+        List<String> possiblePaths = [suffixLinkPart]
+        for (String prefix in (prefixToRemove(suffixPart, partPaths)).sort().unique()) {
+            if (linkPart.pathOnHost.startsWith(prefix)) possiblePaths.add linkPart.pathOnHost - prefix
+        }
+        return possiblePaths.sort { it.length() }.first
     }
 
     File zipPart(PlmFreeCadPart part, Long version = null) {
