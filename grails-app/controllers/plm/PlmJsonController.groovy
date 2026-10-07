@@ -156,29 +156,12 @@ def workspaceParts() {
             return
         }
 
-        /*
-         * Remove the .FCStd extension for the database lookup.
-         *
-         * This allows:
-         *
-         *   2020 corner bracket
-         *   2020 corner bracket.fcstd
-         *   2020 corner bracket.FCStd
-         *
-         * to match the same PLM part.
-         */
+  
         String nameWithoutExtension = name.replaceFirst(
                 '(?i)\\.fcstd$',
                 ''
         )
-
-        /*
-         * Find the active/latest PLM part.
-         *
-         * Match either the complete originalName or the name
-         * without the .FCStd extension.
-         */
-        List<PlmFreeCadPart> matchingParts =
+      List<PlmFreeCadPart> matchingParts =
                 PlmFreeCadPart.executeQuery(
                         '''
                         select p
@@ -206,14 +189,6 @@ def workspaceParts() {
                 name        : name,
                 relativePath: relativePath
         ] as Map<String, Object>
-
-        /*
-         * The part exists in PLM.
-         *
-         * IMPORTANT:
-         * Do not use canDownloadFile() to decide whether the
-         * part exists. A locked part still exists in PLM.
-         */
         if (plmPart) {
 
             resultPart.put(
@@ -231,33 +206,10 @@ def workspaceParts() {
                     plmPart.computedVersion
             )
 
-            /*
-             * Determine whether the current user can download it.
-             *
-             * If download is allowed, report CURRENT.
-             *
-             * If download is not allowed, report LOCKED.
-             *
-             * This preserves the important distinction between
-             * "not in PLM" and "exists but is locked".
-             */
-            if (plmFreeCadSecurityService.canDownloadFile(
-                    plmPart,
-                    user
-            )) {
-
-                resultPart.put(
-                        "plmStatus",
-                        "CURRENT"
-                )
-
-            } else {
-
-                resultPart.put(
-                        "plmStatus",
-                        "LOCKED"
-                )
-            }
+        resultPart.put(
+                "plmStatus",
+                plmPart.status?.toString()
+        )
 
         } else {
 
