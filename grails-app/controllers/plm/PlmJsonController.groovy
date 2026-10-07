@@ -60,7 +60,7 @@ class PlmJsonController {
 
         Map<String, Object> result = [
                 serverBuild             : getServerBuildDate(),
-                messagingProtocolVersion: "2",
+                messagingProtocolVersion: "3",
                 maximumFileUploadSize   : maximumFileUploadSize,
                 maxRequestSize          : maximumRequestSize
         ] as Map<String, Object>
@@ -130,72 +130,160 @@ class PlmJsonController {
     }
 
     //create endpoint for getting status of PLM for parts, exposes /plmJson/workspaceParts
-    @Secured(["ROLE_PLM_USER"])
-    def workspaceParts() {
-    
-        Map<String, Object> requestJson = request.JSON as Map<String, Object>
-    
-        List<Map<String, Object>> workspaceParts =
-                (requestJson.get("parts") ?: []) as List<Map<String, Object>>
-    
-        User user = springSecurityService.currentUser as User
-    
-        List<Map<String, Object>> resultParts = []
-    
-        workspaceParts.each { Map<String, Object> workspacePart ->
-    
-            String name = workspacePart.get("name") as String
-            String relativePath = workspacePart.get("relativePath") as String
-    
-            if (!name) {
-                return
-            }
-    
-            List<PlmFreeCadPart> matchingParts = PlmFreeCadPart.executeQuery(
-                    '''
-                    select p
-                    from PlmFreeCadPart p
-                    where lower(p.originalName) = lower(:originalName)
-                      and p.active = true
-                      and p.nextVersion is null
-                      and p.pathOnHost like '%FCStd'
-                    order by p.id desc
-                    ''',
-                    [originalName: name],
-                    [max: 1]
-            ) as List<PlmFreeCadPart>
-    
-            PlmFreeCadPart plmPart =
-                    matchingParts ? matchingParts[0] : null
-    
-            Map<String, Object> resultPart = [
-                    name        : name,
-                    relativePath: relativePath
-            ] as Map<String, Object>
-    
-            if (plmPart &&
-                    plmFreeCadSecurityService.canDownloadFile(plmPart, user)) {
-    
-                resultPart.put("existsInPlm", true)
-                resultPart.put("plmPartId", plmPart.id)
-                resultPart.put("latestVersion", plmPart.computedVersion)
-                resultPart.put("plmStatus", "CURRENT")
-    
-            } else {
-    
-                resultPart.put("existsInPlm", false)
-                resultPart.put("plmStatus", "NOT_IN_PLM")
-            }
-    
-            resultParts.add(resultPart)
+@Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
+def workspaceParts() {
+
+    Map<String, Object> requestJson =
+            request.JSON as Map<String, Object>
+
+    List<Map<String, Object>> workspaceParts =
+            (requestJson.get("parts") ?: []) as List<Map<String, Object>>
+
+    User user =
+            springSecurityService.currentUser as User
+
+    List<Map<String, Object>> resultParts = []
+
+    workspaceParts.each { Map<String, Object> workspacePart ->
+
+        String name =
+                workspacePart.get("name") as String
+
+        String relativePath =
+                workspacePart.get("relativePath") as String
+
+        if (!name) {
+            return
         }
-    
-        response.contentType = 'application/json'
-    
-        render([
-                parts: resultParts
-        ] as JSON)
+
+        /*
+         * Remove the .FCStd extension for the database lookup.
+         *
+         * This allows:
+         *
+         *   2020 corner bracket
+         *   2020 corner bracket.fcstd
+         *   2020 corner bracket.FCStd
+         *
+         * to match the same PLM part.
+         */
+        String nameWithoutExtension = name.replaceFirst(
+                '(?i)\\.fcstd$',
+                ''
+        )
+
+        /*
+         * Find the active/latest PLM part.
+         *
+         * Match either the complete originalName or the name
+         * without the .FCStd extension.
+         */
+        List<PlmFreeCadPart> matchingParts =
+                PlmFreeCadPart.executeQuery(
+                        '''
+                        select p
+                        from PlmFreeCadPart p
+                        where (
+                            lower(p.originalName) = lower(:originalName)
+                            or lower(p.originalName) = lower(:nameWithoutExtension)
+                        )
+                          and p.active = true
+                          and p.nextVersion is null
+                          and lower(p.pathOnHost) like '%fcstd'
+                        order by p.id desc
+                        ''',
+                        [
+                                originalName       : name,
+                                nameWithoutExtension: nameWithoutExtension
+                        ],
+                        [max: 1]
+                ) as List<PlmFreeCadPart>
+
+        PlmFreeCadPart plmPart =
+                matchingParts ? matchingParts[0] : null
+
+        Map<String, Object> resultPart = [
+                name        : name,
+                relativePath: relativePath
+        ] as Map<String, Object>
+
+        /*
+         * The part exists in PLM.
+         *
+         * IMPORTANT:
+         * Do not use canDownloadFile() to decide whether the
+         * part exists. A locked part still exists in PLM.
+         */
+        if (plmPart) {
+
+            resultPart.put(
+                    "existsInPlm",
+                    true
+            )
+
+            resultPart.put(
+                    "plmPartId",
+                    plmPart.id
+            )
+
+            resultPart.put(
+                    "latestVersion",
+                    plmPart.computedVersion
+            )
+
+            /*
+             * Determine whether the current user can download it.
+             *
+             * If download is allowed, report CURRENT.
+             *
+             * If download is not allowed, report LOCKED.
+             *
+             * This preserves the important distinction between
+             * "not in PLM" and "exists but is locked".
+             */
+            if (plmFreeCadSecurityService.canDownloadFile(
+                    plmPart,
+                    user
+            )) {
+
+                resultPart.put(
+                        "plmStatus",
+                        "CURRENT"
+                )
+
+            } else {
+
+                resultPart.put(
+                        "plmStatus",
+                        "LOCKED"
+                )
+            }
+
+        } else {
+
+            /*
+             * No matching active/latest PLM part was found.
+             */
+            resultPart.put(
+                    "existsInPlm",
+                    false
+            )
+
+            resultPart.put(
+                    "plmStatus",
+                    "NOT_IN_PLM"
+            )
+        }
+
+        resultParts.add(resultPart)
     }
+
+    response.contentType = 'application/json'
+
+    render([
+            parts: resultParts
+    ] as JSON)
+}
 
     //create endpoint for searching for parts, exposes /plmJson/searchParts?originalName=
     def searchParts(String originalName) {
