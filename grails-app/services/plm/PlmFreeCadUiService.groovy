@@ -566,10 +566,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
             }
 
             im = Math.min(im, i)
-            println "commonSuffix p: $p, i: $i, im: $im, ol: $ol, pl: $pl"
             output = p
         }
-        println "commonSuffix ${im}"
         String[] outputSplit = output.split('/')
         if (im == 100 || im >= outputSplit.length) return output
         outputSplit[outputSplit.length - im..-1].join('/')
@@ -586,6 +584,9 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         List<String> linkPartPaths = PlmFreeCadPart.findAllByFileId(linkPart.fileId)*.pathOnHost
         String suffixLinkPart = commonSuffix(linkPartPaths)
 
+        if (partPaths.size() == 1) {
+            suffixLinkPart = suffixLinkPart - suffixPart.substring(0, suffixPart.lastIndexOf('/'))
+        }
         List<String> possiblePaths = [suffixLinkPart]
         for (String prefix in (prefixToRemove(suffixPart, partPaths)).sort().unique()) {
             if (linkPart.pathOnHost.startsWith(prefix)) possiblePaths.add linkPart.pathOnHost - prefix
