@@ -6,7 +6,10 @@ import grails.compiler.GrailsCompileStatic
 import grails.converters.JSON
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.plugin.springsecurity.annotation.Secured
+import grails.util.Pair
 import org.springframework.beans.factory.annotation.Value
+import taack.domain.TaackFilter
+import taack.domain.TaackFilterService
 
 @GrailsCompileStatic
 @Secured(["ROLE_PLM_USER", "ROLE_ADMIN"])
@@ -14,6 +17,7 @@ class PlmJsonController {
 
     PlmFreeCadSecurityService plmFreeCadSecurityService
     SpringSecurityService springSecurityService
+    TaackFilterService taackFilterService
 
     @Value('${grails.controllers.upload.maxFileSize}')
     Long maximumFileUploadSize
@@ -53,6 +57,15 @@ class PlmJsonController {
         }
 
         return buildDate
+    }
+
+    def queryModel() {
+        PlmFreeCadPart part = new PlmFreeCadPart()
+        Pair<List<PlmFreeCadPart>, Long> parts = taackFilterService.getBuilder(PlmFreeCadPart)
+                    .setSortOrder(TaackFilter.Order.ASC, part.label_)
+                    .build().list() as Pair<List<PlmFreeCadPart>, Long>
+        response.contentType = 'application/json'
+        render prepareParts(parts.aValue, springSecurityService.currentUser as User) as JSON
     }
 
     // Endpoint: /plmJson/serverInfo
