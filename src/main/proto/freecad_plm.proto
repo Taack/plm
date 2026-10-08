@@ -48,6 +48,7 @@ message Bucket {
   map<string, PlmLink> links = 2;
   repeated string serverSha1Files = 3;
   ServerStatus status = 4;
+  string uploadError = 5;
 }
 
 // protoc-29.6-linux-x86_64/bin/protoc --python_out=/home/auo/tmp/py --java_out=/home/auo/tmp/java app/plm/src/main/proto/freecad_plm.proto
