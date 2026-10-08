@@ -79,7 +79,7 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
         nextVersion nullable: true
         plmContentType nullable: true
         plmContentShaOne nullable: true
-        originalName nullable: true
+        originalName nullable: true, unique: 'fileId'
         pathOnHost nullable: true
         //creationOrder unique: 'nextVersion'
     }

@@ -145,9 +145,8 @@ class PlmFreeCadProtoService {
                         }
 
                         oldPart.userUpdated = u
-                        oldPart.save(flush: true)
-                        if (oldPart.hasErrors()) log.error "${oldPart.errors}"
-
+                        oldPart.save(flush: true, failOnError: true)
+                        if (oldPart.hasErrors()) log.error "oldPart: ${oldPart.errors}"
                     }
                     partToBeCloned.userUpdated = u
                     File file = new File(storePath + '/' + sha1 + '.' + ext)
@@ -175,7 +174,9 @@ class PlmFreeCadProtoService {
 
                     partToBeCloned.documentAccess = documentAccess
                     partToBeCloned.save(flush: true, failOnError: true)
-                    if (partToBeCloned.hasErrors()) log.error "${partToBeCloned.errors}"
+                    if (partToBeCloned.hasErrors()) {
+                        log.error "partToBeCloned: ${partToBeCloned.errors}"
+                    }
                 }
                 objNameToPart.put(plmFile.name, existingPart ?: partToBeCloned)
                 plmFile.externalLinkList.each { String lIt ->
@@ -216,7 +217,7 @@ class PlmFreeCadProtoService {
                             break
                     }
                     link.save(flush: true, failOnError: true)
-                    if (link.hasErrors()) log.error "${link.errors}"
+                    if (link.hasErrors()) log.error "link: ${link.errors}"
                 }
             } else {
                 log.error("No part for ${entry.key} in protobuf !!!")

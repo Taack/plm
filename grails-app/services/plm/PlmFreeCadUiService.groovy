@@ -584,9 +584,9 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         List<String> linkPartPaths = PlmFreeCadPart.findAllByFileId(linkPart.fileId)*.pathOnHost
         String suffixLinkPart = commonSuffix(linkPartPaths)
 
-        if (partPaths.size() == 1) {
-            suffixLinkPart = suffixLinkPart - suffixPart.substring(0, suffixPart.lastIndexOf('/'))
-        }
+        if (suffixPart.contains('/'))
+            suffixLinkPart = suffixLinkPart - suffixPart.substring(0, suffixPart.lastIndexOf('/') + 1)
+
         List<String> possiblePaths = [suffixLinkPart]
         for (String prefix in (prefixToRemove(suffixPart, partPaths)).sort().unique()) {
             if (linkPart.pathOnHost.startsWith(prefix)) possiblePaths.add linkPart.pathOnHost - prefix
