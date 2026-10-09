@@ -384,7 +384,12 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         }
 
         def showPreview = new UiShowSpecifier().ui {
-            field """<div style="text-align: center;"><img style="max-width: 360px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}&timestamp=${part.mTimeNs}"></div>"""
+            if (!isMail)
+                field """<div style="text-align: center;"><img style="max-width: 360px;" src="/plm/previewPart/${part.id ?: 0}?partVersion=${part.computedVersion ?: 0}&timestamp=${part.mTimeNs}"></div>"""
+            else {
+                File p = this.preview(part, partVersion)
+                field """<div style="text-align: center;"><img style="max-width: 360px;" src="data:image/${p.name.substring(p.name.lastIndexOf('.') + 1)};base64, ${Base64.getEncoder().encodeToString(p.bytes)}"></div>"""
+            }
         }
 
         UiBlockSpecifier b = new UiBlockSpecifier().ui {

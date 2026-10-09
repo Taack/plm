@@ -19,6 +19,8 @@ import java.text.SimpleDateFormat
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
+import static taack.render.TaackUiService.tr
+
 @GrailsCompileStatic
 class PlmFreeCadProtoService {
 
@@ -36,9 +38,10 @@ class PlmFreeCadProtoService {
     }
 
     FreecadPlm.Bucket incomingBucket = null
+    FreecadPlm.Bucket.Builder outbound = null
 
     FreecadPlm.Bucket processZippedProto(ZipFile zipFile) {
-        FreecadPlm.Bucket.Builder outbound = FreecadPlm.Bucket.newBuilder()
+        outbound = FreecadPlm.Bucket.newBuilder()
         outbound.setStatus(FreecadPlm.ServerStatus.NOK_PROTO)
 
         var protoBin = zipFile.getEntry("proto.bin")
@@ -66,7 +69,7 @@ class PlmFreeCadProtoService {
     }
 
     FreecadPlm.Bucket processZippedFiles(ZipFile zipFile) {
-        FreecadPlm.Bucket.Builder outbound = FreecadPlm.Bucket.newBuilder()
+        outbound = FreecadPlm.Bucket.newBuilder()
         outbound.setStatus(FreecadPlm.ServerStatus.NOK_FILES)
         Map<String, FreecadPlm.PlmLink> linksMap = incomingBucket.linksMap
         Map<String, PlmFile> plmFilesMap = incomingBucket.plmFilesMap
@@ -97,6 +100,7 @@ class PlmFreeCadProtoService {
                     String computedSha1 = digest.digest().encodeHex().toString()
                     if (computedSha1 != sha1) {
                         log.warn("Sha1($sha1) != computedSha1($computedSha1)")
+                        outbound.uploadError = tr("received.sha1.different.from.computed.sha1.error", sha1, computedSha1)
                         return outbound.build()
                     }
                     fileContentIs = zipFile.getInputStream(zipFile.getEntry(sha1))
@@ -113,23 +117,29 @@ class PlmFreeCadProtoService {
 
             if (existingPart?.status == PlmFreeCadPartStatus.LOCKED) {
                 log.error "Attempt to update Locked Part (from sha1): ${plmFile.name} $existingPart"
+                outbound.uploadError = tr("attempt.to.update.locked.part.with.same.sha1.error", plmFile.name)
                 return outbound.build()
             } else if (existingPart && !plmFreeCadSecurityService.canEditFile(existingPart, u)) {
                 log.error "Attempt to update part you are not supposed to edit (from sha1): ${plmFile.name} $existingPart"
+                outbound.uploadError = tr("attempt.to.update.a.part.with.same.sha1.you.are.not.supposed.to.edit.error", plmFile.name)
                 return outbound.build()
             } else if (plmFile.id == null || plmFile.id.isBlank()) {
                 log.error "PlmFile without ID: ${plmFile.name} $existingPart"
+                outbound.uploadError = tr("plm.file.without.id.error", plmFile.name)
                 return outbound.build()
             } else if (plmFile.fileName.contains('"')) {
                 log.error "PlmFile fileName contains double quotes: ${plmFile.fileName} $existingPart"
+                outbound.uploadError = tr("plm.filename.with.quotes.error", plmFile.name)
                 return outbound.build()
             } else {
                 PlmFreeCadPart partToBeCloned = PlmFreeCadPart.findByFileIdAndNextVersionIsNull(plmFile.id)
                 if (partToBeCloned?.status == PlmFreeCadPartStatus.LOCKED) {
                     log.error "Attempt to update Locked Part (from id): ${plmFile.id} $partToBeCloned"
+                    outbound.uploadError = tr("attempt.to.update.locked.part.with.same.id.error", plmFile.id)
                     return outbound.build()
                 } else if (partToBeCloned && !plmFreeCadSecurityService.canEditFile(partToBeCloned, u)) {
                     log.error "Attempt to update part you are not supposed to edit (from id): ${plmFile.id} $partToBeCloned"
+                    outbound.uploadError = tr("attempt.to.update.a.part.with.same.id.you.are.not.supposed.to.edit.error", plmFile.id)
                     return outbound.build()
                 }
                 log.info "Upload PlmFile: ${plmFile.name} with id: ${plmFile.id}, already exists: ${existingPart}, part to be cloned ${partToBeCloned}"
@@ -145,8 +155,13 @@ class PlmFreeCadProtoService {
                         }
 
                         oldPart.userUpdated = u
+                        if (!oldPart.validate()) {
+                            outbound.uploadError = "${oldPart.errors}"
+                        }
                         oldPart.save(flush: true, failOnError: true)
-                        if (oldPart.hasErrors()) log.error "oldPart: ${oldPart.errors}"
+                        if (oldPart.hasErrors()) {
+                            log.error "oldPart: ${oldPart.errors}"
+                        }
                     }
                     partToBeCloned.userUpdated = u
                     File file = new File(storePath + '/' + sha1 + '.' + ext)
@@ -165,7 +180,7 @@ class PlmFreeCadProtoService {
                     partToBeCloned.plmContentShaOne = sha1
                     partToBeCloned.originalName = new File(plmFile.fileName).getName()
                     if (partToBeCloned.originalName.toLowerCase().endsWith(".fcstd")) {
-                        partToBeCloned.originalName = partToBeCloned.originalName.substring( 0, partToBeCloned.originalName.length() - 6)
+                        partToBeCloned.originalName = partToBeCloned.originalName.substring(0, partToBeCloned.originalName.length() - 6)
                     }
                     partToBeCloned.cTimeNs = plmFile.getCTimeNs()
                     partToBeCloned.mTimeNs = plmFile.getUTimeNs()
@@ -173,6 +188,9 @@ class PlmFreeCadProtoService {
                     DocumentAccess documentAccess = DocumentAccess.findOrCreateByIsInternalAndIsRestrictedToMyBusinessUnitAndIsRestrictedToMySubsidiaryAndIsRestrictedToMyManagersAndIsRestrictedToEmbeddingObjects(false, false, false, false, true)
 
                     partToBeCloned.documentAccess = documentAccess
+                    if (!partToBeCloned.validate()) {
+                        outbound.uploadError = "${partToBeCloned.errors}"
+                    }
                     partToBeCloned.save(flush: true, failOnError: true)
                     if (partToBeCloned.hasErrors()) {
                         log.error "partToBeCloned: ${partToBeCloned.errors}"
@@ -215,6 +233,9 @@ class PlmFreeCadProtoService {
                         case FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED:
                             log.error 'FreecadPlm.PlmLink.LinkCopyOnChangeEnum.UNRECOGNIZED'
                             break
+                    }
+                    if (!link.validate()) {
+                        outbound.uploadError = "${link.errors}"
                     }
                     link.save(flush: true, failOnError: true)
                     if (link.hasErrors()) log.error "link: ${link.errors}"

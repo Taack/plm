@@ -31,7 +31,11 @@ class PlmProtoController {
         } catch (IOException e) {
             log.error "${e.toString()}"
             plmFreeCadProtoService.incomingBucket = null
-            render "NOK ${e}"
+            response.status = 200
+            response.contentType = 'application/octet-stream'
+            response.outputStream << plmFreeCadProtoService.outbound.build().toByteArray()
+            response.outputStream.flush()
+            response.outputStream.close()
         }
     }
 
@@ -49,7 +53,11 @@ class PlmProtoController {
         } catch (IOException e) {
             log.error "${e.toString()}"
             plmFreeCadProtoService.incomingBucket = null
-            render "NOK ${e}"
+            response.status = 200
+            response.contentType = 'application/octet-stream'
+            response.outputStream << plmFreeCadProtoService.outbound.build().toByteArray()
+            response.outputStream.flush()
+            response.outputStream.close()
         }
     }
 

@@ -154,6 +154,11 @@ class PlmController implements WebAttributes {
                 "isHistory")
     }
 
+    def showPartInline(PlmFreeCadPart part, Long partVersion) {
+        render taackUiService.dumpMailHtml(
+                plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, true, false))
+    }
+
     def previewAsciidoc(PlmFreeCadPart part) {
         taackUiService.show TaackUi.createModal {
             show(new UiShowSpecifier().ui {

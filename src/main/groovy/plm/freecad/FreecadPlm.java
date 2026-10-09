@@ -3872,6 +3872,18 @@ PlmLink defaultValue);
      * @return The status.
      */
     ServerStatus getStatus();
+
+    /**
+     * <code>string uploadError = 5;</code>
+     * @return The uploadError.
+     */
+    String getUploadError();
+    /**
+     * <code>string uploadError = 5;</code>
+     * @return The bytes for uploadError.
+     */
+    com.google.protobuf.ByteString
+        getUploadErrorBytes();
   }
   /**
    * Protobuf type {@code plm.freecad.Bucket}
@@ -3898,6 +3910,7 @@ PlmLink defaultValue);
       serverSha1Files_ =
           com.google.protobuf.LazyStringArrayList.emptyList();
       status_ = 0;
+      uploadError_ = "";
     }
 
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -4140,6 +4153,45 @@ PlmLink defaultValue) {
       return result == null ? ServerStatus.UNRECOGNIZED : result;
     }
 
+    public static final int UPLOADERROR_FIELD_NUMBER = 5;
+    @SuppressWarnings("serial")
+    private volatile Object uploadError_ = "";
+    /**
+     * <code>string uploadError = 5;</code>
+     * @return The uploadError.
+     */
+    @Override
+    public String getUploadError() {
+      Object ref = uploadError_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        uploadError_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string uploadError = 5;</code>
+     * @return The bytes for uploadError.
+     */
+    @Override
+    public com.google.protobuf.ByteString
+        getUploadErrorBytes() {
+      Object ref = uploadError_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (String) ref);
+        uploadError_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @Override
     public final boolean isInitialized() {
@@ -4171,6 +4223,9 @@ PlmLink defaultValue) {
       }
       if (status_ != ServerStatus.OK_PROTO.getNumber()) {
         output.writeEnum(4, status_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(uploadError_)) {
+        com.google.protobuf.GeneratedMessage.writeString(output, 5, uploadError_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -4213,6 +4268,9 @@ PlmLink defaultValue) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(4, status_);
       }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(uploadError_)) {
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(5, uploadError_);
+      }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
@@ -4235,6 +4293,8 @@ PlmLink defaultValue) {
       if (!getServerSha1FilesList()
           .equals(other.getServerSha1FilesList())) return false;
       if (status_ != other.status_) return false;
+      if (!getUploadError()
+          .equals(other.getUploadError())) return false;
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -4260,6 +4320,8 @@ PlmLink defaultValue) {
       }
       hash = (37 * hash) + STATUS_FIELD_NUMBER;
       hash = (53 * hash) + status_;
+      hash = (37 * hash) + UPLOADERROR_FIELD_NUMBER;
+      hash = (53 * hash) + getUploadError().hashCode();
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -4422,6 +4484,7 @@ PlmLink defaultValue) {
         serverSha1Files_ =
             com.google.protobuf.LazyStringArrayList.emptyList();
         status_ = 0;
+        uploadError_ = "";
         return this;
       }
 
@@ -4468,6 +4531,9 @@ PlmLink defaultValue) {
         if (((from_bitField0_ & 0x00000008) != 0)) {
           result.status_ = status_;
         }
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.uploadError_ = uploadError_;
+        }
       }
 
       @Override
@@ -4500,6 +4566,11 @@ PlmLink defaultValue) {
         }
         if (other.status_ != 0) {
           setStatusValue(other.getStatusValue());
+        }
+        if (!other.getUploadError().isEmpty()) {
+          uploadError_ = other.uploadError_;
+          bitField0_ |= 0x00000010;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
@@ -4556,6 +4627,11 @@ PlmLink defaultValue) {
                 bitField0_ |= 0x00000008;
                 break;
               } // case 32
+              case 42: {
+                uploadError_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000010;
+                break;
+              } // case 42
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -5047,6 +5123,78 @@ PlmLink defaultValue) {
         return this;
       }
 
+      private Object uploadError_ = "";
+      /**
+       * <code>string uploadError = 5;</code>
+       * @return The uploadError.
+       */
+      public String getUploadError() {
+        Object ref = uploadError_;
+        if (!(ref instanceof String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          String s = bs.toStringUtf8();
+          uploadError_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      /**
+       * <code>string uploadError = 5;</code>
+       * @return The bytes for uploadError.
+       */
+      public com.google.protobuf.ByteString
+          getUploadErrorBytes() {
+        Object ref = uploadError_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (String) ref);
+          uploadError_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string uploadError = 5;</code>
+       * @param value The uploadError to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUploadError(
+          String value) {
+        if (value == null) { throw new NullPointerException(); }
+        uploadError_ = value;
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string uploadError = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearUploadError() {
+        uploadError_ = getDefaultInstance().getUploadError();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string uploadError = 5;</code>
+       * @param value The bytes for uploadError to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUploadErrorBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        uploadError_ = value;
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:plm.freecad.Bucket)
     }
 
@@ -5147,17 +5295,17 @@ PlmLink defaultValue) {
       "reecad.PlmLink.LinkCopyOnChangeEnum\022\r\n\005s" +
       "cale\030\005 \001(\001\022\017\n\007plmFile\030\006 \001(\t\"<\n\024LinkCopyO" +
       "nChangeEnum\022\014\n\010Disabled\020\000\022\013\n\007Enabled\020\001\022\t" +
-      "\n\005Owned\020\002\"\273\002\n\006Bucket\0223\n\010plmFiles\030\001 \003(\0132!" +
+      "\n\005Owned\020\002\"\320\002\n\006Bucket\0223\n\010plmFiles\030\001 \003(\0132!" +
       ".plm.freecad.Bucket.PlmFilesEntry\022-\n\005lin" +
       "ks\030\002 \003(\0132\036.plm.freecad.Bucket.LinksEntry" +
       "\022\027\n\017serverSha1Files\030\003 \003(\t\022)\n\006status\030\004 \001(" +
-      "\0162\031.plm.freecad.ServerStatus\032E\n\rPlmFiles" +
-      "Entry\022\013\n\003key\030\001 \001(\t\022#\n\005value\030\002 \001(\0132\024.plm." +
-      "freecad.PlmFile:\0028\001\032B\n\nLinksEntry\022\013\n\003key" +
-      "\030\001 \001(\t\022#\n\005value\030\002 \001(\0132\024.plm.freecad.PlmL" +
-      "ink:\0028\001*H\n\014ServerStatus\022\014\n\010OK_PROTO\020\000\022\r\n" +
-      "\tNOK_PROTO\020\001\022\014\n\010OK_FILES\020\002\022\r\n\tNOK_FILES\020" +
-      "\003b\006proto3"
+      "\0162\031.plm.freecad.ServerStatus\022\023\n\013uploadEr" +
+      "ror\030\005 \001(\t\032E\n\rPlmFilesEntry\022\013\n\003key\030\001 \001(\t\022" +
+      "#\n\005value\030\002 \001(\0132\024.plm.freecad.PlmFile:\0028\001" +
+      "\032B\n\nLinksEntry\022\013\n\003key\030\001 \001(\t\022#\n\005value\030\002 \001" +
+      "(\0132\024.plm.freecad.PlmLink:\0028\001*H\n\014ServerSt" +
+      "atus\022\014\n\010OK_PROTO\020\000\022\r\n\tNOK_PROTO\020\001\022\014\n\010OK_" +
+      "FILES\020\002\022\r\n\tNOK_FILES\020\003b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -5180,7 +5328,7 @@ PlmLink defaultValue) {
     internal_static_plm_freecad_Bucket_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_plm_freecad_Bucket_descriptor,
-        new String[] { "PlmFiles", "Links", "ServerSha1Files", "Status", });
+        new String[] { "PlmFiles", "Links", "ServerSha1Files", "Status", "UploadError", });
     internal_static_plm_freecad_Bucket_PlmFilesEntry_descriptor =
       internal_static_plm_freecad_Bucket_descriptor.getNestedTypes().get(0);
     internal_static_plm_freecad_Bucket_PlmFilesEntry_fieldAccessorTable = new
