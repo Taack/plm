@@ -1,6 +1,7 @@
 package plm
 
 import attachement.AttachmentSecurityService
+import attachment.TaackDocument
 import attachment.WriteAccess
 import crew.User
 import grails.compiler.GrailsCompileStatic
@@ -61,18 +62,13 @@ class PlmFreeCadSecurityService {
 
 
     boolean canEditFile(PlmFreeCadPart plmDoc, User user) {
-        switch (plmDoc.writeAccess) {
-            case WriteAccess.OWNERS:
-                return plmDoc.userCreated.id == user.id || plmDoc.userCreated.allManagers*.id.contains(user.id)
-                break
-            case WriteAccess.READ_ONLY:
-                return false
-                break
-            case WriteAccess.READERS:
-                return canDownloadFile(plmDoc, user)
-                break
-        }
-        return plmDoc.userCreated.id == user.id
+        return AttachmentSecurityService.canEditFile(plmDoc as TaackDocument, user)
+    }
+
+    boolean canCheckout(PlmFreeCadPart plmDoc, User user) {
+        if (!plmDoc.lockedBy) return true
+        if (plmDoc.lockedBy == user) return true
+        return false
     }
 
     boolean canDownloadFile(PlmFreeCadPart plmDoc) {
