@@ -377,7 +377,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 fieldLabeled part.plmFileUserCreated_
                 fieldLabeled part.plmContentType_
                 fieldLabeled Style.EMPHASIS, part.status_
-                fieldLabeled part.lockedBy_
+                showAction ActionIcon.EDIT * IconStyle.SCALE_DOWN * IconStyle.LEFT, PlmController.&unlockPart as MC, part.id
+                fieldLabeled Style.EMPHASIS + Style.RED, part.lockedBy_
                 showAction ActionIcon.EDIT * IconStyle.SCALE_DOWN * IconStyle.LEFT, PlmController.&editPartCategory as MC, part.id
                 fieldLabeled part.documentCategory?.tags_
             }

@@ -183,6 +183,13 @@ class PlmController implements WebAttributes {
         })
     }
 
+    @Transactional
+    def unlockPart(PlmFreeCadPart part) {
+        if (part.id) {
+            part.lockedBy = null
+        }
+    }
+
     def editPartCategory(PlmFreeCadPart part) {
         taackUiService.show(new UiBlockSpecifier().ui {
             modal {
