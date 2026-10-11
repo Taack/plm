@@ -4,13 +4,16 @@ import attachement.AttachmentUiService
 import attachment.Attachment
 import attachment.DocumentCategory
 import attachment.config.AttachmentContentType
+import crew.User
 import crew.config.SupportedLanguage
 import grails.compiler.GrailsCompileStatic
 import grails.gorm.transactions.Transactional
+import grails.plugin.springsecurity.SpringSecurityService
 import grails.plugin.springsecurity.annotation.Secured
 import grails.web.api.WebAttributes
 import org.codehaus.groovy.runtime.MethodClosure
 import org.codehaus.groovy.runtime.MethodClosure as MC
+import org.grails.datastore.gorm.GormEntity
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.multipart.MultipartHttpServletRequest
 import taack.ast.type.FieldInfo
@@ -42,6 +45,7 @@ class PlmController implements WebAttributes {
     AttachmentUiService attachmentUiService
     ConvertersToAsciidocService convertersToAsciidocService
     TaackEditorService taackEditorService
+    SpringSecurityService springSecurityService
 
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
@@ -187,6 +191,17 @@ class PlmController implements WebAttributes {
     def unlockPart(PlmFreeCadPart part) {
         if (part.id) {
             part.lockedBy = null
+            part.status == PlmFreeCadPartStatus.FREE
+            taackSaveService.save(part, null, part.status_, part.lockedBy_)
+        }
+    }
+
+    @Transactional
+    def lockPart(PlmFreeCadPart part) {
+        if (part.id) {
+            part.lockedBy = springSecurityService.currentUser as User
+            part.status == PlmFreeCadPartStatus.LOCKED
+            taackSaveService.save(part, null, part.status_, part.lockedBy_)
         }
     }
 

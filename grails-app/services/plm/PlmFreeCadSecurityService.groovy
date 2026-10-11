@@ -31,6 +31,12 @@ class PlmFreeCadSecurityService {
         canEditFile(PlmFreeCadPart.get(id), springSecurityService.currentUser as User)
     }
 
+    private securityCanLockClosure(Long id, Map p) {
+        if (!id && !p) return true
+        if (!id) return true
+        canCheckout(PlmFreeCadPart.get(id), springSecurityService.currentUser as User)
+    }
+
     @PostConstruct
     void init() {
         TaackUiEnablerService.securityClosure(
@@ -38,12 +44,8 @@ class PlmFreeCadSecurityService {
                 PlmController.&downloadBinPart as MethodClosure,
                 PlmController.&addComment as MethodClosure,
                 PlmController.&previewPart as MethodClosure,
-                PlmController.&editPart as MethodClosure,
-                PlmController.&editPartCategory as MethodClosure,
-                PlmController.&previewPart as MethodClosure,
                 PlmController.&previewAsciidoc as MethodClosure,
                 PlmController.&showPart as MethodClosure,
-                PlmController.&saveComment as MethodClosure
         )
         TaackUiEnablerService.securityClosure(
                 this.&securityCanEditClosure,
@@ -56,6 +58,10 @@ class PlmFreeCadSecurityService {
                 PlmController.&importAttachment as MethodClosure,
                 PlmController.&savePartCategory as MethodClosure,
                 PlmController.&saveComment as MethodClosure
+        )
+        TaackUiEnablerService.securityClosure(
+                this.&securityCanLockClosure,
+                PlmController.&lockPart as MethodClosure,
         )
 
         TaackAppRegisterService.register(new TaackApp(PlmController.&parts as MethodClosure, new String(this.class.getResourceAsStream("/plm/plm.svg").readAllBytes())))
