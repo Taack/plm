@@ -54,7 +54,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         found ? found.path : configured
     }
 
-    private static void requireExecutable(String path, String configKey, String installHint) {
+    private void requireExecutable(String path, String configKey, String installHint) {
         if (new File(path).canExecute()) return
         String message = "'$path' is not executable. $installHint, or set $configKey to its full path"
         log.error message
@@ -377,7 +377,6 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 fieldLabeled part.plmFileUserCreated_
                 fieldLabeled part.plmContentType_
                 fieldLabeled Style.EMPHASIS, part.status_
-                showAction ActionIcon.EDIT * IconStyle.SCALE_DOWN * IconStyle.LEFT, PlmController.&unlockPart as MC, part.id
                 fieldLabeled Style.EMPHASIS + Style.RED, part.lockedBy_
                 showAction ActionIcon.EDIT * IconStyle.SCALE_DOWN * IconStyle.LEFT, PlmController.&editPartCategory as MC, part.id
                 fieldLabeled part.documentCategory?.tags_
