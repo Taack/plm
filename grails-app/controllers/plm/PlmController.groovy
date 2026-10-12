@@ -193,7 +193,7 @@ class PlmController implements WebAttributes {
     def unlockPart(PlmFreeCadPart part) {
         if (part.id) {
             part.lockedBy = null
-            part.status == PlmFreeCadPartStatus.FREE
+            part.status = PlmFreeCadPartStatus.FREE
             taackSaveService.save(part, [null, part.status_, part.lockedBy_] as FieldInfo[], false, false)
         }
         taackUiService.ajaxReload()
@@ -203,7 +203,7 @@ class PlmController implements WebAttributes {
     def lockPart(PlmFreeCadPart part) {
         if (part.id) {
             part.lockedBy = springSecurityService.currentUser as User
-            part.status == PlmFreeCadPartStatus.LOCKED
+            part.status = PlmFreeCadPartStatus.LOCKED
             taackSaveService.save(part, [null, part.status_, part.lockedBy_] as FieldInfo[], false, false)
         }
         taackUiService.ajaxReload()

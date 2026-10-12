@@ -115,11 +115,7 @@ class PlmFreeCadProtoService {
             PlmFreeCadPart existingPart = PlmFreeCadPart.findByPlmContentShaOne(sha1)
             String ext = plmFile.fileName.substring(plmFile.fileName.lastIndexOf('.') + 1)
 
-            if (existingPart?.status == PlmFreeCadPartStatus.LOCKED) {
-                log.error "Attempt to update Locked Part (from sha1): ${plmFile.name} $existingPart"
-                outbound.uploadError = tr("attempt.to.update.locked.part.with.same.sha1.error", plmFile.name)
-                return outbound.build()
-            } else if (existingPart && !plmFreeCadSecurityService.canCheckout(existingPart, u)) {
+            if (existingPart && !plmFreeCadSecurityService.canCheckout(existingPart, u)) {
                 log.error "Part locked by ${existingPart.lockedBy} (from sha1): ${plmFile.name} $existingPart"
                 outbound.uploadError = tr("part.locked.by.with.same.sha1.error", existingPart.lockedBy ? existingPart.lockedBy.toString() : "", plmFile.id)
                 return outbound.build()
@@ -137,11 +133,7 @@ class PlmFreeCadProtoService {
                 return outbound.build()
             } else {
                 PlmFreeCadPart partToBeCloned = PlmFreeCadPart.findByFileIdAndNextVersionIsNull(plmFile.id)
-                if (partToBeCloned?.status == PlmFreeCadPartStatus.LOCKED) {
-                    log.error "Attempt to update Locked Part (from id): ${plmFile.id} $partToBeCloned"
-                    outbound.uploadError = tr("attempt.to.update.locked.part.with.same.id.error", plmFile.id)
-                    return outbound.build()
-                } else if (partToBeCloned && !plmFreeCadSecurityService.canCheckout(partToBeCloned, u)) {
+                if (partToBeCloned && !plmFreeCadSecurityService.canCheckout(partToBeCloned, u)) {
                     log.error "Part locked by ${partToBeCloned.lockedBy} (from id): ${plmFile.id} $partToBeCloned"
                     outbound.uploadError = tr("part.locked.by.with.same.id.error", partToBeCloned.lockedBy ? partToBeCloned.lockedBy.toString() : "", plmFile.id)
                     return outbound.build()

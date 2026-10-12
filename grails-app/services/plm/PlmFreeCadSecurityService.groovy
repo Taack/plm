@@ -74,7 +74,8 @@ class PlmFreeCadSecurityService {
 
     boolean canCheckout(PlmFreeCadPart plmDoc, User user) {
         if (!plmDoc.lockedBy && plmDoc.status == PlmFreeCadPartStatus.FREE) return true
-        if (plmDoc.lockedBy == user) return true
+        if (plmDoc.lockedBy?.id == user.id) return true
+        if (!plmDoc.lockedBy && plmDoc.status == PlmFreeCadPartStatus.CREATED) return true
         return false
     }
 
