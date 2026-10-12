@@ -159,7 +159,9 @@ class PlmController implements WebAttributes {
     }
 
     def showPartInline(PlmFreeCadPart part, Long partVersion) {
-        render taackUiService.dumpMailHtml(
+        String isRo = part.lockedBy || part.status == PlmFreeCadPartStatus.LOCKED ? '<!-- read-only -->' : ''
+
+        render isRo + taackUiService.dumpMailHtml(
                 plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, true, false))
     }
 
