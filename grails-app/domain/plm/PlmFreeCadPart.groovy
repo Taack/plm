@@ -82,7 +82,9 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
         originalName nullable: true
         pathOnHost nullable: true
         fileId validateor: { obj, v ->
-            if (PlmFreeCadPart.findAllByFileId(v)*.originalName.unique().size() > 1)
+            if (v == 'READ_ONLY')
+                "part.is.read.only"
+            else if (PlmFreeCadPart.findAllByFileId(v)*.originalName.unique().size() > 1)
                 "fileId.not.unique.per.original.name"
         }
         //creationOrder unique: 'nextVersion'
