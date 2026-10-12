@@ -121,7 +121,7 @@ class PlmFreeCadProtoService {
                 return outbound.build()
             } else if (existingPart && !plmFreeCadSecurityService.canCheckout(existingPart, u)) {
                 log.error "Part locked by ${existingPart.lockedBy} (from sha1): ${plmFile.name} $existingPart"
-                outbound.uploadError = tr("part.locked.by.with.same.sha1.error", existingPart.lockedBy.toString(), plmFile.id)
+                outbound.uploadError = tr("part.locked.by.with.same.sha1.error", existingPart.lockedBy ? existingPart.lockedBy.toString() : "", plmFile.id)
                 return outbound.build()
             } else if (existingPart && !plmFreeCadSecurityService.canEditFile(existingPart, u)) {
                 log.error "Attempt to update part you are not supposed to edit (from sha1): ${plmFile.name} $existingPart"
@@ -143,7 +143,7 @@ class PlmFreeCadProtoService {
                     return outbound.build()
                 } else if (partToBeCloned && !plmFreeCadSecurityService.canCheckout(partToBeCloned, u)) {
                     log.error "Part locked by ${partToBeCloned.lockedBy} (from id): ${plmFile.id} $partToBeCloned"
-                    outbound.uploadError = tr("part.locked.by.with.same.id.error", partToBeCloned.lockedBy.toString(), plmFile.id)
+                    outbound.uploadError = tr("part.locked.by.with.same.id.error", partToBeCloned.lockedBy ? partToBeCloned.lockedBy.toString() : "", plmFile.id)
                     return outbound.build()
                 } else if (partToBeCloned && !plmFreeCadSecurityService.canEditFile(partToBeCloned, u)) {
                     log.error "Attempt to update part you are not supposed to edit (from id): ${plmFile.id} $partToBeCloned"
@@ -158,9 +158,7 @@ class PlmFreeCadProtoService {
                         partToBeCloned.documentCategory = new DocumentCategory(category: DocumentCategoryEnum.OTHER)
                     } else {
                         PlmFreeCadPart oldPart = partToBeCloned.cloneDirectObjectData()
-                        partToBeCloned.plmLinks?.each { PlmFreeCadLink lIt ->
-                            oldPart.addToPlmLinks(lIt)
-                        }
+                        partToBeCloned.plmLinks?.each { PlmFreeCadLink lIt -> oldPart.addToPlmLinks(lIt)}
 
                         oldPart.userUpdated = u
                         if (!oldPart.validate()) {
