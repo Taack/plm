@@ -645,7 +645,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
     File preview(PlmFreeCadPart part, Long version = null) {
         if (version != null) {
-            part = part.getHistory()[version]
+            List<PlmFreeCadPart> parts = part.getHistory()
+            part = parts.size() > version ? parts[version] : parts.last()
         }
         String filePath = previewPath + '/' + part.plmContentShaOne + '.png'
         String filePathWebp = previewPath + '/' + part.plmContentShaOne + '.webp'

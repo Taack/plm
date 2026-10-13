@@ -151,7 +151,6 @@ class PlmFreeCadProtoService {
                     } else {
                         PlmFreeCadPart oldPart = partToBeCloned.cloneDirectObjectData()
                         partToBeCloned.plmLinks?.each { PlmFreeCadLink lIt -> oldPart.addToPlmLinks(lIt)}
-
                         oldPart.userUpdated = u
                         if (!oldPart.validate()) {
                             outbound.uploadError = "${oldPart.errors}"
@@ -163,6 +162,7 @@ class PlmFreeCadProtoService {
                     }
                     partToBeCloned.userUpdated = u
                     partToBeCloned.lockedBy = u
+                    partToBeCloned.status = PlmFreeCadPartStatus.LOCKED
                     File file = new File(storePath + '/' + sha1 + '.' + ext)
                     if (fileContent) file << fileContent
                     if (fileContentIs) file << fileContentIs
