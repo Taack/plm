@@ -189,7 +189,9 @@ class PlmFreeCadProtoService {
                     partToBeCloned.documentAccess = documentAccess
                     if (!partToBeCloned.validate()) {
                         outbound.uploadError = "${partToBeCloned.errors}"
+                        return outbound.build()
                     }
+
                     partToBeCloned.save(flush: true, failOnError: true)
                     if (partToBeCloned.hasErrors()) {
                         log.error "partToBeCloned: ${partToBeCloned.errors}"
