@@ -1,6 +1,7 @@
 package plm
 
 import attachement.AttachmentSecurityService
+import attachment.TaackDocument
 import attachment.WriteAccess
 import crew.User
 import grails.compiler.GrailsCompileStatic
@@ -30,6 +31,12 @@ class PlmFreeCadSecurityService {
         canEditFile(PlmFreeCadPart.get(id), springSecurityService.currentUser as User)
     }
 
+    private securityCanLockClosure(Long id, Map p) {
+        if (!id && !p) return true
+        if (!id) return true
+        canCheckout(PlmFreeCadPart.get(id), springSecurityService.currentUser as User)
+    }
+
     @PostConstruct
     void init() {
         TaackUiEnablerService.securityClosure(
@@ -37,15 +44,12 @@ class PlmFreeCadSecurityService {
                 PlmController.&downloadBinPart as MethodClosure,
                 PlmController.&addComment as MethodClosure,
                 PlmController.&previewPart as MethodClosure,
-                PlmController.&editPart as MethodClosure,
-                PlmController.&editPartCategory as MethodClosure,
-                PlmController.&previewPart as MethodClosure,
                 PlmController.&previewAsciidoc as MethodClosure,
                 PlmController.&showPart as MethodClosure,
-                PlmController.&saveComment as MethodClosure
         )
         TaackUiEnablerService.securityClosure(
                 this.&securityCanEditClosure,
+                PlmController.&unlockPart as MethodClosure,
                 PlmController.&editPart as MethodClosure,
                 PlmController.&editPartCategory as MethodClosure,
                 PlmController.&savePart as MethodClosure,
@@ -55,24 +59,24 @@ class PlmFreeCadSecurityService {
                 PlmController.&savePartCategory as MethodClosure,
                 PlmController.&saveComment as MethodClosure
         )
+        TaackUiEnablerService.securityClosure(
+                this.&securityCanLockClosure,
+                PlmController.&lockPart as MethodClosure,
+        )
 
         TaackAppRegisterService.register(new TaackApp(PlmController.&parts as MethodClosure, new String(this.class.getResourceAsStream("/plm/plm.svg").readAllBytes())))
     }
 
 
     boolean canEditFile(PlmFreeCadPart plmDoc, User user) {
-        switch (plmDoc.writeAccess) {
-            case WriteAccess.OWNERS:
-                return plmDoc.userCreated.id == user.id || plmDoc.userCreated.allManagers*.id.contains(user.id)
-                break
-            case WriteAccess.READ_ONLY:
-                return false
-                break
-            case WriteAccess.READERS:
-                return canDownloadFile(plmDoc, user)
-                break
-        }
-        return plmDoc.userCreated.id == user.id
+        return AttachmentSecurityService.canEditFile(plmDoc as TaackDocument, user)
+    }
+
+    boolean canCheckout(PlmFreeCadPart plmDoc, User user) {
+        if (!plmDoc.lockedBy && plmDoc.status == PlmFreeCadPartStatus.FREE) return true
+        if (plmDoc.lockedBy?.id == user.id) return true
+        if (!plmDoc.lockedBy && plmDoc.status == PlmFreeCadPartStatus.CREATED) return true
+        return false
     }
 
     boolean canDownloadFile(PlmFreeCadPart plmDoc) {

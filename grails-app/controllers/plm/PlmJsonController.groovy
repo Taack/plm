@@ -39,7 +39,8 @@ class PlmJsonController {
                     status            : part.status,
                     computedVersion   : part.computedVersion,
                     pathOnHost        : part.pathOnHost,
-                    plmFileLastUpdated: part.plmFileLastUpdated
+                    plmFileLastUpdated: part.plmFileLastUpdated,
+                    lockedBy          : part.lockedBy
             ] as Map<String, Object>
         }
     }

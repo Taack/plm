@@ -15,6 +15,7 @@ import taack.ast.type.FieldInfo
 import taack.domain.TaackAttachmentService
 import taack.domain.TaackFilter
 import taack.domain.TaackFilterService
+import taack.render.TaackUiEnablerService
 import taack.ui.TaackUiConfiguration
 import taack.ui.dsl.*
 import taack.ui.dsl.block.BlockSpec
@@ -350,7 +351,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
         if (fieldInfoTo && fieldInfoTo.value) to = fieldInfoTo.value.toString()
 
         if (from != to) {
-            String i18n = tr('content.became.from.to.label', fieldInfoFrom ? tr(fieldInfoFrom) : fieldInfoTo ? tr(fieldInfoTo) : ' unknown ', from.take(30), to.take(30))
+            String i18n = tr('content.became.from.to.label', fieldInfoFrom ? tr(fieldInfoFrom) : fieldInfoTo ? tr(fieldInfoTo) : ' unknown ', TaackUiEnablerService.sanitizeString(from.take(30)), TaackUiEnablerService.sanitizeString(to.take(30)))
             "<li>$i18n</li>"
         } else ''
     }
@@ -377,7 +378,7 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 fieldLabeled part.plmFileUserCreated_
                 fieldLabeled part.plmContentType_
                 fieldLabeled Style.EMPHASIS, part.status_
-                fieldLabeled part.lockedBy_
+                fieldLabeled Style.EMPHASIS + Style.RED, part.lockedBy_
                 showAction ActionIcon.EDIT * IconStyle.SCALE_DOWN * IconStyle.LEFT, PlmController.&editPartCategory as MC, part.id
                 fieldLabeled part.documentCategory?.tags_
             }
@@ -400,6 +401,10 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
                 col BlockSpec.Width.THREE_QUARTER, {
                     show showPreview, {
                         label(tr('preview.label'))
+                        if (!part.lockedBy)
+                            menuIcon PlmActionIcon.LOCK, PlmController.&lockPart as MC, [id: part.id]
+                        else
+                            menuIcon PlmActionIcon.UNLOCK, PlmController.&unlockPart as MC, [id: part.id]
                         menuIcon ActionIcon.DOWNLOAD, PlmController.&downloadBinPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
 //                        menuIcon ActionIcon.SHOW, PlmController.&preview3dPart as MC, [id: part.id, partVersion: part.computedVersion ?: 0]
                         if (!isHistory) {
@@ -640,7 +645,8 @@ class PlmFreeCadUiService implements WebAttributes, GrailsConfigurationAware {
 
     File preview(PlmFreeCadPart part, Long version = null) {
         if (version != null) {
-            part = part.getHistory()[version]
+            List<PlmFreeCadPart> parts = part.getHistory()
+            part = parts.size() > version ? parts[version] : parts.last()
         }
         String filePath = previewPath + '/' + part.plmContentShaOne + '.png'
         String filePathWebp = previewPath + '/' + part.plmContentShaOne + '.webp'
