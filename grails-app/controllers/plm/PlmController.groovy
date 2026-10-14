@@ -46,6 +46,7 @@ class PlmController implements WebAttributes {
     ConvertersToAsciidocService convertersToAsciidocService
     TaackEditorService taackEditorService
     SpringSecurityService springSecurityService
+    PlmFreeCadSecurityService plmFreeCadSecurityService
 
     private UiMenuSpecifier buildMenu(String q = null) {
         new UiMenuSpecifier().ui {
@@ -159,7 +160,7 @@ class PlmController implements WebAttributes {
     }
 
     def showPartInline(PlmFreeCadPart part, Long partVersion) {
-        String isRo = part.lockedBy || part.status == PlmFreeCadPartStatus.LOCKED ? '<!-- read-only -->' : ''
+        String isRo = !plmFreeCadSecurityService.canCheckout(part, springSecurityService.currentUser as User) ? '<!-- read-only -->' : ''
 
         render isRo + taackUiService.dumpMailHtml(
                 plmFreeCadUiService.buildFreeCadPartBlockShow(part, partVersion, true, false))
