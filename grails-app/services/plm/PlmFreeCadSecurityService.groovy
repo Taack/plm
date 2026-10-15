@@ -1,6 +1,6 @@
 package plm
 
-import attachement.AttachmentSecurityService
+import attachment.AttachmentSecurityService
 import attachment.WriteAccess
 import crew.User
 import grails.compiler.GrailsCompileStatic
