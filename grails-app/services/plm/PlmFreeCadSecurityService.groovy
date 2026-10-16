@@ -1,8 +1,7 @@
 package plm
 
-import attachement.AttachmentSecurityService
+import attachment.AttachmentSecurityService
 import attachment.TaackDocument
-import attachment.WriteAccess
 import crew.User
 import grails.compiler.GrailsCompileStatic
 import grails.plugin.springsecurity.SpringSecurityService

@@ -1,6 +1,6 @@
 package plm
 
-import attachement.AttachmentUiService
+import attachment.AttachmentUiService
 import attachment.Attachment
 import attachment.DocumentCategory
 import attachment.config.AttachmentContentType

@@ -1,6 +1,6 @@
 package plm
 
-import attachement.AttachmentUiService
+import attachment.AttachmentUiService
 import attachment.DocumentCategory
 import attachment.Term
 import crew.AttachmentController
