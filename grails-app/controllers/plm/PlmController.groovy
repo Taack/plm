@@ -70,7 +70,22 @@ class PlmController implements WebAttributes {
         redirect action: 'parts'
     }
 
-    def downloadBinPart(PlmFreeCadPart part, Long partVersion) {
+    def downloadBinPart(PlmFreeCadPart part, Long partVersion, Boolean lockIt) {
+        if (lockIt) {
+            User u = springSecurityService.currentUser as User
+            if (part.id && plmFreeCadSecurityService.canCheckout(part, u) && plmFreeCadSecurityService.canEditFile(part, u)) {
+                if (part.lockedBy.id != u.id || part.status != PlmFreeCadPartStatus.LOCKED) {
+                    PlmFreeCadPart.withNewTransaction {
+                        taackSaveService.save(part, [null, part.status_, part.lockedBy_] as FieldInfo[], false, true)
+                        part.lockedBy = u
+                        part.status = PlmFreeCadPartStatus.LOCKED
+                    }
+                }
+            } else {
+                log.error("Cannot edit (${plmFreeCadSecurityService.canEditFile(part, u)}) or checkout part ${plmFreeCadSecurityService.canCheckout(part, u)} ...")
+                throw new SecurityException("Cannot edit or checkout part")
+            }
+        }
         response.contentType = 'application/zip'
         response.setHeader("Content-disposition", "filename=${URLEncoder.encode("${part.originalName}${partVersion ? "-v${partVersion}" : ''}-${TaackUiService.dateFileName}.zip", 'UTF-8')}")
         response.outputStream << plmFreeCadUiService.zipPart(part, partVersion).bytes
