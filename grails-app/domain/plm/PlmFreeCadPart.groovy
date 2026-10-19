@@ -200,9 +200,10 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
             String[] elements = fileId.split('/')
             int counter = elements.size()
             StringBuilder parentId = new StringBuilder()
-            for (int i = 0; i < counter; i++) {
+            for (int i = 0; i < counter - 1; i++) {
                 if (i > 0) parentId.append('/')
-                parentId.append(elements[i])
+                if (i == counter - 2) parentId.append(elements[i] - "-${label}")
+                else parentId.append(elements[i])
             }
             String pId = parentId.toString()
             return PlmFreeCadPart.findByFileId(pId)
