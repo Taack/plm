@@ -184,7 +184,7 @@ class PlmFreeCadProtoService {
                     partToBeCloned.cTimeNs = plmFile.getCTimeNs()
                     partToBeCloned.mTimeNs = plmFile.getUTimeNs()
 
-                    DocumentAccess documentAccess = DocumentAccess.findOrCreateByIsInternalAndIsRestrictedToMyBusinessUnitAndIsRestrictedToMySubsidiaryAndIsRestrictedToMyManagersAndIsRestrictedToEmbeddingObjects(false, false, false, false, true)
+                    DocumentAccess documentAccess = new DocumentAccess(isRestrictedToMyBusinessUnit: false, isRestrictedToMySubsidiary: false,isRestrictedToMyManagers: false)
 
                     partToBeCloned.documentAccess = documentAccess
                     if (!partToBeCloned.validate()) {
