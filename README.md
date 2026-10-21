@@ -3,6 +3,8 @@ Video of the latest version: [Taack PLM 2026.10.05 for FreeCAD](https://youtu.be
 Demo server installation (Linux/Mac):
 # Bare Metal Installation
 
+NOTE: If you migrate from an old version, you have to delete column `IS_INTERNAL` and `IS_RESTRICTED_TO_EMBEDDING_OBJECTS` from the database (H2, Postgres ...)
+
 Download the server
 ```bash
 $ wget https://github.com/Taack/plm/releases/download/v2026.10.19/server-0.6.jar
