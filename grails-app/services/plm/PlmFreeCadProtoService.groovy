@@ -117,6 +117,10 @@ class PlmFreeCadProtoService {
                 }
             }
             PlmFreeCadPart existingPart = PlmFreeCadPart.findByPlmContentShaOne(sha1)
+            if (!existingPart && !fileContent && !fileContentIs) {
+                log.info "Waiting for a later chunk for ${plmFile.name} ($sha1)"
+                continue
+            }
             String ext = plmFile.fileName.substring(plmFile.fileName.lastIndexOf('.') + 1)
 
             if (existingPart && !plmFreeCadSecurityService.canCheckout(existingPart, u)) {
