@@ -7,7 +7,7 @@ NOTE: If you migrate from an old version, you have to delete column `IS_INTERNAL
 
 Download the server
 ```bash
-$ wget https://github.com/Taack/plm/releases/download/v2026.10.19/server-0.6.jar
+$ wget https://github.com/Taack/plm/releases/download/v2026.10.22/server-0.6.jar
 ```
 
 Check Java version > 25:
@@ -56,7 +56,7 @@ services:
 
 Download the server to the same location as the docker-compose.yml file
 ```bash
-$ wget https://github.com/Taack/plm/releases/download/v2026.10.19/server-0.6.jar
+$ wget https://github.com/Taack/plm/releases/download/v2026.10.22/server-0.6.jar
 ```
 Build the docker image
 ```bash
