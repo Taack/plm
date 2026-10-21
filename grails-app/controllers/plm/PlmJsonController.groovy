@@ -35,6 +35,7 @@ class PlmJsonController {
             [
                     id                : part.id,
                     label             : part.label,
+                    name              : part.name,
                     userCreated       : part.userCreated.username,
                     status            : part.status,
                     computedVersion   : part.computedVersion,

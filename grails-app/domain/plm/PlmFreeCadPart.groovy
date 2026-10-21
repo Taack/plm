@@ -50,6 +50,7 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
     String plmContentShaOne
     String originalName
     String label
+    String name
     String pathOnHost
     String fileId
 
@@ -75,6 +76,7 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
         plmFileLastUpdated nullable: true
         plmFileUserCreated nullable: true
         comment nullable: true
+        name nullable: true
         commentVersion nullable: true, widget: 'asciidoc'
         nextVersion nullable: true
         plmContentType nullable: true
@@ -129,6 +131,7 @@ class PlmFreeCadPart extends TaackDocument implements IDomainHistory<PlmFreeCadP
             oldPart.fileId = fileId
             oldPart.comment = comment
             oldPart.label = label
+            oldPart.name = name
             oldPart.commentVersion = commentVersion
             oldPart.documentAccess = documentAccess
             oldPart.documentCategory = documentCategory

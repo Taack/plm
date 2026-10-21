@@ -54,6 +54,10 @@ class PlmFreeCadProtoService {
                     log.warn "Part label becomes ${plmFile.label}"
                     existingPart.label = plmFile.label
                 }
+                if (plmFile.name != existingPart.name) {
+                    log.warn "Part name becomes ${plmFile.name}"
+                    existingPart.name = plmFile.name
+                }
                 if (plmFile.fileName != existingPart.pathOnHost) {
                     log.warn "Part path becomes ${plmFile.fileName}"
                     existingPart.pathOnHost = plmFile.fileName
@@ -171,6 +175,7 @@ class PlmFreeCadProtoService {
                     partToBeCloned.fileId = plmFile.id
                     partToBeCloned.comment = plmFile.comment
                     partToBeCloned.label = plmFile.label
+                    partToBeCloned.name = plmFile.name
                     partToBeCloned.plmFileLastUpdated = dateFormat.parse(plmFile.lastModifiedDate)
                     partToBeCloned.plmFileDateCreated = dateFormat.parse(plmFile.createdDate)
                     partToBeCloned.plmFileUserCreated = plmFile.createdBy
