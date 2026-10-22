@@ -1,4 +1,4 @@
-Video of the latest version: [Taack PLM 2026.10.05 for FreeCAD](https://youtu.be/sMTuQunCXyw).
+Video of the latest version: [Taack PLM 2026.10.22 for FreeCAD](https://youtu.be/8CJI0JcUI9w).
 
 Demo server installation (Linux/Mac):
 # Bare Metal Installation
