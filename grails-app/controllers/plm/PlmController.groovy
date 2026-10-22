@@ -74,7 +74,7 @@ class PlmController implements WebAttributes {
         if (lockIt) {
             User u = springSecurityService.currentUser as User
             if (part.id && plmFreeCadSecurityService.canCheckout(part, u) && plmFreeCadSecurityService.canEditFile(part, u)) {
-                if (part.lockedBy.id != u.id || part.status != PlmFreeCadPartStatus.LOCKED) {
+                if (part.lockedBy?.id != u.id || part.status != PlmFreeCadPartStatus.LOCKED) {
                     PlmFreeCadPart.withNewTransaction {
                         taackSaveService.save(part, [null, part.status_, part.lockedBy_] as FieldInfo[], false, true)
                         part.lockedBy = u
